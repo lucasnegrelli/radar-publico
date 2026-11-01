@@ -9,7 +9,7 @@ con = duckdb.connect(str(RAIZ / "dados" / "radar.duckdb"))
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 ORDEM = {"alta": 0, "media": 1, "baixa": 2}
 NOME_REGRA = {"R01": "Empresa punida recebeu cota parlamentar", "R02": "Contrato com empresa punida",
-              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena"}
+              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor"}
 
 def sql(nome): return (RAIZ / "alertas" / nome).read_text(encoding="utf-8").strip().rstrip(";")
 def fmt_cnpj(d): return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}" if len(d) == 14 and not d.startswith("000") else f"CPF ***{d[-8:-2]}**"
@@ -66,17 +66,17 @@ if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
         ib = origem_de({str(r[desc.index("id")]) and None for r in rows})
         return rows, desc, loc, total_regra
     # R02 agrupado por empresa
-    for regra, arq in (("R02", "02_contrato_com_sancionada.sql"), ("R03", "03_empresa_nova_contrato_grande.sql"), ("R04", "04_capital_pequeno_contrato_gigante.sql")):
+    for regra, arq in (("R02", "02_contrato_com_sancionada.sql"), ("R03", "03_empresa_nova_contrato_grande.sql"), ("R04", "04_capital_pequeno_contrato_gigante.sql"), ("R05", "05_doador_prefeito_fornecedor.sql")):
         con.execute(f"create or replace table t_{regra} as " + sql(arq))
     ibge_por_id = {}
     # código IBGE do órgão (para origem no mapa)
     ib_rows = con.execute("select id, ibge from pncp").fetchall() if False else []
-    for regra in ("R02", "R03", "R04"):
+    for regra in ("R02", "R03", "R04", "R05"):
         rows = con.execute(f"select * from t_{regra} order by case gravidade when 'alta' then 0 when 'media' then 1 else 2 end, valor desc").fetchall()
         desc = [d[0] for d in con.description]; ix = {k: i for i, k in enumerate(desc)}
-        if regra == "R02":
+        if regra in ("R02", "R05"):
             grupos = {}
-            for r in rows: grupos.setdefault(r[ix["doc"]], []).append(r)
+            for r in rows: grupos.setdefault(r[ix["doc"]] if regra == "R02" else (r[ix["doc"]], r[ix["municipio"]], r[ix["uf"]]), []).append(r)
             itens = sorted(grupos.values(), key=lambda g: (ORDEM[g[0][ix["gravidade"]]], -sum(x[ix["valor"]] for x in g)))[:LIMITE]
         else:
             itens = [[r] for r in rows[:LIMITE]]
@@ -84,13 +84,18 @@ if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
         for g in itens:
             r0 = g[0]; doc = r0[ix["doc"]]; tot = sum(x[ix["valor"]] for x in g)
             tab = [[cel(str(x[ix["data"]])), cel(x[ix["orgao"]][:46], f"{x[ix['municipio']]}/{x[ix['uf']]}"), cel((x[ix["objeto"]] or "")[:90]), cel(brl(x[ix["valor"]]), v=True), cel("ver contrato", u=url_pncp(x[ix["id"]])) if url_pncp(x[ix["id"]]) else cel("–")] for x in sorted(g, key=lambda y: y[ix["data"]])[:12]]
-            a = {"id": f"{regra}-{doc}-{r0[ix['id']]}" if regra != "R02" else f"{regra}-{doc}", "regra": regra, "gravidade": r0[ix["gravidade"]], "empresa": r0[ix["fornecedor"]], "cnpj": fmt_cnpj(doc),
+            a = {"id": f"{regra}-{doc}" if regra == "R02" else (f"{regra}-{doc}-{r0[ix['municipio']]}-{r0[ix['uf']]}" if regra == "R05" else f"{regra}-{doc}-{r0[ix['id']]}"), "regra": regra, "gravidade": r0[ix["gravidade"]], "empresa": r0[ix["fornecedor"]], "cnpj": fmt_cnpj(doc),
                  "total": tot, "n": len(g), "inicio": str(min(x[ix["data"]] for x in g)), "fim": str(max(x[ix["data"]] for x in g)),
                  "origem": None, "local": loc.get(doc), "orgao": r0[ix["orgao"]], "orgao_uf": r0[ix["uf"]], "orgao_municipio": r0[ix["municipio"]],
                  "tabela": {"titulo": "Contratos", "cols": ["Data", "Órgão contratante", "Objeto", "Valor", ""], "linhas": tab}}
             if regra == "R02":
                 a["manchete"] = {"tipo": "R02", "sancao": r0[ix["sancao_tipo"]], "lista": r0[ix["lista"]]}
                 a["sancao"] = {"lista": r0[ix["lista"]], "tipo": r0[ix["sancao_tipo"]], "orgao": r0[ix["orgao_sancionador"]], "alcance": r0[ix["alcance"]], "inicio": str(r0[ix["sancao_ini"]]), "fim": str(r0[ix["sancao_fim"]]) if r0[ix["sancao_fim"]] else None}
+            elif regra == "R05":
+                rb = max(g, key=lambda x: x[ix["doacao"]]); nome = [w for w in rb[ix["doador"]].split() if w]
+                mascarado = nome[0].title() + " " + " ".join(w[0] + "." for w in nome[1:]) if nome else "sócio"
+                a["manchete"] = {"tipo": "R05", "doador": mascarado, "doacao": rb[ix["doacao"]], "prefeito": rb[ix["prefeito"]].title(), "partido": rb[ix["partido"]],
+                                 "cidade": (r0[ix["municipio"]] or "").title(), "uf": r0[ix["uf"]], "qualificacao": rb[ix["qualificacao"]]}
             elif regra == "R03":
                 a["manchete"] = {"tipo": "R03", "abertura": str(r0[ix["abertura"]]), "dias": r0[ix["dias_de_vida"]], "capital": r0[ix["capital_social"]], "porte": r0[ix["porte"]]}
             else:

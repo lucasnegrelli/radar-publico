@@ -26,7 +26,7 @@ WITH sancoes AS (
       ELSE CASE WHEN (s.esf ILIKE 'Federal%' AND p.esfera = 'F') OR (s.uf_s = p.uf) THEN 'media' END
     END AS gravidade
   FROM pncp p JOIN sancoes s ON s.doc = p.doc14 AND p.doc14 <> '00000000000000'
-  WHERE p.data_assinatura >= s.ini AND (s.fim IS NULL OR p.data_assinatura <= s.fim) AND p.valor_global > 0
+  WHERE p.data_assinatura >= s.ini AND (s.fim IS NULL OR p.data_assinatura <= s.fim) AND p.valor_global > 0 AND NOT p.estatal
 )
 SELECT 'R02' AS regra, gravidade, id, fornecedor, doc14 AS doc, orgao, esfera, uf, municipio, objeto, valor_global AS valor, data_assinatura AS data,
        tipo_contrato, categoria, lista, sancao_tipo, orgao_sancionador, alcance, sancao_ini, sancao_fim

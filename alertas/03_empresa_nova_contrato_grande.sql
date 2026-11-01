@@ -12,4 +12,5 @@ LEFT JOIN emp em ON em.cnpj_basico = e.cnpj_basico
 WHERE p.tipo_pessoa = 'PJ' AND e.abertura IS NOT NULL
   AND date_diff('day', e.abertura, p.data_assinatura) BETWEEN 0 AND 180
   AND p.valor_global >= 200000
-  AND NOT p.tipo_especial AND NOT p.credenciamento AND p.n_mesmo_valor < 3;
+  AND NOT p.tipo_especial AND NOT p.credenciamento AND p.n_mesmo_valor < 3 AND NOT p.erro_valor AND NOT p.estatal
+  AND NOT (p.valor_global % 1000 = 0 AND p.valor_global / 1000 <= 10 * coalesce(em.capital_social, 0) AND coalesce(em.capital_social, 0) > 0);  -- provável erro de escala por mil
