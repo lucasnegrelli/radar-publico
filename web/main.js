@@ -47,6 +47,9 @@ function manchete(a) {
   const m = a.manchete, E = `<b>${esc(a.empresa)}</b>`;
   if (m.tipo === "R01") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} da cota parlamentar ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
   if (m.tipo === "R02") return `${E} assinou ${plural(a.n, "contrato público", "contratos públicos")} somando <b>${brl(a.total)}</b> ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
+  if (m.tipo === "RF01") return m.ref
+    ? `${E} foi liquidado pelo Banco Central em nov/2025. Este é o <b>caso de referência</b>: o critério (captação acima de R$ 5 bi, crescimento de 50% ou mais em 12 meses e alavancagem de 10x ou mais) teria acendido por <b>${m.trimestres} trimestres seguidos</b>, desde o 1º trimestre de 2023, mais de dois anos antes da liquidação.`
+    : `${E} cresce rápido e alavancado há <b>${m.trimestres} trimestres seguidos</b>: captações de <b>${brlCurto(m.captacao)}</b> (${m.yoy >= 0 ? "+" : ""}${Math.round(m.yoy * 100)}% em 12 meses) com ativo <b>${(m.alav || 0).toFixed(1)} vezes</b> o patrimônio líquido (posição em ${esc(m.ate)}). É uma <b>lista de observação</b>, não um diagnóstico.`;
   if (m.tipo === "R05") return `${E} assinou ${plural(a.n, "contrato", "contratos")} somando <b>${brl(a.total)}</b> com a Prefeitura de ${esc(m.cidade)}/${esc(m.uf)} desde 2025. <b>${esc(m.doador)}</b>, ${esc(QUALIF[m.qualificacao] || "sócio(a)")} da empresa, doou <b>${brl(m.doacao)}</b> à campanha do prefeito eleito <b>${esc(m.prefeito)}</b> (${esc(m.partido)}) em 2024.`;
   if (m.tipo === "R03") return `${E} abriu as portas em <b>${data(m.abertura)}</b> e, <b>${m.dias} dias depois</b>, assinou um contrato de <b>${brl(a.total)}</b> com ${esc(a.orgao)}.`;
   return `${E} tem capital social de <b>${brl(m.capital || 0)}</b> e assinou um contrato de <b>${brl(a.total)}</b> com ${esc(a.orgao)}: <b>${(m.vezes || 0).toLocaleString("pt-BR")} vezes</b> o capital.`;
@@ -55,6 +58,7 @@ function linhaCard(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return `${situacaoCurta(m.sancao)} quando recebeu da cota parlamentar`;
   if (m.tipo === "R02") return `${situacaoCurta(m.sancao)} quando assinou contrato público`;
+  if (m.tipo === "RF01") return m.ref ? `Caso de referência: o critério acenderia ${m.trimestres} trimestres antes da liquidação` : `Crescimento acelerado e alavancado há ${m.trimestres} trimestres`;
   if (m.tipo === "R05") return `Sócio doou ${brlCurto(m.doacao)} ao prefeito e a empresa fechou contrato com a prefeitura`;
   if (m.tipo === "R03") return `Aberta há ${m.dias} dias quando assinou o contrato`;
   return `Contrato ${(m.vezes || 0).toLocaleString("pt-BR")}× maior que o capital da empresa`;
@@ -62,6 +66,7 @@ function linhaCard(a) {
 function numeros(a) {
   const m = a.manchete, N = (r, v) => `<div><small>${r}</small><b class="num">${v}</b></div>`;
   if (m.tipo === "R01" || m.tipo === "R02") return N("Total recebido", brlCurto(a.total)) + N(m.tipo === "R01" ? "Pagamentos" : "Contratos", a.n) + N("Punição", esc(a.sancao.lista));
+  if (m.tipo === "RF01") return N("Captações", brlCurto(m.captacao)) + N("Em 12 meses", (m.yoy >= 0 ? "+" : "") + Math.round(m.yoy * 100) + "%") + N("Ativo / patrimônio", (m.alav || 0).toFixed(1) + "x");
   if (m.tipo === "R05") return N("Em contratos", brlCurto(a.total)) + N("Contratos", a.n) + N("Doação ao prefeito", brlCurto(m.doacao));
   if (m.tipo === "R03") return N("Valor do contrato", brlCurto(a.total)) + N("Dias de vida", m.dias) + N("Capital social", m.capital != null ? brlCurto(m.capital) : "–");
   return N("Valor do contrato", brlCurto(a.total)) + N("Vezes o capital", (m.vezes || 0).toLocaleString("pt-BR")) + N("Capital social", brlCurto(m.capital || 0));
@@ -70,6 +75,7 @@ function checagem(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return ["Abra a nota de cada pagamento e veja o que foi contratado.", `Veja se a punição realmente alcançava a casa legislativa na data do pagamento (o alcance acima diz onde ela valia).`, "Confirme a situação atual da empresa no Portal da Transparência."];
   if (m.tipo === "R02") return ["Abra cada contrato no PNCP e veja quem contratou e o que foi contratado.", "Confira se a punição valia para esse órgão (veja o alcance acima). Punição restrita a outro órgão não impede contratar.", "Procure se o contrato foi suspenso ou anulado depois."];
+  if (m.tipo === "RF01") return ["Alavancagem de 10x a 20x é comum em banco. O sinal relevante é o crescimento sustentado muito acima dos pares.", "Veja quem compra o papel: fundos de previdência de servidores e bancos públicos concentrados num emissor pequeno são o ponto crítico.", "Compare a remuneração oferecida (CDBs, LCIs, LFs) com a taxa de mercado: rendimento muito acima da média exige explicação.", "Consulte o Índice de Basileia e as demonstrações no IF.data do Banco Central."];
   if (m.tipo === "R05") return ["Doar para campanha é legal. Veja se a empresa já era fornecedora da prefeitura antes da eleição.", "Abra cada contrato no PNCP: houve licitação com concorrência ou foi dispensa/inexigibilidade?", "Compare o preço com o que outras prefeituras pagam pelo mesmo objeto.", "Confira a prestação de contas do candidato no site do TSE (DivulgaCandContas)."];
   if (m.tipo === "R03") return ["Empresa nova não é irregular por si só. Veja se tem experiência no objeto contratado (CNAE, sócios).", "Procure o processo de contratação: houve concorrência ou foi dispensa/inexigibilidade?", "Confira quem são os sócios e se têm ligação com o órgão."];
   return ["Confira se o valor está certo: erros de digitação são comuns no PNCP (uma casa decimal a mais vira um contrato de bilhões).", "Capital baixo pode ser normal em empresas de serviço. Veja se há subcontratação ou garantia.", "Abra o contrato no PNCP e confira o objeto e a forma de contratação.", "Confira o histórico da empresa com outros órgãos."];
@@ -210,10 +216,10 @@ function abrir(id) {
     <h4>${esc(t.titulo)}</h4>
     <table style="--c:${c}"><thead><tr>${cab}</tr></thead><tbody>${linhas}</tbody></table>
     ${a.n > t.linhas.length ? `<p class="sub2" style="margin-top:6px">Mostrando ${t.linhas.length} de ${a.n} registros.</p>` : ""}
-    ${blocoSancao}${blocoEmpresa}${blocoVinculo}
+    ${blocoSancao}${blocoEmpresa}${blocoVinculo}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
     <h4>Checagem</h4><ul class="check">${checagem(a).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
     <p class="aviso">Isto é um ponto de atenção feito a partir de dados públicos, não uma conclusão. Pode haver explicação legal.</p>
-    <div class="links" style="margin-top:12px;font-size:12.5px">Fontes: <a href="https://pncp.gov.br" target="_blank" rel="noopener">PNCP</a> · <a href="https://portaldatransparencia.gov.br/sancoes/consulta" target="_blank" rel="noopener">Portal da Transparência</a> · <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener">Câmara</a> · <a href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener">Senado</a> · <a href="https://dadosabertos.rfb.gov.br" target="_blank" rel="noopener">Receita (CNPJ)</a></div>`;
+    <div class="links" style="margin-top:12px;font-size:12.5px">Fontes: <a href="https://www3.bcb.gov.br/ifdata" target="_blank" rel="noopener">Banco Central (IF.data)</a> · <a href="https://dados.cvm.gov.br" target="_blank" rel="noopener">CVM</a> · <a href="https://pncp.gov.br" target="_blank" rel="noopener">PNCP</a> · <a href="https://portaldatransparencia.gov.br/sancoes/consulta" target="_blank" rel="noopener">Portal da Transparência</a> · <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener">Câmara</a> · <a href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener">Senado</a> · <a href="https://dadosabertos.rfb.gov.br" target="_blank" rel="noopener">Receita (CNPJ)</a></div>`;
   $("detalhe").querySelector(".fechar").onclick = fechar;
   if (a.local) map.flyTo({ center: [a.local.lon + 1.6, a.local.lat], zoom: 5.2, duration: 1200 });
 }
@@ -240,15 +246,16 @@ $("aba-sobre").innerHTML = `
   <div class="caixa"><b>Inspiração e créditos</b><p>Operação Serenata de Amor e Querido Diário (Open Knowledge Brasil), ambos de código aberto.</p></div>`;
 
 // ---------- carga ----------
-const [dA, dN, ufGeo] = await Promise.all([
+const [dA, dN, ufGeo, dR] = await Promise.all([
   fetch("/data/alertas.json").then((r) => r.json()).catch(() => ({ alertas: [] })),
   fetch("/data/noticias.json").then((r) => r.json()).catch(() => ({ itens: [] })),
   fetch("/data/uf.geojson").then((r) => r.json()),
+  fetch("/data/risco.json").then((r) => r.json()).catch(() => ({ alertas: [] })),
 ]);
 ufGeo.features.forEach((f) => { f.properties.uf = UF_COD[Number(f.properties.codarea)]; });
-nomes = dA.regras || {};
+nomes = { ...(dA.regras || {}), RF01: "Risco financeiro: banco em crescimento acelerado" };
 const ord = { alta: 0, media: 1, baixa: 2 };
-alertas = dA.alertas.sort((a, b) => ord[a.gravidade] - ord[b.gravidade] || b.total - a.total);
+alertas = [...dA.alertas, ...(dR.alertas || [])].sort((a, b) => ord[a.gravidade] - ord[b.gravidade] || b.total - a.total);
 visiveis = alertas;
 
 // filtro por tipo de alerta
@@ -262,11 +269,11 @@ const contEl = document.createElement("div"); contEl.id = "cont"; contEl.classNa
 const total = alertas.reduce((s, a) => s + a.total, 0);
 $("resumo").innerHTML = `<span><b class="num">${alertas.length}</b>alertas</span><span><b class="num">${brlCurto(total)}</b>envolvidos</span><span><b class="num">${dA.gerado ? data(dA.gerado) : "–"}</b>atualizado</span>`;
 {
-  const altas = alertas.filter((a) => a.gravidade === "alta").length;
-  const n = altas === 0 ? 5 : altas < 8 ? 4 : altas < 40 ? 3 : altas < 120 ? 2 : 1;
+  const altaR = alertas.filter((a) => a.gravidade === "alta").reduce((s, a) => s + (a.total || 0), 0);
+  const n = altaR < 2e9 ? 4 : altaR < 25e9 ? 3 : altaR < 100e9 ? 2 : 1;
   const cor = { 5: "#00ffa6", 4: "#00b8ff", 3: "#ffb300", 2: "#ff7a1a", 1: "#ff2d55" }[n];
   const txt = { 5: "NORMAL", 4: "ATENÇÃO", 3: "ELEVADO", 2: "ALTO", 1: "CRÍTICO" }[n];
-  $("ameaca").style.setProperty("--c", cor);
+  $("ameaca").style.setProperty("--c", cor); $("ameaca").title = `Nível calculado pelo valor total dos alertas de prioridade alta: ${brlCurto(altaR)}`;
   $("ameaca").innerHTML = `<div><small>Nível de ameaça</small><span>${txt}</span></div><b>${n}</b>`;
 }
 lista();
