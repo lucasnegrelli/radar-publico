@@ -34,7 +34,13 @@ for tipo, n in [("Socios", 10), ("Empresas", 10), ("Estabelecimentos", 10)]:
         with zipfile.ZipFile(z) as zf:
             nome = zf.namelist()[0]; zf.extract(nome, TMP)
         csv = TMP / nome
-        duckdb.sql(f"COPY ({sel} FROM read_csv('{csv.as_posix()}', {OPC}, columns={colunas})) TO '{alvo.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
+        enc = "latin-1"
+        if tipo == "Estabelecimentos":  # bytes fora do latin-1 estrito: normaliza para utf-8
+            novo = TMP / (nome + ".utf8")
+            subprocess.run(f'iconv -c -f latin1 -t utf-8 "{csv}" > "{novo}"', shell=True, check=True)
+            csv.unlink(); csv = novo; enc = "utf-8"
+        opc = OPC.replace("latin-1", enc)
+        duckdb.sql(f"COPY ({sel} FROM read_csv('{csv.as_posix()}', {opc}, columns={colunas})) TO '{alvo.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
         csv.unlink(); z.unlink()
         print("ok", alvo.name, flush=True)
 print("FIM", flush=True)
