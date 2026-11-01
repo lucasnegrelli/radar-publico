@@ -7,41 +7,48 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
-  <div id="globe"></div>
-  <div class="vinheta"></div>
-
   <header id="topo">
-    <div class="marca"><span class="alvo"></span><b>RADAR PÚBLICO</b><small>monitor de dinheiro público</small></div>
-    <div class="nivel" id="nivel"><span class="rotulo">NÍVEL DE ATENÇÃO</span><b id="nivel-n">–</b><span id="nivel-t"></span></div>
-    <div class="relogio"><span id="relogio">--:--:--</span><small>BRASÍLIA</small></div>
+    <div class="marca"><span class="alvo"></span><b>Radar Público</b><small>● ao vivo · monitor de dinheiro público</small></div>
+    <nav id="abas">
+      <button data-aba="alertas" class="on">Alertas</button>
+      <button data-aba="risco">Risco financeiro</button>
+      <button data-aba="noticias">Notícias</button>
+      <button data-aba="sobre">Como ler</button>
+    </nav>
+    <div class="resumo" id="resumo"></div>
+    <div class="ameaca" id="ameaca"></div>
   </header>
 
-  <aside id="lista">
-    <h2>ALERTAS <span id="contagem"></span></h2>
-    <div class="filtros" id="filtros">
-      <button data-g="todas" class="on">Todos</button>
-      <button data-g="alta">Alta</button>
-      <button data-g="media">Média</button>
-      <button data-g="baixa">Baixa</button>
+  <main>
+    <aside id="painel">
+      <section id="aba-alertas" class="aba on">
+        <div class="rot">// alvos monitorados</div>
+        <div class="filtros" id="filtros">
+          <button data-g="todas" class="on">Todos</button>
+          <button data-g="alta">Alta</button>
+          <button data-g="media">Média</button>
+          <button data-g="baixa">Baixa</button>
+        </div>
+        <ul id="itens"></ul>
+      </section>
+      <section id="aba-risco" class="aba"></section>
+      <section id="aba-noticias" class="aba"></section>
+      <section id="aba-sobre" class="aba"></section>
+    </aside>
+
+    <div id="mapa"></div>
+    <div class="varre" id="varre"></div>
+    <div class="scan"></div><div class="vinheta"></div>
+    <i class="cb tl"></i><i class="cb tr"></i><i class="cb bl"></i><i class="cb br"></i>
+    <div id="coords">LAT --.-- · LON --.--</div>
+    <section id="detalhe" hidden></section>
+    <div id="legenda">
+      <span style="color:#ff2d55"><i style="background:#ff2d55"></i>Prioridade alta</span>
+      <span style="color:#ffb300"><i style="background:#ffb300"></i>Média</span>
+      <span style="color:#00b8ff"><i style="background:#00b8ff"></i>Baixa</span>
+      <span class="mudo">Rota: de Brasília (quem pagou) até a cidade da empresa (quem recebeu)</span>
     </div>
-    <ul id="itens"></ul>
-  </aside>
-
-  <section id="detalhe" hidden>
-    <button id="fechar" aria-label="Fechar">×</button>
-    <span class="selo" id="d-grav"></span>
-    <h3 id="d-titulo"></h3>
-    <p id="d-texto"></p>
-    <dl>
-      <dt>Valor</dt><dd id="d-valor"></dd>
-      <dt>Período</dt><dd id="d-periodo"></dd>
-      <dt>Destino</dt><dd id="d-destino"></dd>
-      <dt>Fonte</dt><dd id="d-fonte"></dd>
-    </dl>
-    <p class="aviso">Ponto de atenção não é prova de irregularidade. Confira sempre na fonte oficial.</p>
-  </section>
-
-  <footer id="wire"><b>WIRE</b><div class="faixa"><div id="faixa-txt"></div></div></footer>
+  </main>
   <script type="module" src="/main.js"></script>
 </body>
 </html>

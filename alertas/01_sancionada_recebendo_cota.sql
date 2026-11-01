@@ -22,7 +22,7 @@ WITH sancoes AS (
          try_strptime(DATA,'%d/%m/%Y')::date, try_cast(replace(VALOR_REEMBOLSADO,',','.') AS double), TIPO_DESPESA, NULL
   FROM senado_ceaps
 )
-SELECT g.casa, g.parlamentar, g.partido, g.uf, g.fornecedor, s.lista, s.categoria, s.orgao,
+SELECT g.casa, g.parlamentar, g.partido, g.uf, g.fornecedor, g.doc AS cnpj, s.lista, s.categoria, s.orgao,
        CASE WHEN s.abr ILIKE 'Todas as Esferas%' THEN 'AMPLO (todas as esferas)'
             WHEN s.abr ILIKE 'Em todos os Poderes%' THEN 'AMPLO (todos os poderes da esfera)'
             WHEN s.abr ILIKE 'Na Esfera e no Poder%' THEN 'MÉDIO (esfera e poder do órgão)'
