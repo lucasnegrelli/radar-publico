@@ -1,0 +1,22 @@
+name: CNPJ mensal
+on:
+  schedule:
+    - cron: "0 9 15 * *"   # dia 15 de cada mês, 6h SP
+  workflow_dispatch:
+jobs:
+  cnpj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install duckdb huggingface_hub
+      - name: Baixar e converter CNPJ (parte por parte, apaga o bruto)
+        run: python -I ingestao/cnpj.py
+      - name: Enviar snapshot ao Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          export SNAPSHOT=$(cat dados/cnpj_data.txt)
+          python -I ingestao/sync_hf.py subir

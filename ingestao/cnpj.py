@@ -3,10 +3,18 @@ Uso: python cnpj.py [AAAA-MM-DD]. Saída: dados/cnpj/{empresas,estabelecimentos,
 Apaga zip/csv de cada parte depois de converter (economiza disco). Idempotente."""
 import sys, pathlib, subprocess, zipfile, duckdb
 
-DATA = sys.argv[1] if len(sys.argv) > 1 else "2026-10-13"
+def ultima_data():
+    import re
+    html = subprocess.run(["curl", "-sS", "-m", "60", "https://dados-abertos-rf-cnpj.casadosdados.com.br/arquivos/"],
+                          capture_output=True, text=True, check=True).stdout
+    return sorted(set(re.findall(r'href="(\d{4}-\d{2}-\d{2})/"', html)))[-1]
+
+DATA = sys.argv[1] if len(sys.argv) > 1 else ultima_data()
+print("dump:", DATA, flush=True)
 BASE = f"https://dados-abertos-rf-cnpj.casadosdados.com.br/arquivos/{DATA}/"
 RAIZ = pathlib.Path(__file__).parent.parent / "dados"
 TMP, OUT = RAIZ / "tmp_cnpj", RAIZ / "cnpj"
+open(RAIZ / "cnpj_data.txt", "w").write(DATA)
 TMP.mkdir(parents=True, exist_ok=True); OUT.mkdir(parents=True, exist_ok=True)
 
 OPC = "delim=';', quote='\"', escape='\"', header=false, all_varchar=true, encoding='latin-1', strict_mode=false"
