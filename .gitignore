@@ -5,3 +5,6 @@ __pycache__/
 referencias/_*
 
 web/public/data/
+
+# Local Netlify folder
+.netlify
