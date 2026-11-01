@@ -90,7 +90,7 @@ const map = new maplibregl.Map({
 });
 map.touchZoomRotate.disableRotation();
 const vazio = { type: "FeatureCollection", features: [] };
-const MAX_COMETAS = 70;
+const MAX_COMETAS = 36;
 
 function curva(a, b, n = 36) {
   const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
@@ -160,7 +160,9 @@ function montarMapa() {
   const posVarre = () => { const p = map.project(BRASILIA); varre.style.left = p.x + mapaEl.offsetLeft + "px"; varre.style.top = p.y + "px"; };
   map.on("move", posVarre); posVarre();
   map.on("mousemove", (e) => { $("coords").textContent = `LAT ${e.lngLat.lat.toFixed(2)} · LON ${e.lngLat.lng.toFixed(2)}`; });
+  let quadroN = 0;
   (function quadro(t) {
+    if ((quadroN++ & 1) && !map.isMoving()) { requestAnimationFrame(quadro); return; }  // metade dos quadros: alivia a CPU
     const s = (t - t0) / 1000;
     map.setPaintProperty("pulso", "circle-radius", 13 + 5 * Math.sin(s * 2.4));
     const f1 = (s / 2.4) % 1, f2 = (s / 2.4 + 0.5) % 1;
@@ -225,10 +227,53 @@ function abrir(id) {
 }
 function fechar() { $("detalhe").hidden = true; sel = null; lista(); map.setFilter("rotas-sel", ["==", ["get", "id"], ""]); map.fitBounds([[-74, -34], [-34, 5.5]], { padding: { left: 60, right: 40, top: 30, bottom: 70 }, duration: 900 }); }
 
+// ---------- fichas de agente público ----------
+let fichas = null;
+const norm = (x) => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const CARGO = { dep: "Deputado(a) federal", sen: "Senador(a)", pref: "Prefeito(a) eleito(a) em 2024" };
+$("aba-fichas").innerHTML = `<h3>Fichas de agentes públicos</h3><p class="sub2">Busque um deputado, senador ou prefeito. A ficha reúne só dados abertos (gastos, fornecedores, alertas ligados). Não é avaliação de conduta.</p>
+  <input id="busca" type="search" placeholder="Nome, cidade ou UF..." autocomplete="off" style="width:100%;padding:10px 12px;margin:6px 0 12px;background:#06141a;border:1px solid var(--neon);color:#fff;font:14px ui-monospace,Consolas,monospace;outline:none"><div id="res"></div>`;
+async function carregarFichas() {
+  if (fichas) return;
+  $("res").innerHTML = '<p class="sub2">Carregando fichas...</p>';
+  fichas = (await fetch("/data/fichas.json").then((r) => r.json()).catch(() => ({ fichas: [] }))).fichas;
+  fichas.forEach((f) => { f._k = norm([f.n, f.c, f.u, f.p].join(" ")); });
+  buscarFichas();
+}
+function buscarFichas() {
+  const q = norm($("busca").value).trim();
+  const lista = (q ? fichas.filter((f) => q.split(/\s+/).every((w) => f._k.includes(w))) : fichas.filter((f) => f.n_alertas > 0).sort((a, b) => b.n_alertas - a.n_alertas)).slice(0, 40);
+  $("res").innerHTML = (q ? "" : '<div class="rot">// com alertas ligados</div>') + (lista.map((f, i) => `<div class="card" style="--c:#00ffa6" data-i="${fichas.indexOf(f)}"><div class="topo"><div class="nome">${esc(f.n)}</div>${f.n_alertas ? `<div class="valor num" style="color:var(--media)">${f.n_alertas} alerta${f.n_alertas > 1 ? "s" : ""}</div>` : ""}</div><div class="meta">${CARGO[f.t]}${f.c ? " · " + esc(f.c) : ""}${f.p ? " · " + esc(f.p) : ""}${f.u ? "/" + esc(f.u) : ""}</div></div>`).join("") || '<p class="sub2">Nenhuma ficha encontrada.</p>');
+  $("res").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrirFicha(fichas[Number(c.dataset.i)])));
+}
+$("busca").addEventListener("input", () => fichas && buscarFichas());
+function abrirFicha(f) {
+  sel = null; const c = "#00ffa6";
+  const anos = Object.entries(f.anos || {}); const max = Math.max(1, ...anos.map(([, v]) => v));
+  const barras = anos.map(([a, v]) => `<div style="display:grid;grid-template-columns:44px 1fr 92px;gap:8px;align-items:center;margin:4px 0;font-size:12.5px"><span class="sub2">${a}</span><div style="background:#0b2a2c;height:10px"><div style="width:${Math.round(100 * v / max)}%;height:10px;background:var(--neon);box-shadow:0 0 8px var(--neon)"></div></div><span class="num" style="text-align:right">${brlCurto(v)}</span></div>`).join("");
+  const forn = (f.forn || []).map((x) => `<tr><td>${esc(x[0])}</td><td class="v num" style="color:var(--forte)">${brlCurto(x[1])}</td></tr>`).join("");
+  const al = (f.alertas || []).map((id) => { const a = alertas.find((z) => z.id === id); return a ? `<li><a href="#" data-id="${esc(id)}">${esc(a.empresa)}</a> <span class="sub2">· ${esc(nomes[a.regra] || a.regra)} · ${brlCurto(a.total)}</span></li>` : ""; }).join("");
+  const r = f.r05;
+  $("detalhe").hidden = false; $("detalhe").style.setProperty("--c", c);
+  $("detalhe").innerHTML = `
+    <button class="fechar" aria-label="Fechar">×</button>
+    <div class="dos" style="--c:${c}"><span>FICHA · ${CARGO[f.t].toUpperCase()}</span><span class="carimbo">DADOS ABERTOS</span></div>
+    <h2 style="--c:${c}">${esc(f.n)}</h2>
+    <div class="sub2 mono">${f.c ? esc(f.c) + "/" : ""}${esc(f.u || "")}${f.p ? " · " + esc(f.p) : ""}</div>
+    ${f.t === "pref" ? `<div class="manchete" style="--c:${c}">${r ? `Entre os contratos da prefeitura desde 2025, <b>${r.n} empresa${r.n > 1 ? "s" : ""}</b> têm sócio que doou à campanha de 2024, somando <b>${brl(r.v)}</b> em contratos. Doar é legal; o ponto de atenção é o vínculo.` : "Nenhum cruzamento entre doadores da campanha e fornecedores da prefeitura foi encontrado nos dados analisados."}</div>` : `<div class="manchete" style="--c:${c}">${f.pct25 != null ? `Em 2025, o gasto de cota foi maior que o de <b>${f.pct25}%</b> dos deputados.` : "Sem gasto de cota registrado em 2025."} ${f.n_alertas ? `Aparece em <b>${f.n_alertas}</b> alerta${f.n_alertas > 1 ? "s" : ""} (empresa punida paga com a cota).` : "Não aparece em nenhum alerta."}</div>`}
+    ${barras ? `<h4>Gasto da cota por ano</h4>${barras}` : ""}
+    ${forn ? `<h4>Maiores fornecedores (2023 a 2026)</h4><table><tbody>${forn}</tbody></table>` : ""}
+    ${al ? `<h4>Alertas ligados</h4><ul class="check">${al}</ul>` : ""}
+    <p class="aviso">Ficha montada só com dados abertos e sem avaliação de conduta. Gasto alto de cota não indica irregularidade por si só: depende de estado, estrutura de gabinete e uso legítimo.</p>`;
+  $("detalhe").querySelector(".fechar").onclick = () => { $("detalhe").hidden = true; };
+  $("detalhe").querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
+}
+
 // ---------- abas ----------
 $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
   [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
-  document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba)); };
+  document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
+  if (b.dataset.aba === "fichas") carregarFichas(); };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
   [...$("filtros").children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
 
