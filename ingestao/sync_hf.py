@@ -18,8 +18,16 @@ cmd = sys.argv[1] if len(sys.argv) > 1 else "info"
 if cmd == "subir":
     local = pathlib.Path(sys.argv[2] if len(sys.argv) > 2 else RAIZ / "dados" / "cnpj")
     remoto = sys.argv[3] if len(sys.argv) > 3 else "cnpj/" + os.environ.get("SNAPSHOT", "atual")
-    api.upload_folder(repo_id=REPO, repo_type="dataset", folder_path=str(local), path_in_repo=remoto,
-                      allow_patterns=["*.parquet", "*.json", "*.md"], commit_message=f"atualiza {remoto}")
+    import time, random
+    for tentativa in range(8):  # vários trabalhos gravam ao mesmo tempo: repete se houver conflito de commit
+        try:
+            api.upload_folder(repo_id=REPO, repo_type="dataset", folder_path=str(local), path_in_repo=remoto,
+                              allow_patterns=["*.parquet", "*.json", "*.md"], commit_message=f"atualiza {remoto}")
+            break
+        except Exception as e:
+            print("tentativa", tentativa + 1, "falhou:", str(e)[:120]); time.sleep(random.uniform(5, 20) * (tentativa + 1))
+    else:
+        raise SystemExit("não consegui enviar ao Hugging Face")
     print("enviado:", local, "->", REPO + "/" + remoto)
 elif cmd == "baixar":
     snapshot_download(repo_id=REPO, repo_type="dataset", allow_patterns=[sys.argv[2] + "/*"], local_dir=sys.argv[3])
