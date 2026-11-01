@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Radar Público · Monitor de dinheiro público</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div id="globe"></div>
+  <div class="vinheta"></div>
+
+  <header id="topo">
+    <div class="marca"><span class="alvo"></span><b>RADAR PÚBLICO</b><small>monitor de dinheiro público</small></div>
+    <div class="nivel" id="nivel"><span class="rotulo">NÍVEL DE ATENÇÃO</span><b id="nivel-n">–</b><span id="nivel-t"></span></div>
+    <div class="relogio"><span id="relogio">--:--:--</span><small>BRASÍLIA</small></div>
+  </header>
+
+  <aside id="lista">
+    <h2>ALERTAS <span id="contagem"></span></h2>
+    <div class="filtros" id="filtros">
+      <button data-g="todas" class="on">Todos</button>
+      <button data-g="alta">Alta</button>
+      <button data-g="media">Média</button>
+      <button data-g="baixa">Baixa</button>
+    </div>
+    <ul id="itens"></ul>
+  </aside>
+
+  <section id="detalhe" hidden>
+    <button id="fechar" aria-label="Fechar">×</button>
+    <span class="selo" id="d-grav"></span>
+    <h3 id="d-titulo"></h3>
+    <p id="d-texto"></p>
+    <dl>
+      <dt>Valor</dt><dd id="d-valor"></dd>
+      <dt>Período</dt><dd id="d-periodo"></dd>
+      <dt>Destino</dt><dd id="d-destino"></dd>
+      <dt>Fonte</dt><dd id="d-fonte"></dd>
+    </dl>
+    <p class="aviso">Ponto de atenção não é prova de irregularidade. Confira sempre na fonte oficial.</p>
+  </section>
+
+  <footer id="wire"><b>WIRE</b><div class="faixa"><div id="faixa-txt"></div></div></footer>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

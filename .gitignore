@@ -3,3 +3,5 @@ dados/
 __pycache__/
 .env
 referencias/_*
+
+web/public/data/

@@ -1,0 +1,34 @@
+:root{--bg:#05080d;--painel:rgba(8,14,22,.82);--linha:#16314a;--texto:#cfe3f3;--mudo:#6f8aa3;--alta:#ff3b3b;--media:#ffb020;--baixa:#4cc9f0;--verde:#35e0a1}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--texto);font:14px/1.45 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;overflow:hidden}
+#globe{position:fixed;inset:0}
+.vinheta{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65)),repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px)}
+.cesium-viewer-bottom{left:50%!important;transform:translateX(-50%);bottom:34px!important;opacity:.5;font-size:10px}
+#topo{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:linear-gradient(var(--painel),transparent);border-bottom:1px solid var(--linha);z-index:5}
+.marca{display:flex;align-items:center;gap:10px}.marca b{letter-spacing:.18em;color:#fff}.marca small{color:var(--mudo);letter-spacing:.08em}
+.alvo{width:14px;height:14px;border:2px solid var(--verde);border-radius:50%;position:relative;animation:pulso 2s infinite}
+.alvo::after{content:"";position:absolute;inset:3px;background:var(--verde);border-radius:50%}
+@keyframes pulso{50%{box-shadow:0 0 0 7px rgba(53,224,161,.08)}}
+.nivel{display:flex;align-items:center;gap:12px;padding:6px 14px;border:1px solid var(--linha);background:var(--painel)}
+.nivel .rotulo{color:var(--mudo);font-size:11px;letter-spacing:.14em}.nivel b{font-size:22px;color:var(--c,#fff)}
+.relogio{text-align:right}.relogio span{font-size:18px;color:#fff}.relogio small{display:block;color:var(--mudo);font-size:10px;letter-spacing:.2em}
+#lista{position:fixed;top:66px;left:14px;bottom:46px;width:330px;background:var(--painel);border:1px solid var(--linha);backdrop-filter:blur(6px);display:flex;flex-direction:column;z-index:4}
+#lista h2{font-size:12px;letter-spacing:.2em;color:var(--mudo);padding:12px 14px 8px}
+.filtros{display:flex;gap:4px;padding:0 14px 10px}.filtros button{flex:1;background:none;border:1px solid var(--linha);color:var(--mudo);padding:4px 0;font:inherit;font-size:11px;cursor:pointer}
+.filtros button.on{border-color:var(--verde);color:var(--verde)}
+#itens{list-style:none;overflow:auto;padding:0 8px 8px}
+#itens li{padding:10px;border:1px solid transparent;border-left:3px solid var(--c);margin-bottom:6px;background:rgba(255,255,255,.025);cursor:pointer}
+#itens li:hover,#itens li.sel{border-color:var(--c);background:rgba(255,255,255,.06)}
+#itens .t{color:#fff;font-size:13px}#itens .m{color:var(--mudo);font-size:11px;margin-top:3px}
+#detalhe{position:fixed;top:66px;right:14px;width:360px;background:var(--painel);border:1px solid var(--linha);backdrop-filter:blur(6px);padding:18px;z-index:4}
+#detalhe[hidden]{display:none}
+#fechar{position:absolute;top:8px;right:12px;background:none;border:0;color:var(--mudo);font-size:22px;cursor:pointer}
+.selo{display:inline-block;padding:2px 8px;font-size:11px;letter-spacing:.14em;border:1px solid var(--c);color:var(--c);text-transform:uppercase}
+#detalhe h3{margin:10px 0 8px;color:#fff;font-size:16px}#d-texto{color:var(--texto);margin-bottom:12px}
+dl{display:grid;grid-template-columns:70px 1fr;gap:4px 10px;border-top:1px solid var(--linha);padding-top:10px}dt{color:var(--mudo)}dd{color:#fff}
+.aviso{margin-top:12px;font-size:11px;color:var(--mudo);border-left:2px solid var(--media);padding-left:8px}
+#wire{position:fixed;left:0;right:0;bottom:0;height:34px;display:flex;align-items:center;gap:12px;background:var(--painel);border-top:1px solid var(--linha);z-index:5;padding-left:14px}
+#wire b{color:var(--alta);letter-spacing:.2em;font-size:12px}.faixa{overflow:hidden;flex:1;white-space:nowrap}
+#faixa-txt{display:inline-block;padding-left:100%;animation:corre 120s linear infinite;color:var(--mudo)}#faixa-txt span{margin-right:60px}#faixa-txt a{color:var(--texto);text-decoration:none}
+@keyframes corre{to{transform:translateX(-100%)}}
+@media(max-width:900px){#lista{width:auto;right:14px;bottom:auto;max-height:36vh}#detalhe{top:auto;bottom:46px;left:14px;right:14px;width:auto}.marca small{display:none}}
