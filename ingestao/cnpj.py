@@ -1,7 +1,7 @@
 """Baixa o dump de CNPJ (espelho casadosdados da base da Receita) e converte para Parquet enxuto.
 Uso: python cnpj.py [AAAA-MM-DD]. Saída: dados/cnpj/{empresas,estabelecimentos,socios}_N.parquet.
 Apaga zip/csv de cada parte depois de converter (economiza disco). Idempotente."""
-import sys, pathlib, urllib.request, zipfile, duckdb
+import sys, pathlib, subprocess, zipfile, duckdb
 
 DATA = sys.argv[1] if len(sys.argv) > 1 else "2026-10-13"
 BASE = f"https://dados-abertos-rf-cnpj.casadosdados.com.br/arquivos/{DATA}/"
@@ -29,7 +29,8 @@ for tipo, n in [("Socios", 10), ("Empresas", 10), ("Estabelecimentos", 10)]:
         if alvo.exists(): continue
         z = TMP / f"{tipo}{i}.zip"
         print("baixando", z.name, flush=True)
-        urllib.request.urlretrieve(BASE + z.name, z)
+        if not z.exists() or z.stat().st_size < 1000:
+            subprocess.run(["curl", "-sS", "--fail", "-m", "3600", "-o", str(z), BASE + z.name], check=True)
         with zipfile.ZipFile(z) as zf:
             nome = zf.namelist()[0]; zf.extract(nome, TMP)
         csv = TMP / nome

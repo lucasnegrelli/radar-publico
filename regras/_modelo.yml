@@ -1,0 +1,12 @@
+# Modelo de regra de detecção (estilo Sigma, em português claro)
+id: R01
+nome: Fornecedor de cota parlamentar com sanção vigente
+tipologia: T6
+gravidade: media        # baixa | media | alta | critica
+explicacao_simples: >
+  Esta empresa recebeu dinheiro da cota de um parlamentar numa data em que constava
+  na lista de empresas punidas pelo governo. Pode haver explicação legal (a punição
+  pode valer só para um órgão). Vale conferir.
+fontes: [Câmara CEAP, Senado CEAPS, CEIS, CNEP]
+consulta: ../alertas/01_sancionada_recebendo_cota.sql
+falsos_positivos: sanção restrita a um órgão; homônimo; data de emissão errada

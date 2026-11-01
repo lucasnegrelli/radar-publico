@@ -2,3 +2,4 @@ dados/
 *.duckdb
 __pycache__/
 .env
+referencias/_*
