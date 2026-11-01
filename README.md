@@ -21,5 +21,6 @@ sempre com link para a fonte oficial.
 ## Status
 - [x] PNCP responde sem chave (testado 31/10/2026)
 - [ ] Querido Diário API: handshake SSL falhando em 31/10, retestar
-- [ ] Primeira ingestão PNCP -> DuckDB
+- [x] Ingestão -> DuckDB (PNCP, CEAP Câmara, CEAPS Senado, TSE 2024, SICONFI, deputados)
+- [ ] CNPJ da Receita (servidor não conecta daqui, achar espelho)
 - [ ] Alerta 1: empresa nova com contrato grande
