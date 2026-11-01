@@ -24,5 +24,10 @@ if tem("csv/senado_ceaps_*.csv"):
 if tem("csv/receitas_candidatos_*.csv"):
     q(f"CREATE OR REPLACE TABLE tse_receitas AS SELECT * FROM read_csv('{(D/'csv'/'receitas_candidatos_*.csv').as_posix()}', delim=';', header=true, all_varchar=true, encoding='latin-1', union_by_name=true, ignore_errors=true)")
 
+for nome in ("ceis", "cnep"):
+    if tem(f"csv/*_{nome.upper()}.csv"):
+        q(f"CREATE OR REPLACE TABLE {nome} AS SELECT * FROM read_csv(?, delim=';', header=true, all_varchar=true, encoding='latin-1', strict_mode=false)",
+          [(D / "csv" / f"*_{nome.upper()}.csv").as_posix()])
+
 for (t,) in q("SHOW TABLES").fetchall():
     print(f"{t:20s}", q(f"SELECT count(*) FROM {t}").fetchone()[0], "linhas")

@@ -23,4 +23,6 @@ sempre com link para a fonte oficial.
 - [ ] Querido Diário API: handshake SSL falhando em 31/10, retestar
 - [x] Ingestão -> DuckDB (PNCP, CEAP Câmara, CEAPS Senado, TSE 2024, SICONFI, deputados)
 - [ ] CNPJ da Receita (servidor não conecta daqui, achar espelho)
-- [ ] Alerta 1: empresa nova com contrato grande
+- [x] Alerta 1: fornecedor de cota parlamentar com sanção vigente (CEIS/CNEP), ver alertas/01
+- [ ] Alerta 2: doador de campanha que virou fornecedor
+- [ ] Alerta 3: empresa nova com contrato grande (precisa do CNPJ da Receita)
