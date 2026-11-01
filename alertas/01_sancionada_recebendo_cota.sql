@@ -3,12 +3,12 @@
 -- Coluna "alcance" separa o que bloqueia contratação em toda a administração do que é restrito a um órgão.
 WITH sancoes AS (
   SELECT 'CEIS' AS lista, lpad(regexp_replace("CPF OU CNPJ DO SANCIONADO",'\D','','g'),14,'0') AS doc,
-         "CATEGORIA DA SANÇÃO" AS categoria, "ÓRGÃO SANCIONADOR" AS orgao, "ABRAGÊNCIA DA SANÇÃO" AS abr,
+         "CATEGORIA DA SANÇÃO" AS categoria, "ÓRGÃO SANCIONADOR" AS orgao, "ABRAGÊNCIA DA SANÇÃO" AS abr, "ESFERA ÓRGÃO SANCIONADOR" AS esf,
          try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date AS ini, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date AS fim
   FROM ceis
   UNION ALL
   SELECT 'CNEP', lpad(regexp_replace("CPF OU CNPJ DO SANCIONADO",'\D','','g'),14,'0'),
-         "CATEGORIA DA SANÇÃO","ÓRGÃO SANCIONADOR","ABRAGÊNCIA DA SANÇÃO",
+         "CATEGORIA DA SANÇÃO","ÓRGÃO SANCIONADOR","ABRAGÊNCIA DA SANÇÃO","ESFERA ÓRGÃO SANCIONADOR",
          try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date
   FROM cnep
 ), gastos AS (
@@ -31,4 +31,5 @@ SELECT g.casa, g.parlamentar, g.partido, g.uf, g.fornecedor, g.doc AS cnpj, s.li
        s.ini AS sancao_inicio, s.fim AS sancao_fim, g.emissao, g.valor, g.tipo, g.url
 FROM gastos g JOIN sancoes s ON g.doc = s.doc AND g.doc <> '00000000000000'
 WHERE g.emissao >= s.ini AND (s.fim IS NULL OR g.emissao <= s.fim)
+  AND (s.abr ILIKE 'Todas as Esferas%' OR s.esf ILIKE 'Federal%' OR s.abr NOT ILIKE 'Em todos os Poderes%' AND s.abr NOT ILIKE 'Na Esfera e no Poder%')
 ORDER BY (alcance LIKE 'AMPLO%') DESC, g.valor DESC;
