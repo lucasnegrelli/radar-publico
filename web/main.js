@@ -1,5 +1,8 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
+import { MapboxOverlay } from "@deck.gl/mapbox";
+import { PathLayer, ColumnLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { TripsLayer } from "@deck.gl/geo-layers";
 
 const COR = { alta: "#ff2d55", media: "#ffb300", baixa: "#00b8ff" };
 const NOME_G = { alta: "Prioridade alta", media: "Prioridade média", baixa: "Prioridade baixa" };
@@ -99,9 +102,8 @@ const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
   style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, layers: [{ id: "fundo", type: "background", paint: { "background-color": "#04090e" } }] },
   bounds: MAPA_BOUNDS, fitBoundsOptions: { padding: 8 },
-  minZoom: 1.5, maxZoom: 10, dragRotate: false, pitchWithRotate: false,
+  minZoom: 1.5, maxZoom: 10, dragRotate: true, pitchWithRotate: true, maxPitch: 60,
 });
-map.touchZoomRotate.disableRotation();
 const vazio = { type: "FeatureCollection", features: [] };
 
 function curva(a, b, n = 40) {
@@ -111,71 +113,103 @@ function curva(a, b, n = 40) {
     return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]; });
 }
 
+function grade() {
+  const f = [];
+  for (let x = -75; x <= -30; x += 5) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[x, -36], [x, 8]] } });
+  for (let y = -35; y <= 7; y += 5) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[-76, y], [-28, y]] } });
+  return { type: "FeatureCollection", features: f };
+}
 let alertas = [], visiveis = [], filtroG = "todas", filtroR = "todas", sel = null, nomes = {};
-const ptsGeo = (lista) => ({ type: "FeatureCollection", features: lista.filter((a) => a.local).map((a) => ({ type: "Feature", properties: { id: a.id, g: a.gravidade, t: Math.log10(Math.max(a.total, 1000)) }, geometry: { type: "Point", coordinates: [a.local.lon, a.local.lat] } })) });
+const RGB = { alta: [255, 45, 85], media: [255, 179, 0], baixa: [0, 184, 255] };
+const ADITIVO = { blend: true, blendColorOperation: "add", blendColorSrcFactor: "src-alpha", blendColorDstFactor: "one", blendAlphaSrcFactor: "one", blendAlphaDstFactor: "one" };
 function corUF(lista) {
   const por = {}; lista.filter((a) => a.local).forEach((a) => { por[a.local.uf] = (por[a.local.uf] || 0) + 1; });
   const casos = ["match", ["get", "uf"]];
   Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 40 ? "#244a5e" : n >= 15 ? "#1d3d50" : n >= 5 ? "#18323f" : "#132a36"));
   casos.push("#0f212b"); return casos;
 }
-function atualizarMapa() {
-  if (!map.getSource("pontos")) return;
-  map.getSource("pontos").setData(ptsGeo(visiveis));
-  map.setPaintProperty("uf-fill", "fill-color", corUF(visiveis));
+
+// ----- dados derivados para o deck.gl -----
+let trilhas = [], colunas = [], pulsos = [], rotaSel = null, overlay = null;
+function derivar() {
+  const comRota = visiveis.filter((a) => a.local && a.origem);
+  trilhas = comRota.map((a, k) => { const caminho = curva([a.origem.lon, a.origem.lat], [a.local.lon, a.local.lat], 28); const fase = (k * 0.137) % 1;
+    return { id: a.id, g: a.gravidade, w: Math.min(2.6, 0.7 + Math.log10(Math.max(a.total, 1000)) * 0.28), path: caminho, ts: caminho.map((_, i) => fase + i / 28 * 0.9) }; });
+  const por = new Map();
+  visiveis.filter((a) => a.local).forEach((a) => { const k = a.local.cidade + "|" + a.local.uf; let c = por.get(k);
+    if (!c) por.set(k, (c = { pos: [a.local.lon, a.local.lat], cidade: a.local.cidade, uf: a.local.uf, n: 0, total: 0, topo: a, alta: 0 }));
+    c.n++; c.total += a.total; if (a.gravidade === "alta") c.alta++; if (a.total > c.topo.total) c.topo = a; });
+  colunas = [...por.values()].map((c) => ({ ...c, g: c.alta / c.n >= 0.35 ? "alta" : c.alta / c.n > 0 || c.topo.gravidade === "media" ? "media" : "baixa" }));
+  pulsos = [...colunas].sort((a, b) => b.total - a.total).slice(0, 18);
 }
+const altura = (v) => Math.max(8000, (Math.log10(Math.max(v, 1000)) - 2.6) * 95000);
+function camadas(tempo) {
+  const L = [];
+  L.push(new PathLayer({ id: "rotas-base", data: trilhas, getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 70], getWidth: (d) => d.w, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new TripsLayer({ id: "pulsos-rota", data: trilhas, getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => [...RGB[d.g], 255], widthMinPixels: 2.2, capRounded: true, jointRounded: true, trailLength: 0.34, currentTime: tempo, parameters: ADITIVO }));
+  L.push(new ColumnLayer({ id: "colunas", data: colunas, diskResolution: 6, radius: 19000, extruded: true, getPosition: (d) => d.pos, getElevation: (d) => altura(d.total), getFillColor: (d) => [...RGB[d.g], 210],
+    material: { ambient: 0.7, diffuse: 0.5, shininess: 30, specularColor: [255, 255, 255] }, pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 120], onClick: (i) => i.object && abrir(i.object.topo.id) }));
+  L.push(new ScatterplotLayer({ id: "anel-pulso", data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 10 + 26 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(200 * (1 - (tempo % 1)))], getLineWidth: 1.5, lineWidthUnits: "pixels", parameters: ADITIVO }));
+  if (rotaSel) {
+    L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 14, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
+    L.push(new PathLayer({ id: "sel", data: [rotaSel], getPath: (d) => d.path, getColor: [255, 255, 255, 255], getWidth: 3, widthUnits: "pixels", capRounded: true }));
+  }
+  return L;
+}
+function atualizarMapa() { if (!overlay) return; derivar(); map.setPaintProperty("uf-fill", "fill-color", corUF(visiveis)); }
 function mostrarRota(a) {
-  if (!map.getSource("rota")) return;
   const o = a.origem, d = a.local;
-  if (!o || !d) { map.getSource("rota").setData(vazio); return; }
-  map.getSource("rota").setData({ type: "Feature", properties: { g: a.gravidade }, geometry: { type: "LineString", coordinates: curva([o.lon, o.lat], [d.lon, d.lat]) } });
+  if (!o || !d) { rotaSel = null; return; }
+  rotaSel = { g: a.gravidade, path: curva([o.lon, o.lat], [d.lon, d.lat], 60) };
   const b = new maplibregl.LngLatBounds([o.lon, o.lat], [o.lon, o.lat]).extend([d.lon, d.lat]);
   map.fitBounds(b, { padding: { top: 90, bottom: 90, left: 90, right: 560 }, maxZoom: 7, duration: 1100 });
 }
-const limparRota = () => map.getSource("rota") && map.getSource("rota").setData(vazio);
+const limparRota = () => { rotaSel = null; };
 
 function montarMapa() {
   const corG = ["match", ["get", "g"], "alta", COR.alta, "media", COR.media, COR.baixa];
-  // mundo ao fundo, discreto
   map.addSource("mundo", { type: "geojson", data: mundoGeo });
   map.addLayer({ id: "mundo-fill", type: "fill", source: "mundo", paint: { "fill-color": "#0a151d" } });
   map.addLayer({ id: "mundo-line", type: "line", source: "mundo", paint: { "line-color": "#16303d", "line-width": 0.6 } });
-  // Brasil em destaque
+  map.addSource("grade", { type: "geojson", data: grade() });
+  map.addLayer({ id: "grade", type: "line", source: "grade", paint: { "line-color": "#00ffa6", "line-width": 0.5, "line-opacity": 0.07 } });
   map.addSource("ufs", { type: "geojson", data: ufGeo });
   map.addLayer({ id: "uf-fill", type: "fill", source: "ufs", paint: { "fill-color": corUF(visiveis) } });
-  map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#2d7f78", "line-width": 0.9, "line-opacity": 0.8 } });
-  // voos internacionais (opcional)
+  map.addLayer({ id: "uf-glow", type: "line", source: "ufs", paint: { "line-color": "#00ffa6", "line-width": 4, "line-blur": 4, "line-opacity": 0.14 } });
+  map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#19f0b4", "line-width": 0.8, "line-opacity": 0.5 } });
   map.addSource("voos", { type: "geojson", data: vazio });
-  map.addLayer({ id: "voos-arco", type: "line", source: "voos", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": "#b388ff", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1, 100, 4], "line-opacity": 0.7 } });
+  map.addLayer({ id: "voos-arco", type: "line", source: "voos", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": "#b388ff", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1, 100, 4], "line-opacity": 0.75 } });
   map.addLayer({ id: "voos-ponto", type: "circle", source: "voos", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none" }, paint: { "circle-color": "#b388ff", "circle-radius": ["interpolate", ["linear"], ["get", "n"], 1, 4, 100, 12], "circle-stroke-color": "#fff", "circle-stroke-width": 1 } });
   map.addLayer({ id: "voos-nome", type: "symbol", source: "voos", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none", "text-field": ["concat", ["get", "pais"], " · ", ["to-string", ["get", "n"]]], "text-font": ["Open Sans Regular"], "text-size": 11, "text-offset": [0, 1.2], "text-anchor": "top" }, paint: { "text-color": "#d9c8ff", "text-halo-color": "#04090e", "text-halo-width": 1.5 } });
-  // rota do alerta selecionado
-  map.addSource("rota", { type: "geojson", data: vazio });
-  map.addLayer({ id: "rota-brilho", type: "line", source: "rota", paint: { "line-color": corG, "line-width": 8, "line-blur": 6, "line-opacity": 0.35 } });
-  map.addLayer({ id: "rota", type: "line", source: "rota", layout: { "line-cap": "round" }, paint: { "line-color": "#ffffff", "line-width": 2.4 } });
-  // alertas agrupados
-  map.addSource("pontos", { type: "geojson", data: ptsGeo(visiveis), cluster: true, clusterRadius: 42, clusterMaxZoom: 8,
-    clusterProperties: { alta: ["+", ["case", ["==", ["get", "g"], "alta"], 1, 0]], media: ["+", ["case", ["==", ["get", "g"], "media"], 1, 0]] } });
-  const corC = ["case", [">=", ["/", ["get", "alta"], ["get", "point_count"]], 0.35], COR.alta, [">=", ["/", ["+", ["get", "alta"], ["get", "media"]], ["get", "point_count"]], 0.35], COR.media, COR.baixa];
-  map.addLayer({ id: "cluster", type: "circle", source: "pontos", filter: ["has", "point_count"], paint: { "circle-color": corC, "circle-opacity": 0.85, "circle-radius": ["step", ["get", "point_count"], 14, 5, 18, 20, 23, 60, 29], "circle-stroke-color": "#04090e", "circle-stroke-width": 2 } });
-  map.addLayer({ id: "cluster-n", type: "symbol", source: "pontos", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Open Sans Regular"], "text-size": 12 }, paint: { "text-color": "#04090e" } });
-  map.addLayer({ id: "pontos", type: "circle", source: "pontos", filter: ["!", ["has", "point_count"]], paint: { "circle-color": corG, "circle-radius": ["interpolate", ["linear"], ["get", "t"], 3, 4, 5, 7, 7, 11], "circle-stroke-color": "#04090e", "circle-stroke-width": 1.5 } });
-  const el = document.createElement("div"); el.innerHTML = '<div style="color:#00ffa6;font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-shadow:0 0 6px #000">◉ BRASÍLIA</div>';
+  const el = document.createElement("div"); el.innerHTML = '<div style="color:#00ffa6;font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.14em;text-shadow:0 0 8px #00ffa6">◉ BRASÍLIA</div>';
   new maplibregl.Marker({ element: el, anchor: "left" }).setLngLat(BRASILIA).addTo(map);
 
-  map.on("click", "cluster", async (e) => {
-    const f = e.features[0]; const z = await map.getSource("pontos").getClusterExpansionZoom(f.properties.cluster_id);
-    map.easeTo({ center: f.geometry.coordinates, zoom: z + 0.3 });
-  });
-  map.on("click", "pontos", (e) => abrir(e.features[0].properties.id));
-  ["pontos", "cluster", "voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
+  derivar();
+  overlay = new MapboxOverlay({ interleaved: false, layers: camadas(0), getTooltip: ({ object, layer }) => {
+    if (!object) return null;
+    if (layer.id === "colunas") return { className: "deck-tip", html: `<b>${esc(object.cidade)}/${esc(object.uf)}</b><br>${plural(object.n, "alerta", "alertas")} · ${brlCurto(object.total)}<br><span style="opacity:.7">clique para abrir o maior</span>` };
+    if (layer.id === "rotas-base") { const a = alertas.find((x) => x.id === object.id); return a ? { className: "deck-tip", html: `<b>${esc(a.empresa)}</b><br>${brlCurto(a.total)}` } : null; }
+    return null; } });
+  map.addControl(overlay);
+  map.easeTo({ pitch: 38, duration: 1600 });
+
+  map.on("click", "voos-ponto", () => {});
+  ["voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
   const dica = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
-  map.on("mousemove", "pontos", (e) => { const a = alertas.find((x) => x.id === e.features[0].properties.id); if (a) dica.setLngLat(e.lngLat).setHTML(`<b>${esc(a.empresa)}</b><br>${esc(a.local.cidade)}/${esc(a.local.uf)} · ${brlCurto(a.total)}`).addTo(map); });
-  map.on("mouseleave", "pontos", () => dica.remove());
   map.on("mousemove", "voos-ponto", (e) => dica.setLngLat(e.lngLat).setHTML(`<b>${esc(e.features[0].properties.pais)}</b><br>${e.features[0].properties.n} voos pagos com a cota`).addTo(map));
   map.on("mouseleave", "voos-ponto", () => dica.remove());
   map.on("mousemove", (e) => { $("coords").textContent = `LAT ${e.lngLat.lat.toFixed(2)} · LON ${e.lngLat.lng.toFixed(2)}`; });
   $("tg-voos").onchange = (e) => alternarVoos(e.target.checked);
+
+  const varre = $("varre"), mapaEl = $("mapa");
+  const posVarre = () => { const p = map.project(BRASILIA); varre.style.left = p.x + mapaEl.offsetLeft + "px"; varre.style.top = p.y + "px"; };
+  map.on("move", posVarre); posVarre();
+  const t0 = performance.now(); let q = 0;
+  (function quadro(t) {
+    if ((q++ & 1) && !map.isMoving()) { requestAnimationFrame(quadro); return; }
+    overlay.setProps({ layers: camadas(((t - t0) / 2600) % 1.5) });
+    requestAnimationFrame(quadro);
+  })(t0);
 }
 async function alternarVoos(on) {
   const v = on ? "visible" : "none";

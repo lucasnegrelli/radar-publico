@@ -81,3 +81,13 @@ ul.check{padding-left:18px;color:var(--texto);font-size:13px}ul.check li{margin:
 .barra{height:8px;background:#0b2a2c}.barra i{display:block;height:8px;background:var(--neon)}
 .dim{opacity:.6}
 .diario{border-left:2px solid var(--ciano);padding:6px 10px;margin:8px 0;background:rgba(0,229,255,.05);font-size:12.5px}.diario small{color:var(--mudo);display:block}
+
+/* ===== v3: HUD de volta (o que funcionou) + refinamento ===== */
+.scan,.vinheta,.varre,.cb{display:block!important}
+.scan{background:repeating-linear-gradient(0deg,rgba(0,255,166,.028) 0 1px,transparent 1px 3px)}
+.vinheta{background:radial-gradient(ellipse at center,transparent 58%,rgba(0,0,0,.62))}
+.varre{opacity:.55}
+.cb{opacity:.8}
+.marca b{text-shadow:0 0 12px var(--neon);animation:none}
+.deck-tip{background:rgba(0,0,0,.92)!important;border:1px solid var(--neon)!important;color:#c9f3ea!important;font:12px ui-monospace,Consolas,monospace!important;padding:8px 12px!important;box-shadow:0 0 18px rgba(0,255,166,.4)!important;border-radius:0!important}
+.deck-tip b{color:#fff}

@@ -77,13 +77,7 @@ alertas = []
 # lista de observação atual: sinal sustentado por >= 4 trimestres terminando no último trimestre
 for cod, d in corridas.items():
     if d["seq"].get(ultimo, 0) >= 2: alertas.append(montar(cod, d, ultimo))
-# caso de referência: Master (backtest)
-for cod, d in corridas.items():
-    if d["nome"].startswith("BANCO MASTER - PRUDENCIAL"):
-        pico = max(d["seq"].items(), key=lambda kv: kv[1])
-        alertas.append(montar(cod, d, pico[0], ref=True))
-        primeira = next(am for am in sorted(d["seq"]) if d["seq"][am] >= 1)
-        print("Master: sinal de", fmt_trim(primeira), "até", fmt_trim(pico[0]), "(", pico[1], "trimestres seguidos )")
+# (o Banco Master NÃO entra aqui: é uma investigação cadastrada em casos/, validada por testes internos)
 
 saida = {"gerado": str(datetime.date.today()), "ultimo_trimestre": ultimo, "alertas": alertas}
 (RAIZ / "web" / "public" / "data" / "risco.json").write_text(json.dumps(saida, ensure_ascii=False, default=str), encoding="utf-8")

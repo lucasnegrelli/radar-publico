@@ -6,16 +6,20 @@ permissions:
 jobs:
   buscar:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: python ingestao/diarios.py
-      - name: Salvar resultado no repositório
+      - name: Investigações (casos)
+        run: python ingestao/diarios_casos.py master
+      - name: Empresas dos alertas
+        run: python ingestao/diarios.py
+      - name: Salvar resultados no repositório
         run: |
           git config user.name "radar-publico-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data-publica/diarios.json
-          git diff --cached --quiet || git commit -m "diários oficiais: menções das empresas dos alertas"
+          git add data-publica/
+          git diff --cached --quiet || git commit -m "diários oficiais: casos e empresas dos alertas"
+          git pull --rebase -q
           git push

@@ -1,0 +1,13 @@
+{
+  "caso": "master",
+  "consultas": [
+    "\"Banco Master\" \"letra financeira\"",
+    "\"Banco Master\" RPPS",
+    "\"Banco Master\" \"instituto de previdência\"",
+    "\"Banco Master\" \"comitê de investimentos\"",
+    "\"Banco Master\" CDB",
+    "\"Banco Master\" aplicação",
+    "\"Banco Master S/A\""
+  ],
+  "desde": "2022-01-01"
+}

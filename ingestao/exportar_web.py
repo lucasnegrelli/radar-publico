@@ -121,9 +121,67 @@ if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
     for a in alertas:
         if a["regra"] != "R01": a["origem"] = mapa.get((a.get("orgao_municipio"), a.get("orgao_uf")), BRASILIA)
 
+PAIS_XY = {"LUXEMBURGO": (49.8, 6.1), "SUICA": (46.8, 8.2), "MALTA": (35.9, 14.4), "BERMUDAS": (32.3, -64.8), "URUGUAI": (-32.5, -55.8), "CAYMAN": (19.3, -81.25), "VIRGENS": (18.4, -64.6),
+    "PANAMA": (8.5, -80.8), "SINGAPURA": (1.35, 103.8), "HONG KONG": (22.3, 114.2), "EMIRADOS": (24.4, 54.4), "CHIPRE": (35.0, 33.0), "BAHAMAS": (25.0, -77.4), "MONACO": (43.7, 7.4), "ANDORRA": (42.5, 1.6),
+    "JERSEY": (49.2, -2.1), "BARBADOS": (13.2, -59.5), "BELIZE": (17.2, -88.5), "SEYCHELLES": (-4.7, 55.5), "MAURICIO": (-20.3, 57.6), "COSTA RICA": (9.9, -84.0), "LIBANO": (33.9, 35.5), "LIBERIA": (6.4, -9.4),
+    "MALDIVAS": (3.2, 73.2), "ANGUILLA": (18.2, -63.05), "ARUBA": (12.5, -70.0), "TURKS": (21.7, -71.8), "SAMOA": (-13.8, -172.1), "VANUATU": (-15.4, 166.9), "MARSHALL": (7.1, 171.2), "GIBRALTAR": (36.1, -5.35),
+    "LIECHTENSTEIN": (47.2, 9.5), "MAN": (54.2, -4.5), "GUERNSEY": (49.5, -2.6), "ANTIGUA": (17.1, -61.8), "SANTA LUCIA": (13.9, -61.0), "MACAU": (22.2, 113.5)}
+def _xy(nome):
+    n = (nome or "").upper().replace("Í", "I").replace("Ç", "C").replace("Ã", "A").replace("Ê", "E").replace("Ú", "U").replace("Ô", "O")
+    return next(({"lat": v[0], "lon": v[1]} for k, v in PAIS_XY.items() if k in n), None)
+for a in alertas:
+    if a["regra"] == "R08": a["manchete"]["pais_xy"] = _xy(a["manchete"]["pais"])
+
+# 2) correlação: a mesma empresa em 2+ regras vira "sinais combinados"
+from collections import defaultdict
+por_emp = defaultdict(list)
+for a in alertas:
+    if a["regra"] != "RF01" and a.get("cnpj") and not a["cnpj"].startswith("CPF"): por_emp[a["cnpj"]].append(a)
+for cn, lst in por_emp.items():
+    regs = sorted({x["regra"] for x in lst})
+    if len(regs) >= 2:
+        for x in lst:
+            x["correlacao"] = [{"id": y["id"], "regra": y["regra"]} for y in lst if y["regra"] != x["regra"]][:6]
+incidentes = sorted(({"cnpj": cn, "empresa": lst[0]["empresa"], "regras": sorted({x["regra"] for x in lst}), "total": max(x["total"] for x in lst)} for cn, lst in por_emp.items() if len({x["regra"] for x in lst}) >= 2),
+                    key=lambda i: (-len(i["regras"]), -i["total"]))
+
+# 3) histórico: o que é novo desde a última rodada (baseline = primeira rodada)
+hist_f = RAIZ / "data-publica" / "historico.json"; hoje = str(datetime.date.today())
+hist = json.loads(hist_f.read_text(encoding="utf-8")) if hist_f.exists() else {"baseline": hoje, "ids": {}}
+primeira_rodada = not hist["ids"]
+for a in alertas:
+    vis = hist["ids"].setdefault(a["id"], hist["baseline"] if primeira_rodada else hoje)
+    a["visto_em"] = vis; a["novo"] = (vis != hist["baseline"]) and (datetime.date.fromisoformat(hoje) - datetime.date.fromisoformat(vis)).days <= 14
+hist_f.parent.mkdir(exist_ok=True); hist_f.write_text(json.dumps(hist, ensure_ascii=False), encoding="utf-8")
+
 contagem = {}
 for a in alertas: contagem.setdefault(a["regra"], {"alta": 0, "media": 0, "baixa": 0})[a["gravidade"]] += 1
-saida = {"gerado": str(datetime.date.today()), "regras": NOME_REGRA, "contagem": contagem, "alertas": alertas}
+saida = {"gerado": str(datetime.date.today()), "regras": NOME_REGRA, "contagem": contagem, "incidentes": incidentes[:100], "alertas": alertas}
 out = RAIZ / "web" / "public" / "data"; out.mkdir(parents=True, exist_ok=True)
 (out / "alertas.json").write_text(json.dumps(saida, ensure_ascii=False, default=str), encoding="utf-8")
 print(len(alertas), "alertas |", {k: sum(v.values()) for k, v in contagem.items()}, "|", sum(1 for a in alertas if a["local"]), "localizados")
+
+
+# ---------- saúde das fontes (o que cada base cobre e até quando) ----------
+def um(sql, default=None):
+    try: return con.execute(sql).fetchone()
+    except Exception: return default
+pn = um("select count(*), min(data_assinatura), max(data_assinatura) from pncp") or (0, None, None)
+ce = um("select count(*), min(left(datEmissao,10)), max(left(datEmissao,10)) from camara_ceap") or (0, None, None)
+se = um("select count(*) from senado_ceaps") or (0,)
+tr = um("select count(*) from tse_receitas") or (0,)
+cd = (RAIZ / "dados" / "cnpj_data.txt").read_text().strip() if (RAIZ / "dados" / "cnpj_data.txt").exists() else "2026-10-13"
+fontes = [
+ {"fonte": "PNCP (contratos)", "cobertura": f"{pn[1]} a {pn[2]}", "linhas": pn[0], "atualizado": hoje, "lacuna": "Valores digitados errados na origem (filtrados em parte). Contratos de 2020 a 2024 não foram baixados."},
+ {"fonte": "Cota parlamentar (Câmara)", "cobertura": f"{ce[1]} a {ce[2]}", "linhas": ce[0], "atualizado": hoje, "lacuna": "Data = emissão da nota. Não mostra se o gasto foi legítimo."},
+ {"fonte": "Cota parlamentar (Senado)", "cobertura": "2025 e 2026", "linhas": se[0], "atualizado": hoje, "lacuna": "Sem partido e UF do senador no arquivo."},
+ {"fonte": "TSE (doações 2024)", "cobertura": "Eleições municipais de 2024", "linhas": tr[0], "atualizado": "2026-11-01", "lacuna": "Só doações de pessoas físicas a candidatos. Eleições de 2022 e anteriores não estão carregadas."},
+ {"fonte": "Receita Federal (CNPJ)", "cobertura": f"Cadastro de {cd}", "linhas": None, "atualizado": cd, "lacuna": "Espelho de terceiro; o site oficial não respondeu."},
+ {"fonte": "CEIS e CNEP (punições)", "cobertura": "Lista vigente em 30/10/2026", "linhas": None, "atualizado": "2026-10-30", "lacuna": "Alcance da punição nem sempre informado."},
+ {"fonte": "Banco Central (IF.data)", "cobertura": "Trimestral, de 2022 a jun/2026", "linhas": None, "atualizado": hoje, "lacuna": "Não mostra quem compra o papel dos bancos."},
+ {"fonte": "CVM (carteira dos fundos)", "cobertura": "dez/2024, jun/2025, set/2025 e a mais recente", "linhas": None, "atualizado": hoje, "lacuna": "Fundos de previdência (RPPS) compram papel direto: o DAIR não é dado aberto em lote."},
+ {"fonte": "DataJud (CNJ)", "cobertura": "Ações de improbidade por tribunal", "linhas": None, "atualizado": hoje, "lacuna": "Não informa as partes dos processos."},
+ {"fonte": "Querido Diário", "cobertura": "Diários municipais desde 2025", "linhas": None, "atualizado": hoje, "lacuna": "Cobre só parte dos municípios; menções podem ser homônimos."},
+]
+(RAIZ / "web" / "public" / "data" / "meta.json").write_text(json.dumps({"gerado": hoje, "fontes": fontes, "n_alertas": len(alertas), "n_incidentes": len(incidentes)}, ensure_ascii=False, default=str), encoding="utf-8")
+print("meta.json:", len(fontes), "fontes |", len(incidentes), "empresas com sinais combinados")
