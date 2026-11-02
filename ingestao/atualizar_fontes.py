@@ -14,8 +14,8 @@ def get(url, dest):
     urllib.request.urlretrieve(url, dest)
 
 # CEIS / CNEP: o arquivo é datado; tenta de hoje para trás
-for nome in ("ceis", "cnep"):
-    for d in range(0, 10):
+for nome in ("ceis", "cnep", "cepim"):
+    for d in range(0, 25 if nome == "cepim" else 10):
         dia = (datetime.date.today() - datetime.timedelta(days=d)).strftime("%Y%m%d")
         try:
             z = BR / f"{nome}_{dia}.zip"

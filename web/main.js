@@ -55,7 +55,7 @@ function manchete(a) {
   const m = a.manchete, E = `<b>${esc(a.empresa)}</b>`;
   if (m.tipo === "R01") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} da cota parlamentar ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
   if (m.tipo === "R02") return `${E} assinou ${plural(a.n, "contrato público", "contratos públicos")} somando <b>${brl(a.total)}</b> ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
-  if (m.tipo === "R09") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} de emendas parlamentares ${periodo(a.inicio, a.fim)}. Autor${m.autores.length > 1 ? "es principais" : ""}: <b>${m.autores.map((x) => esc(x.nome)).join(", ")}</b>.${m.sancao ? " A empresa constava em lista de sancionadas no período." : ""}${m.nova ? " Foi aberta menos de um ano antes do primeiro pagamento." : ""}${m.capital_peq ? " O valor recebido é muito maior que o capital social." : ""}`;
+  if (m.tipo === "R09") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} de emendas parlamentares ${periodo(a.inicio, a.fim)}. Autor${m.autores.length > 1 ? "es principais" : ""}: <b>${m.autores.map((x) => esc(x.nome)).join(", ")}</b>.${m.sancao ? " A empresa constava em lista de sancionadas no período." : ""}${m.cepim ? " A entidade consta no CEPIM (impedida de receber transferências federais): " + esc(String(m.cepim).toLowerCase()) + "." : ""}${m.nova ? " Foi aberta menos de um ano antes do primeiro pagamento." : ""}${m.capital_peq ? " O valor recebido é muito maior que o capital social." : ""}`;
   if (m.tipo === "R08") return `${E} assinou ${plural(a.n, "contrato", "contratos")} somando <b>${brl(a.total)}</b> com ${esc(a.orgao)}. Tem como sócio <b>${esc(m.socio)}</b> sediado em <b>${esc(m.pais)}</b>, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"} (lista de referência). Ter sócio no exterior é legal; o ponto de atenção é a opacidade de quem recebe dinheiro público.`;
   if (m.tipo === "R06") return `${E} assinou <b>${a.n} contratos</b> com ${esc(a.orgao)} no trimestre ${esc(m.tri)}, cada um entre <b>${brl(m.minimo)}</b> e <b>${brl(m.maximo)}</b>, somando <b>${brl(a.total)}</b>. Todos abaixo da faixa de dispensa de licitação por valor: pode ser uma compra maior dividida em partes.`;
   if (m.tipo === "R07") return `${E} concentra <b>${Math.round(m.share * 100)}%</b> de tudo que ${esc(a.orgao)} contratou em <b>${m.ano}</b> (${brl(a.total)} de ${brl(m.total_orgao)}).`;
@@ -70,7 +70,7 @@ function linhaCard(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return `${situacaoCurta(m.sancao)} quando recebeu da cota parlamentar`;
   if (m.tipo === "R02") return `${situacaoCurta(m.sancao)} quando assinou contrato público`;
-  if (m.tipo === "R09") return `Recebeu verba de emenda de ${m.autores[0] ? m.autores[0].nome : "parlamentar"}${m.n_autores > 1 ? " e mais " + (m.n_autores - 1) : ""}: ${[m.sancao && "sancionada", m.nova && "empresa nova", m.capital_peq && "capital pequeno"].filter(Boolean).join(", ")}`;
+  if (m.tipo === "R09") return `Recebeu verba de emenda de ${m.autores[0] ? m.autores[0].nome : "parlamentar"}${m.n_autores > 1 ? " e mais " + (m.n_autores - 1) : ""}: ${[m.cepim && "impedida (CEPIM)", m.sancao && "sancionada", m.nova && "empresa nova", m.capital_peq && "capital pequeno"].filter(Boolean).join(", ")}`;
   if (m.tipo === "R08") return `Sócio sediado em ${m.pais}, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"}`;
   if (m.tipo === "R06") return `${a.n} contratos pequenos no mesmo trimestre, todos abaixo do limite de dispensa`;
   if (m.tipo === "R07") return `Fica com ${Math.round(m.share * 100)}% do dinheiro contratado pela prefeitura em ${m.ano}`;
@@ -776,14 +776,15 @@ function porque(a) {
     descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro"];
     naoProva = ["Que há dinheiro desviado ou evasão: multinacionais legítimas têm holding em Luxemburgo, Suíça ou Países Baixos.", "Quem é o dono real: o sócio no exterior pode ter um beneficiário final no Brasil."];
   } else if (m.tipo === "R09") {
-    regra = "Procuramos entidades privadas que receberam dinheiro de emendas parlamentares (Portal da Transparência) e que, ao mesmo tempo, aparecem em lista de sancionadas, foram abertas há menos de um ano ou têm capital social muito pequeno para o valor recebido.";
+    regra = "Procuramos entidades privadas que receberam dinheiro de emendas parlamentares (Portal da Transparência) e que, ao mesmo tempo, aparecem em lista de sancionadas ou no CEPIM (entidades impedidas de receber verba federal), foram abertas há menos de um ano ou têm capital social muito pequeno para o valor recebido.";
     ok("A entidade recebeu emendas de pelo menos R$ 100 mil", `${brl(a.total)} em ${plural(a.n, "pagamento", "pagamentos")}, ${per}`);
     if (m.sancao && s) ok("Constava como sancionada no período dos pagamentos", `${s.lista} · ${s.tipo}`);
+    if (m.cepim) ok("Consta no CEPIM: entidade privada sem fins lucrativos impedida de receber transferências federais", String(m.cepim).toLowerCase());
     if (m.nova) ok("Aberta menos de 1 ano antes do primeiro pagamento", `abertura em ${data(m.abertura)}`);
     if (m.capital_peq) ok("Valor recebido mais de 50 vezes o capital social", `capital ${brl(m.capital || 0)}`);
     prio = a.gravidade === "alta" ? "Alta: sanção de alcance amplo, ou empresa nova com mais de R$ 1 milhão, ou mais de um sinal combinado." : a.gravidade === "media" ? "Média: um sinal e mais de R$ 500 mil recebidos." : "Baixa: um sinal e valor menor.";
     descartado = ["Prefeituras, governos estaduais, autarquias e órgãos públicos (receber emenda é o esperado)", "Pagamentos abaixo de R$ 100 mil no total"];
-    naoProva = ["Que houve desvio: a entidade pode ter executado o objeto normalmente.", "Que o parlamentar escolheu a entidade por algum interesse: a indicação da emenda é política e pública, e o dado só mostra quem recebeu."];
+    naoProva = ["Que houve desvio: a entidade pode ter executado o objeto normalmente.", "Que o impedimento do CEPIM já existia na data do pagamento: a lista é a de hoje e o pagamento pode ser anterior.", "Que o parlamentar escolheu a entidade por algum interesse: a indicação da emenda é política e pública, e o dado só mostra quem recebeu."];
   } else if (m.tipo === "RF01") {
     regra = "Procuramos bancos cuja captação cresce muito e de forma sustentada, com muita alavancagem: um padrão que costuma anteceder problemas, embora seja comum em bancos em expansão legítima.";
     ok("Captações acima de R$ 5 bilhões", brlCurto(m.captacao));

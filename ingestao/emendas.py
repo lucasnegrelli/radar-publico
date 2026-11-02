@@ -37,6 +37,13 @@ c.execute("""create table sanc as
   union all select 'CNEP', lpad(regexp_replace("CPF OU CNPJ DO SANCIONADO",'\\D','','g'),14,'0'), "CATEGORIA DA SANÇÃO", "ÓRGÃO SANCIONADOR", "ABRAGÊNCIA DA SANÇÃO", "ESFERA ÓRGÃO SANCIONADOR",
      try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date from cnep""")
 
+# CEPIM: entidades privadas sem fins lucrativos impedidas de receber transferências federais
+c.execute("create table cepim(doc varchar, motivo varchar)")
+_cp = sorted(glob.glob(str(RAIZ / "dados" / "csv" / "*_CEPIM.csv")) + glob.glob(str(D.parent / "extra" / "*_CEPIM.csv")))
+if _cp:
+    c.execute(f"insert into cepim select lpad(regexp_replace(column0,'\D','','g'),14,'0'), column4 from read_csv('{_cp[-1]}', delim=';', header=false, skip=1, all_varchar=true, encoding='latin-1', columns={{'column0':'VARCHAR','column1':'VARCHAR','column2':'VARCHAR','column3':'VARCHAR','column4':'VARCHAR'}})")
+print(c.execute("select count(*) from cepim").fetchone()[0], "entidades no CEPIM", flush=True)
+
 # --- pagamentos a entidades privadas (pessoa jurídica que não é órgão público)
 c.execute("""create table pag as
   select emenda, autor, tipo_emenda, ano_mes, make_date(try_cast(left(ano_mes,4) as int), greatest(1, least(12, try_cast(right(ano_mes,2) as int))), 1) data,
@@ -53,11 +60,12 @@ c.execute("""create table agg as
 c.execute("""create table flags as
   select a.*, (select list(s.lista || '|' || coalesce(s.categoria,'') || '|' || coalesce(s.abr,'') || '|' || coalesce(s.orgao,'') || '|' || coalesce(s.esf,'')) from sanc s
                 where s.doc = a.doc and s.ini <= a.fim and (s.fim is null or s.fim >= a.ini)) sancoes,
+         (select any_value(motivo) from cepim m where m.doc = a.doc) cepim,
          (a.abertura is not null and a.abertura > a.ini - interval 365 day and a.total >= 200000) nova,
          (a.capital_social is not null and a.total >= 500000 and a.capital_social > 0 and a.total > 50 * a.capital_social) capital_pequeno
   from agg a""")
-rows = c.execute("""select doc, nome, natureza, total, n, ini, fim, n_autores, abertura, capital_social, porte, sancoes, nova, capital_pequeno from flags
-   where sancoes is not null or nova or capital_pequeno order by total desc""").fetchall()
+rows = c.execute("""select doc, nome, natureza, total, n, ini, fim, n_autores, abertura, capital_social, porte, sancoes, nova, capital_pequeno, cepim from flags
+   where sancoes is not null or nova or capital_pequeno or cepim is not null order by (cepim is not null) desc, total desc""").fetchall()
 print(len(rows), "empresas com emenda e ponto de atenção", flush=True)
 
 # --- monta alertas
@@ -75,11 +83,11 @@ def local(doc):
     return {"lat": r[0], "lon": r[1], "cidade": r[2], "uf": r[3]} if r else None
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 alertas = []
-for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, cap_peq in rows[:200]:
+for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, cap_peq, cepim in rows[:220]:
     sc = [s.split("|") for s in (sancoes or [])]
     forte = any(s[2].startswith(("Todas as Esferas", "Em todos os Poderes")) and "Federal" in s[4] or s[2].startswith("Todas as Esferas") for s in sc)
-    flags = int(bool(sc)) + int(bool(nova)) + int(bool(cap_peq))
-    grav = "alta" if forte or (nova and total >= 1e6) or flags >= 2 else ("media" if total >= 500000 else "baixa")
+    flags = int(bool(sc)) + int(bool(nova)) + int(bool(cap_peq)) + int(bool(cepim))
+    grav = "alta" if forte or cepim or (nova and total >= 1e6) or flags >= 2 else ("media" if total >= 500000 else "baixa")
     linhas = [[{"t": str(r[0])[:7], "s": None, "u": None, "v": False}, {"t": r[1].title()[:48], "s": r[2], "u": None, "v": False}, {"t": r[3].title()[:44], "s": f"{(r[4] or '').title()}/{r[5]}", "u": None, "v": False},
                {"t": brl(r[6]), "s": None, "u": None, "v": True}, {"t": "–", "s": None, "u": None, "v": False}]
               for r in c.execute("select data, autor, favorecido, municipio, uf, valor, valor from pag where doc = ? order by data", [doc]).fetchall()]
@@ -88,7 +96,7 @@ for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, ca
     a = {"id": f"R09-{doc}", "regra": "R09", "gravidade": grav, "empresa": (nome or "").upper(), "cnpj": fmt_cnpj(doc), "total": total, "n": n, "inicio": str(ini), "fim": str(fim),
          "origem": BRASILIA, "local": local(doc), "orgao": "Emenda parlamentar (União)", "orgao_uf": None, "orgao_municipio": None,
          "manchete": {"tipo": "R09", "autores": [{"nome": t[0].title(), "valor": t[1]} for t in top], "n_autores": n_aut, "natureza": nat, "nova": bool(nova), "abertura": str(ab) if ab else None,
-                      "capital": cap, "capital_peq": bool(cap_peq), "sancao": bool(sc), "porte": porte},
+                      "capital": cap, "capital_peq": bool(cap_peq), "sancao": bool(sc), "cepim": cepim, "porte": porte},
          "tabela": {"titulo": "Emendas pagas à entidade", "cols": ["Mês", "Autor da emenda", "Local", "Valor", ""], "linhas": linhas}}
     if sc:
         s0 = sc[0]
