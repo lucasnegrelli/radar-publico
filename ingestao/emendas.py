@@ -36,6 +36,8 @@ c.execute("""create table sanc as
      try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date ini, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date fim from ceis
   union all select 'CNEP', lpad(regexp_replace("CPF OU CNPJ DO SANCIONADO",'\\D','','g'),14,'0'), "CATEGORIA DA SANÇÃO", "ÓRGÃO SANCIONADOR", "ABRAGÊNCIA DA SANÇÃO", "ESFERA ÓRGÃO SANCIONADOR",
      try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date from cnep""")
+# multa, publicação extraordinária, demissão, perdimento e dissolução não impedem de receber verba: ficam fora
+c.execute("delete from sanc where categoria ilike 'Multa%' or categoria ilike 'Publica%' or categoria ilike 'Demiss%' or categoria ilike 'Perdimento%' or categoria ilike 'Dissolu%'")
 
 # CEPIM: entidades privadas sem fins lucrativos impedidas de receber transferências federais
 c.execute("create table cepim(doc varchar, motivo varchar)")

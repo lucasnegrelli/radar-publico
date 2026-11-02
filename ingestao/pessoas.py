@@ -82,7 +82,8 @@ for pid, ano, tot, n in c.execute("select m.pid, r.ano, sum(r.v), count(*) from 
 for pid, ano, orig, v in c.execute("select m.pid, r.ano, r.origem, sum(r.v) from rec r join m_sq m using (ano, sq) group by 1,2,3 having sum(r.v) > 0 order by 4 desc").fetchall():
     pessoas[pid]["camp"][ano].setdefault("origens", []).append([orig, round(v)])
 
-sanc = {re.sub(r"\D", "", r[0]) for r in c.execute('select "CPF OU CNPJ DO SANCIONADO" from ceis union select "CPF OU CNPJ DO SANCIONADO" from cnep').fetchall() if r[0]}
+_f = "where \"CATEGORIA DA SANÇÃO\" not ilike 'Multa%' and \"CATEGORIA DA SANÇÃO\" not ilike 'Publica%' and \"CATEGORIA DA SANÇÃO\" not ilike 'Demiss%' and \"CATEGORIA DA SANÇÃO\" not ilike 'Perdimento%' and \"CATEGORIA DA SANÇÃO\" not ilike 'Dissolu%'"
+sanc = {re.sub(r"\D", "", r[0]) for r in c.execute(f'select "CPF OU CNPJ DO SANCIONADO" from ceis {_f} union select "CPF OU CNPJ DO SANCIONADO" from cnep {_f}').fetchall() if r[0]}
 alertas = json.loads((RAIZ / "web/public/data/alertas.json").read_text(encoding="utf-8"))["alertas"]
 por_cnpj = {}
 for a in alertas:

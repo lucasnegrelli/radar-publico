@@ -1,7 +1,7 @@
 -- ALERTA 1: fornecedor pago com cota parlamentar (Câmara e Senado) durante período em que
 -- constava no CEIS/CNEP. Ponto de atenção, não prova de irregularidade.
 -- Coluna "alcance" separa o que bloqueia contratação em toda a administração do que é restrito a um órgão.
-WITH sancoes AS (
+WITH sancoes AS (SELECT * FROM (
   SELECT 'CEIS' AS lista, lpad(regexp_replace("CPF OU CNPJ DO SANCIONADO",'\D','','g'),14,'0') AS doc,
          "CATEGORIA DA SANÇÃO" AS categoria, "ÓRGÃO SANCIONADOR" AS orgao, "ABRAGÊNCIA DA SANÇÃO" AS abr, "ESFERA ÓRGÃO SANCIONADOR" AS esf,
          try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date AS ini, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date AS fim
@@ -11,6 +11,7 @@ WITH sancoes AS (
          "CATEGORIA DA SANÇÃO","ÓRGÃO SANCIONADOR","ABRAGÊNCIA DA SANÇÃO","ESFERA ÓRGÃO SANCIONADOR",
          try_strptime("DATA INÍCIO SANÇÃO",'%d/%m/%Y')::date, try_strptime("DATA FINAL SANÇÃO",'%d/%m/%Y')::date
   FROM cnep
+) x WHERE categoria NOT ILIKE 'Multa%' AND categoria NOT ILIKE 'Publica%' AND categoria NOT ILIKE 'Demiss%' AND categoria NOT ILIKE 'Perdimento%' AND categoria NOT ILIKE 'Dissolu%' AND categoria NOT ILIKE 'Proibi__o de receber%'
 ), gastos AS (
   SELECT 'Câmara' AS casa, txNomeParlamentar AS parlamentar, sgPartido AS partido, sgUF AS uf,
          txtFornecedor AS fornecedor, lpad(regexp_replace(txtCNPJCPF,'\D','','g'),14,'0') AS doc,
