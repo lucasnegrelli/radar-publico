@@ -20,7 +20,7 @@ jobs:
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       PYTHONUNBUFFERED: "1"
-      DUCK_MEM: "4500MB"
+      DUCK_MEM: "10GB"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
