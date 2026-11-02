@@ -67,6 +67,7 @@ jobs:
           python ingestao/viagens_cota.py || true
           python ingestao/risco_financeiro.py
           python ingestao/risco_dossie.py || true
+          python ingestao/fidc.py || true
       - name: Judiciário (DataJud) e notícias
         run: |
           python ingestao/datajud.py || true
