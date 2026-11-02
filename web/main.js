@@ -1,6 +1,7 @@
 import "@fontsource-variable/inter";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
+import { abrirPessoa } from "./pessoa.js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
@@ -108,7 +109,7 @@ const map = new maplibregl.Map({
   style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, projection: { type: "globe" },
     sky: { "sky-color": "#020407", "sky-horizon-blend": 0.5, "horizon-color": "#143f55", "horizon-fog-blend": 0.8, "fog-color": "#020407", "fog-ground-blend": 0.15, "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 7.5, 0] },
     layers: [{ id: "fundo", type: "background", paint: { "background-color": "#07111b" } }] },
-  center: [-60, -14], zoom: 3.35, pitch: 30, bearing: 0,
+  center: [-58, -14], zoom: 3.5, pitch: 28, bearing: 0,
   minZoom: 1.5, maxZoom: 10, dragRotate: true, pitchWithRotate: true, maxPitch: 60,
 });
 const vazio = { type: "FeatureCollection", features: [] };
@@ -126,9 +127,10 @@ function grade() {
   for (let y = -35; y <= 7; y += 5) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[-76, y], [-28, y]] } });
   return { type: "FeatureCollection", features: f };
 }
+let _esc = null;
 let alertas = [], visiveis = [], filtroG = "todas", filtroR = "todas", sel = null, nomes = {};
 const RGB = { alta: [255, 45, 85], media: [255, 179, 0], baixa: [0, 184, 255] };
-const ADITIVO = { blend: true, blendColorOperation: "add", blendColorSrcFactor: "src-alpha", blendColorDstFactor: "one", blendAlphaSrcFactor: "one", blendAlphaDstFactor: "one" };
+const ADITIVO = { depthCompare: "always", depthWriteEnabled: false, blend: true, blendColorOperation: "add", blendColorSrcFactor: "src-alpha", blendColorDstFactor: "one", blendAlphaSrcFactor: "one", blendAlphaDstFactor: "one" };
 function corUF(lista) {
   const por = {}; lista.filter((a) => a.local).forEach((a) => { por[a.local.uf] = (por[a.local.uf] || 0) + 1; });
   const casos = ["match", ["get", "uf"]];
@@ -160,6 +162,7 @@ function derivar() {
   const comRota = visiveis.filter((a) => a.local && a.origem);
   trilhas = comRota.map((a, k) => { const caminho = gc([a.origem.lon, a.origem.lat], [a.local.lon, a.local.lat], 28); const fase = (k * 0.137) % 1;
     return { id: a.id, g: a.gravidade, s: [a.origem.lon, a.origem.lat], t: [a.local.lon, a.local.lat], w: Math.min(2.6, 0.7 + Math.log10(Math.max(a.total, 1000)) * 0.28), path: caminho, ts: caminho.map((_, i) => fase + i / 28 * 0.9) }; });
+  trilhas.sort((x, y) => (alertas.find((a) => a.id === y.id)?.total || 0) - (alertas.find((a) => a.id === x.id)?.total || 0));
   const por = new Map();
   visiveis.filter((a) => a.local).forEach((a) => { const k = a.local.cidade + "|" + a.local.uf; let c = por.get(k);
     if (!c) por.set(k, (c = { pos: [a.local.lon, a.local.lat], cidade: a.local.cidade, uf: a.local.uf, n: 0, total: 0, topo: a, alta: 0 }));
@@ -169,19 +172,24 @@ function derivar() {
   pontosA = visiveis.filter((a) => a.local).map((a) => ({ id: a.id, g: a.gravidade, pos: [a.local.lon, a.local.lat], total: a.total, empresa: a.empresa, cidade: a.local.cidade, uf: a.local.uf }));
 }
 const altura = (v) => Math.max(8000, (Math.log10(Math.max(v, 1000)) - 2.6) * 95000);
+let hoverId = null;
+function ladoVisivel() { const c = map.getCenter(), r = Math.PI / 180, a = c.lat * r, b = -14 * r, d = Math.acos(Math.min(1, Math.sin(a) * Math.sin(b) + Math.cos(a) * Math.cos(b) * Math.cos((c.lng + 52) * r))); return d < 1.05; }
 function camadas(tempo) {
-  const L = [];
-  L.push(new ScatterplotLayer({ id: "brilho", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => 5 + 2 * Math.max(0, Math.log10(Math.max(d.total, 1000)) - 3), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 16], parameters: ADITIVO }));
-  L.push(new PathLayer({ id: "arcos", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 120], getWidth: (d) => d.w * 0.9, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
-  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: 2.6, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: [255, 255, 255, 100], getLineWidth: 0.5, lineWidthUnits: "pixels", pickable: true, onClick: (i) => i.object && abrir(i.object.id) }));
-  L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(190 * (1 - (tempo % 1)))], getLineWidth: 1.3, lineWidthUnits: "pixels", parameters: ADITIVO }));
+  if (!ladoVisivel()) return [];
+  const L = [], t = tempo % 1, ativo = hoverId || sel;
+  L.push(new ScatterplotLayer({ id: "brilho", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => 5 + 2 * Math.max(0, Math.log10(Math.max(d.total, 1000)) - 3) + (d.id === ativo ? 5 : 0), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], d.id === ativo ? 70 : 16], parameters: ADITIVO, updateTriggers: { getRadius: ativo, getFillColor: ativo } }));
+  L.push(new PathLayer({ id: "arcos", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], d.id === ativo ? 255 : 120], getWidth: (d) => d.w * (d.id === ativo ? 2 : 0.9), widthUnits: "pixels", capRounded: true, parameters: ADITIVO, updateTriggers: { getColor: ativo, getWidth: ativo } }));
+  // pontos como antes, mas com área de clique generosa (pickingRadius do overlay) e destaque ao passar o mouse
+  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => (d.id === ativo ? 5.5 : 2.8), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: (d) => (d.id === ativo ? [255, 255, 255, 255] : [255, 255, 255, 100]), getLineWidth: (d) => (d.id === ativo ? 1.6 : 0.5), lineWidthUnits: "pixels", pickable: true, parameters: { depthCompare: "always", depthWriteEnabled: false }, updateTriggers: { getRadius: ativo, getLineColor: ativo, getLineWidth: ativo },
+    onHover: (i) => { if (map.isMoving()) return; const id = i.object ? i.object.id : null; if (id !== hoverId) { hoverId = id; map.getCanvas().style.cursor = id ? "pointer" : ""; } }, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * t, stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(190 * (1 - t))], getLineWidth: 1.3, lineWidthUnits: "pixels", parameters: ADITIVO }));
   if (rotaSel) {
     L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 12, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
-    L.push(new PathLayer({ id: "sel", data: [rotaSel], getPath: (d) => d.path, getColor: [255, 255, 255, 255], getWidth: 2.6, widthUnits: "pixels", capRounded: true }));
+    L.push(new PathLayer({ id: "sel", data: [rotaSel], getPath: (d) => d.path, getColor: [255, 255, 255, 255], getWidth: 2.6, widthUnits: "pixels", capRounded: true, parameters: { depthCompare: "always", depthWriteEnabled: false } }));
   }
   return L;
 }
-function atualizarMapa() { if (!overlay) return; derivar(); map.setPaintProperty("uf-fill", "fill-color", corUF(visiveis)); }
+function atualizarMapa() { if (!overlay) return; derivar(); map.setPaintProperty("uf-fill", "fill-color", corUF(visiveis)); if (typeof atualizarPanorama === "function") atualizarPanorama(); }
 function mostrarRota(a) {
   const o = a.origem, d = a.local;
   if (!o || !d) { rotaSel = null; return; }
@@ -208,10 +216,11 @@ function montarMapa() {
   const el = document.createElement("div"); el.innerHTML = '<div style="color:#00ffa6;font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.14em;text-shadow:0 0 8px #00ffa6">◉ BRASÍLIA</div>';
   new maplibregl.Marker({ element: el, anchor: "left" }).setLngLat(BRASILIA).addTo(map);
 
+  map.on("movestart", () => { if (hoverId) { hoverId = null; map.getCanvas().style.cursor = ""; } });
   derivar();
-  overlay = new MapboxOverlay({ interleaved: true, layers: camadas(0), getTooltip: ({ object, layer }) => {
+  overlay = new MapboxOverlay({ interleaved: true, pickingRadius: 14, layers: camadas(0), getTooltip: ({ object, layer }) => {
     if (!object) return null;
-    if (layer.id === "pontos-a") return { className: "deck-tip", html: `<b>${esc(object.empresa)}</b><br>${esc(object.cidade)}/${esc(object.uf)} · ${brlCurto(object.total)}` };
+    if (layer.id === "pontos-a") return { className: "deck-tip", html: `<b>${esc(object.empresa)}</b><br>${esc(object.cidade)}/${esc(object.uf)} · ${brlCurto(object.total)}<br><span style="opacity:.6">clique para abrir</span>` };
     if (layer.id === "colunas") return { className: "deck-tip", html: `<b>${esc(object.cidade)}/${esc(object.uf)}</b><br>${plural(object.n, "alerta", "alertas")} · ${brlCurto(object.total)}<br><span style="opacity:.7">clique para abrir o maior</span>` };
     if (layer.id === "arcos") { const a = alertas.find((x) => x.id === object.id); return a ? { className: "deck-tip", html: `<b>${esc(a.empresa)}</b><br>${brlCurto(a.total)}` } : null; }
     return null; } });
@@ -566,7 +575,7 @@ if (map.isStyleLoaded()) iniciarMapa();
 map.on("load", iniciarMapa);
 map.on("styledata", () => { if (map.isStyleLoaded()) iniciarMapa(); });
 
-if (location.hash.length > 1) setTimeout(() => abrir(decodeURIComponent(location.hash.slice(1))), 1800);
+if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(location.hash.slice(1)); if (h.startsWith("p-")) abrirPessoa(h.slice(2), CTX_P); else abrir(h); }, 1800);
 
 
 // =====================================================================
@@ -617,8 +626,9 @@ function tabificar() {
 { const _abrir = abrir; abrir = function (id) { _abrir(id); tabificar(); }; }
 
 // ----- busca global (Ctrl+K) -----
+const CTX_P = { $, esc, brlCurto, get alertas() { return alertas; }, nomes, abrir: (id) => abrir(id) };
 const paleta = document.createElement("div"); paleta.id = "paleta";
-paleta.innerHTML = '<div class="caixa-p"><input id="pal-in" placeholder="Buscar empresa, CNPJ, político, cidade ou caso..." autocomplete="off"><div class="res" id="pal-res"></div></div>';
+paleta.innerHTML = '<div class="caixa-p"><input id="pal-in" placeholder="Buscar político, empresa, CNPJ, cidade ou caso... (ex.: Lula, Bolsonaro)" autocomplete="off"><div class="res" id="pal-res"></div></div>';
 document.body.appendChild(paleta);
 let _indice = null, _sel = 0, _itens = [];
 async function indice() {
@@ -626,7 +636,8 @@ async function indice() {
   await carregarFichas(); const dc = await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] }));
   const L = [];
   alertas.forEach((a) => L.push({ g: "Alertas", t: a.empresa, s: `${nomes[a.regra] || a.regra}${a.local ? " · " + a.local.cidade + "/" + a.local.uf : ""}`, v: brlCurto(a.total), k: norm([a.empresa, a.cnpj, a.local && a.local.cidade, a.local && a.local.uf].join(" ")), go: () => abrir(a.id) }));
-  fichas.forEach((f) => L.push({ g: "Agentes públicos", t: f.n, s: `${CARGO[f.t]}${f.c ? " · " + f.c : ""}${f.p ? " · " + f.p : ""}${f.u ? "/" + f.u : ""}`, v: f.n_alertas ? f.n_alertas + " alerta(s)" : "", k: f._k, go: () => abrirFicha(f) }));
+  const ip = await fetch("/data/pessoas/idx.json").then((r) => r.json()).catch(() => ({ p: [] }));
+  ip.p.forEach((r) => L.push({ g: "Pessoas", t: r[1] === r[2] || !r[2] ? r[1] : `${r[1]} (${r[2]})`, s: `${r[5]}${r[4] && r[4] !== "BR" ? " · " + r[4] : ""}${r[3] ? " · " + r[3] : ""} · ${r[6]}`, v: "", rk: r[7], k: norm([r[1], r[2], r[3], r[4]].join(" ")), go: () => abrirPessoa(r[0], CTX_P) }));
   dc.casos.forEach((c) => L.push({ g: "Investigações", t: c.titulo, s: c.resumo, v: "", k: norm(c.titulo + " " + c.resumo), go: () => abrirCaso(c) }));
   return (_indice = L);
 }
@@ -641,9 +652,9 @@ async function buscaPaleta() {
   const q = norm($("pal-in").value).trim(); const L = await indice();
   if (!q) { pintaPaleta([...L.filter((x) => x.g === "Investigações"), ...alertas.filter((a) => a.gravidade === "alta").slice(0, 6).map((a) => L.find((x) => x.t === a.empresa && x.g === "Alertas")).filter(Boolean)]); return; }
   const ts = q.split(/\s+/); const hit = L.filter((x) => ts.every((t) => x.k.includes(t)));
-  const ord = (x) => (norm(x.t).startsWith(q) ? 0 : norm(x.t).includes(q) ? 1 : 2);
+  const ord = (x) => (norm(x.t).startsWith(q) ? 0 : norm(x.t).includes(q) ? 1 : 2) * 1000 - (x.rk || 0);
   const por = {}; hit.sort((a, b) => ord(a) - ord(b)).forEach((x) => { const arr = (por[x.g] ||= []); if (arr.length < 6) arr.push(x); });
-  pintaPaleta(["Alertas", "Agentes públicos", "Investigações"].flatMap((g) => por[g] || []));
+  pintaPaleta(["Pessoas", "Alertas", "Investigações"].flatMap((g) => por[g] || []));
 }
 function abrePaleta() { paleta.classList.add("on"); $("pal-in").value = ""; $("pal-in").focus(); buscaPaleta(); }
 function fechaPaleta() { paleta.classList.remove("on"); }
@@ -775,7 +786,7 @@ function porque(a) {
 
 
 // ----- imprensa por alerta e escala -----
-let _na = null, _esc = null;
+let _na = null;
 fetch("/data/noticias_alertas.json").then((r) => r.json()).then((j) => { _na = j; }).catch(() => {});
 fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualizarPanorama(); }).catch(() => {});
 function escalaHtml() {
