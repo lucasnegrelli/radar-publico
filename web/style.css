@@ -91,3 +91,17 @@ ul.check{padding-left:18px;color:var(--texto);font-size:13px}ul.check li{margin:
 .marca b{text-shadow:0 0 12px var(--neon);animation:none}
 .deck-tip{background:rgba(0,0,0,.92)!important;border:1px solid var(--neon)!important;color:#c9f3ea!important;font:12px ui-monospace,Consolas,monospace!important;padding:8px 12px!important;box-shadow:0 0 18px rgba(0,255,166,.4)!important;border-radius:0!important}
 .deck-tip b{color:#fff}
+
+/* ===== v4: ferramentas de análise ===== */
+.botao{background:none;border:1px solid var(--neon);color:var(--neon);font:11px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;padding:6px 11px;cursor:pointer;text-decoration:none;display:inline-block;margin:0 6px 6px 0}
+.botao:hover,.botao.on{background:var(--neon);color:#000}
+.botao.sx{border-color:#ffb300;color:#ffb300}.botao.sx:hover,.botao.sx.on{background:#ffb300;color:#000}
+.botao.sd{border-color:#6f8aa3;color:#8aa0b5}.botao.sd:hover,.botao.sd.on{background:#6f8aa3;color:#000}
+.acoes{display:flex;flex-wrap:wrap}
+.card.dim{opacity:.45}
+svg.viz{width:100%;height:auto;display:block;background:rgba(0,255,166,.025);border:1px solid var(--linha)}
+svg.viz text{font:10px ui-monospace,Consolas,monospace;fill:#9fd8cc}
+.leg{display:flex;gap:14px;font-size:11.5px;color:var(--mudo);margin:6px 0 0}.leg i{display:inline-block;width:10px;height:3px;margin-right:5px;vertical-align:middle}
+.achado{border-left:3px solid var(--neon);padding:6px 10px;margin:7px 0;background:rgba(0,255,166,.04);font-size:13px}
+.fonte-ok{color:var(--neon)}
+.tbl td.sx{font-size:12px;color:var(--mudo)}

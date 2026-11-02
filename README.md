@@ -19,9 +19,10 @@ Monitor de dinheiro público: cruza bases abertas do governo brasileiro e mostra
 | R05 | Sócio de empresa que doou à campanha do prefeito eleito e a empresa passou a ser contratada pela prefeitura |
 | R06 | Possível fracionamento: 4 ou mais contratos pequenos do mesmo órgão com a mesma empresa no trimestre |
 | R07 | Um fornecedor concentra mais da metade do valor contratado por uma prefeitura no ano |
-| RF01 | Banco em crescimento acelerado e alavancado (Banco Central). Backtest: o critério teria acendido o Banco Master por 9 trimestres, a partir de T1/2023 |
+| RF01 | Banco em crescimento acelerado e alavancado de forma sustentada (Banco Central) |
+| R08 | Empresa que vende ao governo com sócio em jurisdição de sigilo ou tributação favorecida |
 
-Também tem **fichas de agentes públicos** (deputados, senadores, prefeitos): só dados abertos, sem avaliação de conduta.
+Também tem **investigações** (dossiês de casos montados só com dado aberto), **fichas de agentes públicos** (deputados, senadores, prefeitos): só dados abertos, sem avaliação de conduta.
 Tipologias de fraude financeira em [`docs/TIPOLOGIAS.md`](docs/TIPOLOGIAS.md).
 
 ## Limites conhecidos

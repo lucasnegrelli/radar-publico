@@ -207,7 +207,7 @@ function montarMapa() {
   const t0 = performance.now(); let q = 0;
   (function quadro(t) {
     if ((q++ & 1) && !map.isMoving()) { requestAnimationFrame(quadro); return; }
-    overlay.setProps({ layers: camadas(((t - t0) / 2600) % 1.5) });
+    if (!globoAtivo) overlay.setProps({ layers: camadas(((t - t0) / 2600) % 1.5) });
     requestAnimationFrame(quadro);
   })(t0);
 }
@@ -229,15 +229,15 @@ const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json")
 
 // ---------- lista e filtros ----------
 function aplicarFiltro() {
-  visiveis = alertas.filter((a) => (filtroG === "todas" || a.gravidade === filtroG) && (filtroR === "todas" || a.regra === filtroR));
+  visiveis = alertas.filter((a) => (filtroG === "todas" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
   lista(); atualizarMapa();
 }
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
-    <li class="card ${sel === a.id ? "sel" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
+    <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
       <div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div>
       <div class="sub">${linhaCard(a)}</div>
-      <div class="meta"><span class="chip">${NOME_G[a.gravidade].replace("Prioridade ", "")}</span>${a.regra} · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
+      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="chip">${NOME_G[a.gravidade].replace("Prioridade ", "")}</span>${a.regra} · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
   $("cont").textContent = `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
@@ -246,7 +246,7 @@ function lista() {
 // ---------- dossiê ----------
 function abrir(id) {
   const a = alertas.find((x) => x.id === id); if (!a) return;
-  sel = id; lista();
+  sel = id; lista(); history.replaceState(null, "", "#" + encodeURIComponent(id));
   const c = COR[a.gravidade], t = a.tabela, s = a.sancao;
   const cab = t.cols.map((h, i) => `<th${i === 3 ? ' style="text-align:right"' : ""}>${h}</th>`).join("");
   const linhas = t.linhas.map((l) => "<tr>" + l.map((x) => `<td${x.v ? ' class="v num"' : ""}>${x.u ? `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>` : x.s ? `<b>${esc(x.t)}</b><br><span class="sub2">${esc(x.s)}</span>` : esc(x.t)}</td>`).join("") + "</tr>").join("");
@@ -254,6 +254,11 @@ function abrir(id) {
   const m = a.manchete;
   const blocoEmpresa = (m.tipo === "R03" || m.tipo === "R04") ? `<h4>A empresa</h4><dl class="kv">${m.abertura ? `<dt>Abertura</dt><dd>${data(m.abertura)}</dd>` : ""}<dt>Capital social</dt><dd>${m.capital != null ? brl(m.capital) : "não informado"}</dd><dt>Porte</dt><dd>${esc(PORTE[m.porte] || m.porte || "não informado")}</dd><dt>Contratante</dt><dd>${esc(a.orgao || "")}${a.orgao_municipio ? " · " + esc(a.orgao_municipio) + "/" + esc(a.orgao_uf) : ""}</dd></dl>` : "";
   const blocoVinculo = m.tipo === "R05" ? `<h4>O vínculo</h4><dl class="kv"><dt>Prefeito eleito</dt><dd>${esc(m.prefeito)} (${esc(m.partido)}) · ${esc(m.cidade)}/${esc(m.uf)}</dd><dt>Doador</dt><dd>${esc(m.doador)}, ${esc(QUALIF[m.qualificacao] || "sócio(a)")} da empresa</dd><dt>Doou</dt><dd>${brl(m.doacao)} na campanha de 2024</dd><dt>Fonte</dt><dd><a href="https://divulgacandcontas.tse.jus.br" target="_blank" rel="noopener">TSE · DivulgaCandContas</a></dd></dl>` : "";
+  const meta = META[a.regra] || { conf: "média", fp: [] }, est = triagem()[a.id];
+  const blocoCorr = a.correlacao ? `<h4>Sinais combinados</h4><p class="sub2" style="margin-bottom:6px">A mesma empresa aparece em mais de uma regra, o que pesa mais que um alerta isolado.</p><ul class="check">${a.correlacao.map((x) => { const o = alertas.find((z) => z.id === x.id); return `<li><a href="#" data-id="${esc(x.id)}">${esc(nomes[x.regra] || x.regra)}</a>${o ? ` <span class="sub2">· ${brlCurto(o.total)}</span>` : ""}</li>`; }).join("")}</ul>` : "";
+  const blocoAcoes = `<h4>Análise</h4><div class="acoes">${[["visto", "Visto", ""], ["analise", "Em análise", "sx"], ["descartado", "Descartar", "sd"]].map(([k, l, cl]) => `<button class="botao ${cl} ${est === k ? "on" : ""}" data-st="${k}">${l}</button>`).join("")}</div>
+    <p class="sub2">Confiança do dado: <b style="color:#fff">${esc(meta.conf)}</b>. Falsos positivos comuns: ${esc(meta.fp.join("; ") || "nenhum conhecido")}.</p>
+    <div class="acoes" style="margin-top:6px"><a class="botao sx" href="${issueUrl(a)}" target="_blank" rel="noopener">Sinalizar erro nos dados</a><button class="botao" id="b-link">Copiar link</button></div>`;
   $("detalhe").hidden = false; $("detalhe").style.setProperty("--c", c);
   $("detalhe").innerHTML = `
     <button class="fechar" aria-label="Fechar">×</button>
@@ -262,17 +267,22 @@ function abrir(id) {
     <div class="sub2 mono">CNPJ ${esc(a.cnpj)}${a.local ? " · " + esc(a.local.cidade) + "/" + esc(a.local.uf) : ""}</div>
     <div class="manchete" style="--c:${c}">${manchete(a)}</div>
     <div class="numeros" style="--c:${c}">${numeros(a)}</div>
+    <h4>Rede de ligações</h4>${grafoSVG(a)}${linhaSVG(a) ? `<h4>Linha do tempo</h4>${linhaSVG(a)}` : ""}${blocoCorr}
     <h4>${esc(t.titulo)}</h4>
     <table style="--c:${c}"><thead><tr>${cab}</tr></thead><tbody>${linhas}</tbody></table>
     ${a.n > t.linhas.length ? `<p class="sub2" style="margin-top:6px">Mostrando ${t.linhas.length} de ${a.n} registros.</p>` : ""}
     ${blocoSancao}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
     <h4>Checagem</h4><ul class="check">${checagem(a).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+    ${blocoAcoes}
     <p class="aviso">Isto é um ponto de atenção feito a partir de dados públicos, não uma conclusão. Pode haver explicação legal.</p>
     <div class="links" style="margin-top:12px;font-size:12.5px">Fontes: <a href="https://www3.bcb.gov.br/ifdata" target="_blank" rel="noopener">Banco Central (IF.data)</a> · <a href="https://dados.cvm.gov.br" target="_blank" rel="noopener">CVM</a> · <a href="https://pncp.gov.br" target="_blank" rel="noopener">PNCP</a> · <a href="https://portaldatransparencia.gov.br/sancoes/consulta" target="_blank" rel="noopener">Portal da Transparência</a> · <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener">Câmara</a> · <a href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener">Senado</a> · <a href="https://dadosabertos.rfb.gov.br" target="_blank" rel="noopener">Receita (CNPJ)</a></div>`;
   $("detalhe").querySelector(".fechar").onclick = fechar;
+  $("detalhe").querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
+  $("detalhe").querySelectorAll("[data-st]").forEach((b) => (b.onclick = () => { const m2 = triagem(); if (m2[a.id] === b.dataset.st) delete m2[a.id]; else m2[a.id] = b.dataset.st; localStorage.setItem("radar.triagem", JSON.stringify(m2)); abrir(a.id); }));
+  $("b-link").onclick = () => { navigator.clipboard && navigator.clipboard.writeText(location.origin + "/#" + encodeURIComponent(a.id)); $("b-link").textContent = "Link copiado"; };
   mostrarRota(a);
 }
-function fechar() { $("detalhe").hidden = true; sel = null; lista(); limparRota(); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 900 }); }
+function fechar() { $("detalhe").hidden = true; sel = null; history.replaceState(null, "", location.pathname); lista(); limparRota(); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 900 }); }
 
 // ---------- fichas de agente público ----------
 let fichas = null;
@@ -321,12 +331,13 @@ async function montarExterior() {
   const d = await dadosViagens(), el = $("aba-exterior");
   const tot = d.voos.reduce((s, x) => s + x.v, 0);
   el.innerHTML = `<h3>Exterior</h3><p class="sub2">Voos internacionais pagos com a cota parlamentar da Câmara (2023 a 2026). A data é a da <b>emissão</b> da passagem, não do voo. Não é rastreamento de ninguém: é o que a Câmara publica.</p>
-    <div class="caixa"><b>${d.voos.length}</b> voos para <b>${d.paises.length}</b> países, somando <b>${brlCurto(tot)}</b>.</div>
+    <div class="caixa"><b>${d.voos.length}</b> voos para <b>${d.paises.length}</b> países, somando <b>${brlCurto(tot)}</b>.</div><button class="botao" id="b-globo">Ver em globo 3D</button><span class="sub2"> mostra também os sócios em jurisdições de sigilo (R08)</span>
     <div class="rot">// por país</div><table class="tbl"><tbody>${d.paises.map((p) => `<tr><td>${esc(p.pais)}</td><td class="num" style="text-align:right">${p.n} voos</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>
     <div class="rot" style="margin-top:14px">// quem mais voou ao exterior com a cota</div>
     <table class="tbl"><tbody>${d.deputados.slice(0, 15).map((p) => `<tr><td><b>${esc(p.p)}</b><br><span class="sub2">${esc(p.pt || "")}${p.uf ? "/" + esc(p.uf) : ""} · ${Object.entries(p.paises).map(([k, v]) => k + " " + v).join(", ")}</span></td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>
     <p class="aviso">Voo ao exterior pago pela cota não é irregularidade por si só (há regras próprias de uso). Veja o trecho e o passageiro na nota da Câmara.</p>`;
   $("tg-voos").checked = true; alternarVoos(true);
+  $("b-globo").onclick = () => { modoGlobo(!globoAtivo); $("b-globo").textContent = globoAtivo ? "Voltar ao mapa do Brasil" : "Ver em globo 3D"; };
 }
 async function montarJustica() {
   const el = $("aba-justica");
@@ -341,13 +352,131 @@ async function montarJustica() {
     <p class="aviso">As barras pequenas mostram as ações ajuizadas por ano (últimos 8 anos). O DataJud não informa as partes, então não dá para ligar processo a político.</p>`;
 }
 
+// ---------- ferramentas de análise ----------
+let globoAtivo = false;
+const triagem = () => { try { return JSON.parse(localStorage.getItem("radar.triagem") || "{}"); } catch { return {}; } };
+const META = {
+  R01: { conf: "alta", fp: ["punição restrita a outro órgão", "empresa homônima"] },
+  R02: { conf: "média", fp: ["punição que não alcança o órgão contratante", "contrato anterior à punição só republicado"] },
+  R03: { conf: "média", fp: ["empresa criada para uma obra específica", "reorganização societária"] },
+  R04: { conf: "baixa", fp: ["valor digitado errado no PNCP (escala por mil)", "contrato plurianual com valor global"] },
+  R05: { conf: "média", fp: ["doação legal de quem já era fornecedor antes da eleição", "empresa única da cidade"] },
+  R06: { conf: "média", fp: ["compras de naturezas diferentes", "fornecimento contínuo em ata"] },
+  R07: { conf: "média", fp: ["mercado local com poucos fornecedores", "serviço contínuo como coleta de lixo ou saúde"] },
+  R08: { conf: "média", fp: ["multinacional legítima com holding no exterior", "sócio estrangeiro de boa-fé"] },
+  RF01: { conf: "média", fp: ["banco grande e legítimo em expansão", "instituição de pagamento mal classificada"] },
+};
+const issueUrl = (a) => "https://github.com/lucasnegrelli/radar-publico/issues/new?labels=dados&title=" + encodeURIComponent(`Dado suspeito: ${a.empresa} (${a.id})`) + "&body=" + encodeURIComponent(`Alerta: ${a.id}\nEmpresa: ${a.empresa}\n\nO que está errado ou como você verificou:\n\nLink da fonte conferida:\n`);
+function exportarCSV() {
+  const L = [["id", "regra", "prioridade", "empresa", "cnpj", "total_reais", "registros", "inicio", "fim", "cidade", "uf"]];
+  visiveis.forEach((a) => L.push([a.id, a.regra, a.gravidade, a.empresa, a.cnpj, Math.round(a.total), a.n, a.inicio, a.fim, a.local ? a.local.cidade : "", a.local ? a.local.uf : ""]));
+  const csv = L.map((r) => r.map((x) => `"${String(x ?? "").replace(/"/g, '""')}"`).join(";")).join("\n");
+  const u = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" })); const l = document.createElement("a"); l.href = u; l.download = "radar-publico-alertas.csv"; l.click(); URL.revokeObjectURL(u);
+}
+const CORK = { org: "#00ffa6", pessoa: "#00b8ff", sancao: "#ff2d55", pais: "#b388ff", doador: "#ffb300", obra: "#8aa0b5" };
+function grafoSVG(a) {
+  const m = a.manchete, N = []; const org = a.orgao || (a.tabela.linhas[0] && a.tabela.linhas[0][1] && a.tabela.linhas[0][1].t) || "órgão contratante";
+  if (m.tipo === "R01") { [...new Set(a.tabela.linhas.map((l) => l[1].t))].slice(0, 3).forEach((n) => N.push({ l: n, k: "pessoa", e: "cota" })); if (a.sancao) N.push({ l: `${a.sancao.lista}: ${situacaoCurta(a.sancao.tipo)}`, k: "sancao", e: "punida" }); }
+  else if (m.tipo === "R05") { N.push({ l: `Prefeitura de ${m.cidade}`, k: "org", e: "contrata" }); N.push({ l: m.prefeito, k: "pessoa", e: "eleito", liga: 0 }); N.push({ l: m.doador, k: "doador", e: "sócio", liga: -1 }); N.push({ l: m.doador, k: "doador", e: "doou", liga: 1, so: 1 }); }
+  else if (m.tipo === "R08") { N.push({ l: org, k: "org", e: "contrata" }); N.push({ l: `${m.pais}`, k: "pais", e: "sócio" }); }
+  else if (m.tipo === "RF01") { N.push({ l: "Banco Central", k: "org", e: "supervisiona" }); N.push({ l: "Fundos (CVM)", k: "doador", e: "compram papel" }); }
+  else { N.push({ l: org, k: "org", e: "contrata" }); if (a.sancao) N.push({ l: `${a.sancao.lista}: ${situacaoCurta(a.sancao.tipo)}`, k: "sancao", e: "punida" }); if (m.abertura) N.push({ l: `Aberta em ${data(m.abertura)}`, k: "obra", e: "abertura" }); }
+  const nos = N.filter((n) => !n.so), cx = 220, cy = 92, W = 440, H = 184;
+  nos.forEach((n, i) => { const ang = (-Math.PI / 2) + (i + 0.5) * (2 * Math.PI / nos.length) + (nos.length === 1 ? Math.PI / 2 : 0); n.x = cx + 160 * Math.cos(ang); n.y = cy + 66 * Math.sin(ang); });
+  const cut = (x, n) => (x.length > n ? x.slice(0, n - 1) + "…" : x);
+  const linhas = nos.map((n) => { const alvo = n.liga != null && n.liga >= 0 && nos[n.liga] ? nos[n.liga] : { x: cx, y: cy }; return `<line x1="${n.x}" y1="${n.y}" x2="${alvo.x}" y2="${alvo.y}" stroke="${CORK[n.k]}" stroke-opacity=".55" stroke-width="1.4"/><text x="${(n.x + alvo.x) / 2}" y="${(n.y + alvo.y) / 2 - 3}" text-anchor="middle" style="fill:#6f8aa3">${esc(n.e)}</text>`; }).join("");
+  const bolas = nos.map((n) => `<circle cx="${n.x}" cy="${n.y}" r="9" fill="${CORK[n.k]}" fill-opacity=".25" stroke="${CORK[n.k]}"/><text x="${n.x}" y="${n.y + 21}" text-anchor="middle">${esc(cut(n.l, 24))}</text>`).join("");
+  return `<svg class="viz" viewBox="0 0 ${W} ${H}">${linhas}<circle cx="${cx}" cy="${cy}" r="13" fill="#fff" fill-opacity=".9"/><text x="${cx}" y="${cy + 26}" text-anchor="middle" style="fill:#fff;font-weight:700">${esc(cut(a.empresa, 30))}</text>${bolas}</svg>`;
+}
+function linhaSVG(a) {
+  const m = a.manchete, ev = []; const add = (d, l, k) => { if (d && /^\d{4}-\d{2}-\d{2}/.test(String(d))) ev.push({ d: String(d).slice(0, 10), l, k }); };
+  add(m.abertura, "Empresa aberta", "#8aa0b5");
+  if (a.sancao) { add(a.sancao.inicio, "Início da punição", "#ff2d55"); add(a.sancao.fim, "Fim da punição", "#ff2d55"); }
+  if (m.tipo === "R05") { add("2024-10-06", "Eleição", "#ffb300"); add("2025-01-01", "Posse", "#ffb300"); }
+  const ds = a.tabela.linhas.map((l) => l[0].t).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
+  if (ds.length) { add(ds[0], a.tabela.titulo === "Contratos" ? "1º contrato" : "1º pagamento", "#00ffa6"); if (ds.length > 1 && ds[ds.length - 1] !== ds[0]) add(ds[ds.length - 1], "Último", "#00ffa6"); }
+  if (ev.length < 2) return "";
+  ev.sort((x, y) => x.d.localeCompare(y.d)); const t0 = new Date(ev[0].d).getTime(), t1 = new Date(ev[ev.length - 1].d).getTime(), span = Math.max(1, t1 - t0);
+  const mm = (d) => { const x = dt(d); return `${MES[x.m - 1]}/${String(x.a).slice(2)}`; };
+  const pts = ev.map((e, i) => { const x = 30 + 380 * ((new Date(e.d).getTime() - t0) / span), up = i % 2 === 0; return `<line x1="${x}" y1="46" x2="${x}" y2="${up ? 30 : 62}" stroke="${e.k}"/><circle cx="${x}" cy="46" r="4.5" fill="${e.k}"/><text x="${x}" y="${up ? 22 : 74}" text-anchor="middle">${esc(e.l)}</text><text x="${x}" y="${up ? 12 : 85}" text-anchor="middle" style="fill:#6f8aa3">${mm(e.d)}</text>`; }).join("");
+  return `<svg class="viz" viewBox="0 0 440 92"><line x1="20" y1="46" x2="420" y2="46" stroke="#1f3044" stroke-width="2"/>${pts}</svg>`;
+}
+
+// ---------- investigações (casos) ----------
+let _casos = null;
+async function montarCasos() {
+  const d = (_casos ||= await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] })));
+  $("aba-casos").innerHTML = `<h3>Investigações</h3><p class="sub2">Dossiês de casos montados só com dados abertos: o que se consegue levantar, o que falta e quais são os próximos passos.</p>` +
+    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
+  $("aba-casos").querySelectorAll(".card").forEach((e) => (e.onclick = () => abrirCaso(d.casos[Number(e.dataset.i)])));
+}
+function serieSVG(s) {
+  const W = 440, H = 190, px = 34, py = 14, n = s.length, mx = Math.max(...s.map((x) => x.ativo || 0)), X = (i) => px + (W - px - 12) * i / Math.max(1, n - 1), Y = (v) => H - 26 - (H - 26 - py) * (v / mx);
+  const linha = (k, cor) => `<polyline fill="none" stroke="${cor}" stroke-width="2" points="${s.map((x, i) => (x[k] != null ? X(i) + "," + Y(x[k]) : "")).filter(Boolean).join(" ")}"/>`;
+  const eixo = [0, 0.5, 1].map((f) => `<text x="2" y="${Y(mx * f) + 3}">${(mx * f / 1e9).toFixed(0)}</text><line x1="${px}" x2="${W - 8}" y1="${Y(mx * f)}" y2="${Y(mx * f)}" stroke="#1f3044"/>`).join("");
+  const rot = [0, Math.floor(n / 2), n - 1].map((i) => `<text x="${X(i)}" y="${H - 8}" text-anchor="middle">${esc(s[i].tri)}</text>`).join("");
+  return `<svg class="viz" viewBox="0 0 ${W} ${H}">${eixo}${linha("ativo", "#00ffa6")}${linha("captacao", "#ffb300")}${linha("pl", "#00b8ff")}${rot}</svg><div class="leg"><span><i style="background:#00ffa6"></i>Ativo</span><span><i style="background:#ffb300"></i>Captações</span><span><i style="background:#00b8ff"></i>Patrimônio líquido</span><span>R$ bilhões</span></div>`;
+}
+async function abrirCaso(c) {
+  const dd = await fetch("/data/caso_" + c.id + "_diarios.json").then((r) => r.json()).catch(() => ({ diarios: [] }));
+  const porCid = {}; dd.diarios.forEach((x) => { const k = x.cidade + "/" + x.uf; (porCid[k] ||= []).push(x); });
+  const cidades = Object.entries(porCid).sort((a, b) => b[1].length - a[1].length);
+  const ev = [...c.noticias.map((n) => ({ d: n.data, t: n.titulo, f: n.fonte, u: n.url }))].sort((a, b) => a.d.localeCompare(b.d));
+  const ad = c.cadastro;
+  $("detalhe").hidden = false; $("detalhe").style.setProperty("--c", "#00ffa6");
+  $("detalhe").innerHTML = `<button class="fechar" aria-label="Fechar">×</button>
+    <div class="dos" style="--c:#00ffa6"><span>INVESTIGAÇÃO · ${esc(c.id.toUpperCase())}</span><span class="carimbo">DADOS ABERTOS</span></div>
+    <h2 style="--c:#00ffa6">${esc(c.titulo)}</h2><div class="sub2 mono">${esc(ad.razao_social)} · CNPJ base ${esc(ad.cnpj_basico)}</div>
+    <h4>O que os dados mostram</h4>${c.achados.map((x) => `<div class="achado">${esc(x)}</div>`).join("")}
+    ${c.serie.length ? `<h4>Balanço trimestral (Banco Central)</h4>${serieSVG(c.serie)}` : ""}
+    ${c.exposicao_fundos.length ? `<h4>Fundos abertos com papel do banco (CVM)</h4><table class="tbl"><tbody>${c.exposicao_fundos.map((e) => `<tr><td>${esc(e.mes)}</td><td class="num">${e.fundos} fundos</td><td class="num" style="text-align:right">${brlCurto(e.valor)}</td></tr>`).join("")}</tbody></table>` : ""}
+    <h4>Municípios que citam o banco nos diários oficiais</h4>${cidades.length ? `<p class="sub2">${dd.diarios.length} diários em ${cidades.length} municípios. Atos de comitês de investimento de institutos de previdência costumam citar aplicações. Cada menção precisa ser lida: pode ser aplicação, resgate ou só notícia.</p>
+      ${cidades.slice(0, 40).map(([k, v]) => `<div class="diario"><small>${esc(k)} · ${v.length} diário${v.length > 1 ? "s" : ""} · mais recente ${esc(v[0].data)}</small>${esc((v[0].trechos[0] || "").slice(0, 300))} <a href="${esc(v[0].url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}` : '<p class="sub2">Busca nos diários ainda em andamento (roda no GitHub, pode levar um tempo).</p>'}
+    <h4>Linha do tempo de manchetes</h4><table class="tbl"><tbody>${ev.slice(-25).map((e) => `<tr><td class="num sx" style="white-space:nowrap">${esc(e.d)}</td><td><a href="${esc(e.u)}" target="_blank" rel="noopener" style="color:#c9f3ea;text-decoration:none">${esc(e.t)}</a><br><span class="sub2">${esc(e.f)}</span></td></tr>`).join("")}</tbody></table>
+    <h4>Cadastro (Receita Federal)</h4><dl class="kv"><dt>Capital social</dt><dd>${ad.capital_social != null ? brl(ad.capital_social) : "–"}</dd>${ad.estabelecimentos.slice(0, 4).map((e) => `<dt>${esc(e.tipo)}</dt><dd>${esc(e.cnpj)} · ${esc(e.uf)} · ${esc(e.situacao)}${e.situacao_desde ? " desde " + esc(e.situacao_desde) : ""}</dd>`).join("")}
+      ${ad.administradores.map((x) => `<dt>${esc(x.cargo)}</dt><dd>${esc(x.nome)}${x.desde ? " · desde " + esc(x.desde) : ""}</dd>`).join("")}</dl>
+    <h4>O que não dá para ver em dado aberto</h4><ul class="check">${c.lacunas.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+    <h4>Próximos passos</h4><ul class="check">${c.proximos_passos.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+    <p class="aviso">Dossiê montado só com dados públicos e manchetes de imprensa. Não faz acusação: organiza o que está disponível e aponta o que falta verificar.</p>
+    <div class="links" style="margin-top:10px;font-size:12.5px">Fontes: ${c.fontes.map(esc).join(" · ")}</div>`;
+  $("detalhe").querySelector(".fechar").onclick = () => { $("detalhe").hidden = true; };
+}
+
+// ---------- fontes (saúde dos dados) ----------
+async function montarFontes() {
+  const d = await fetch("/data/meta.json").then((r) => r.json()).catch(() => null);
+  $("aba-fontes").innerHTML = d ? `<h3>Fontes e cobertura</h3><p class="sub2">O que cada base cobre, até quando, e o que ainda não vê. Um painel só é confiável se mostra seus próprios pontos cegos.</p>` +
+    d.fontes.map((f) => `<div class="caixa"><b>${esc(f.fonte)}</b><br><span class="sub2">${esc(f.cobertura)}${f.linhas ? " · " + Number(f.linhas).toLocaleString("pt-BR") + " linhas" : ""} · atualizado ${esc(f.atualizado)}</span><p style="margin:6px 0 0;font-size:12.5px;color:var(--media)">Lacuna: ${esc(f.lacuna)}</p></div>`).join("") : '<p class="sub2">Metadados indisponíveis.</p>';
+}
+
+// ---------- globo 3D (vínculos com o exterior) ----------
+function modoGlobo(on) {
+  globoAtivo = on; map.setProjection({ type: on ? "globe" : "mercator" });
+  if (on) {
+    overlay.setProps({ layers: [] });
+    if (!map.getSource("vinc-ext")) {
+      const fs = alertas.filter((a) => a.regra === "R08" && a.local && a.manchete.pais_xy).map((a) => ({ type: "Feature", properties: { n: a.manchete.nivel }, geometry: { type: "LineString", coordinates: curva([a.manchete.pais_xy.lon, a.manchete.pais_xy.lat], [a.local.lon, a.local.lat], 50) } }));
+      map.addSource("vinc-ext", { type: "geojson", data: { type: "FeatureCollection", features: fs } });
+      map.addLayer({ id: "vinc-ext-brilho", type: "line", source: "vinc-ext", paint: { "line-color": "#b388ff", "line-width": 7, "line-blur": 6, "line-opacity": 0.35 } });
+      map.addLayer({ id: "vinc-ext", type: "line", source: "vinc-ext", paint: { "line-color": ["case", ["==", ["get", "n"], 1], "#ff2d55", "#b388ff"], "line-width": 1.6, "line-opacity": 0.9 } });
+    }
+    map.setLayoutProperty("vinc-ext", "visibility", "visible"); map.setLayoutProperty("vinc-ext-brilho", "visibility", "visible");
+    map.easeTo({ center: [-30, 15], zoom: 1.7, pitch: 0, duration: 1600 });
+  } else {
+    if (map.getLayer("vinc-ext")) { map.setLayoutProperty("vinc-ext", "visibility", "none"); map.setLayoutProperty("vinc-ext-brilho", "visibility", "none"); }
+    map.easeTo({ pitch: 38, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 1200 });
+  }
+}
+
 // ---------- abas ----------
 $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
   [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
   if (b.dataset.aba === "fichas") carregarFichas();
   if (b.dataset.aba === "exterior") montarExterior();
-  if (b.dataset.aba === "justica") montarJustica(); };
+  if (b.dataset.aba === "justica") montarJustica();
+  if (b.dataset.aba === "casos") montarCasos();
+  if (b.dataset.aba === "fontes") montarFontes(); };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
   [...$("filtros").children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
 
@@ -382,10 +511,11 @@ visiveis = alertas;
 // filtro por tipo de alerta
 const cont = {}; alertas.forEach((a) => (cont[a.regra] = (cont[a.regra] || 0) + 1));
 const barra = document.createElement("div"); barra.className = "filtros"; barra.id = "regras";
-barra.innerHTML = `<button data-r="todas" class="on">Todos os tipos</button>` + Object.keys(nomes).filter((r) => cont[r]).map((r) => `<button data-r="${r}" title="${esc(nomes[r])}">${esc(nomes[r])} (${cont[r]})</button>`).join("");
+barra.innerHTML = `<button data-r="todas" class="on">Todos os tipos</button><button data-r="__comb" style="border-color:#b388ff;color:#b388ff">Sinais combinados</button>` + Object.keys(nomes).filter((r) => cont[r]).map((r) => `<button data-r="${r}" title="${esc(nomes[r])}">${esc(nomes[r])} (${cont[r]})</button>`).join("");
 barra.onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroR = b.dataset.r; [...barra.children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
 $("filtros").before(barra);
 const contEl = document.createElement("div"); contEl.id = "cont"; contEl.className = "sub2"; contEl.style.margin = "0 0 10px"; $("itens").before(contEl);
+const bCsv = document.createElement("button"); bCsv.className = "botao"; bCsv.textContent = "Exportar CSV"; bCsv.style.margin = "0 0 10px"; bCsv.onclick = () => exportarCSV(); $("itens").before(bCsv);
 
 const total = alertas.filter((a) => !(a.manchete && a.manchete.ref)).reduce((s, a) => s + a.total, 0);  // o caso de referência (Master) é histórico e não entra na soma
 $("resumo").innerHTML = `<span><b class="num">${alertas.length}</b>alertas</span><span><b class="num">${brlCurto(total)}</b>envolvidos</span><span><b class="num">${dA.gerado ? data(dA.gerado) : "–"}</b>atualizado</span>`;
@@ -400,3 +530,5 @@ $("resumo").innerHTML = `<span><b class="num">${alertas.length}</b>alertas</span
 lista();
 $("aba-noticias").innerHTML = `<h3>Notícias</h3><p class="sub2">Manchetes recentes sobre gasto público, fraude e fiscalização.</p><ul class="news">${dN.itens.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.titulo)}</a><small>${esc(n.fonte)}</small></li>`).join("") || "<li class='sub2'>Sem notícias carregadas.</li>"}</ul>`;
 if (map.loaded()) montarMapa(); else map.on("load", montarMapa);
+
+if (location.hash.length > 1) setTimeout(() => abrir(decodeURIComponent(location.hash.slice(1))), 1800);
