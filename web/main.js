@@ -1,3 +1,6 @@
+import "@fontsource-variable/inter";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
@@ -99,10 +102,11 @@ function checagem(a) {
 
 // ---------- mapa ----------
 const MAPA_BOUNDS = [[-75, -34.5], [-33, 5.6]];
+const pad = () => ({ top: 24, bottom: 112, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
 const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
-  style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, layers: [{ id: "fundo", type: "background", paint: { "background-color": "#04090e" } }] },
-  bounds: MAPA_BOUNDS, fitBoundsOptions: { padding: 8 },
+  style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, layers: [{ id: "fundo", type: "background", paint: { "background-color": "#05080c" } }] },
+  bounds: MAPA_BOUNDS, fitBoundsOptions: { padding: { top: 24, bottom: 112, left: 420, right: 24 } },
   minZoom: 1.5, maxZoom: 10, dragRotate: true, pitchWithRotate: true, maxPitch: 60,
 });
 const vazio = { type: "FeatureCollection", features: [] };
@@ -126,8 +130,8 @@ const ADITIVO = { blend: true, blendColorOperation: "add", blendColorSrcFactor: 
 function corUF(lista) {
   const por = {}; lista.filter((a) => a.local).forEach((a) => { por[a.local.uf] = (por[a.local.uf] || 0) + 1; });
   const casos = ["match", ["get", "uf"]];
-  Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 40 ? "#244a5e" : n >= 15 ? "#1d3d50" : n >= 5 ? "#18323f" : "#132a36"));
-  casos.push("#0f212b"); return casos;
+  Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 40 ? "#202f40" : n >= 15 ? "#1a2736" : n >= 5 ? "#152030" : "#111a26"));
+  casos.push("#0e151d"); return casos;
 }
 
 // ----- dados derivados para o deck.gl -----
@@ -145,17 +149,17 @@ function derivar() {
     if (!c) por.set(k, (c = { pos: [a.local.lon, a.local.lat], cidade: a.local.cidade, uf: a.local.uf, n: 0, total: 0, topo: a, alta: 0 }));
     c.n++; c.total += a.total; if (a.gravidade === "alta") c.alta++; if (a.total > c.topo.total) c.topo = a; });
   colunas = [...por.values()].map((c) => ({ ...c, g: c.alta / c.n >= 0.35 ? "alta" : c.alta / c.n > 0 || c.topo.gravidade === "media" ? "media" : "baixa" }));
-  pulsos = [...colunas].sort((a, b) => b.total - a.total).slice(0, 18);
+  pulsos = [...colunas].sort((a, b) => b.total - a.total).slice(0, 6);
   pontosA = visiveis.filter((a) => a.local).map((a) => ({ id: a.id, g: a.gravidade, pos: [a.local.lon, a.local.lat], total: a.total, empresa: a.empresa, cidade: a.local.cidade, uf: a.local.uf }));
 }
 const altura = (v) => Math.max(8000, (Math.log10(Math.max(v, 1000)) - 2.6) * 95000);
 function camadas(tempo) {
   const L = [];
-  L.push(new PathLayer({ id: "rotas-base", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 70], getWidth: (d) => d.w, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
-  L.push(new TripsLayer({ id: "pulsos-rota", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => [...RGB[d.g], 255], widthMinPixels: 2.2, capRounded: true, jointRounded: true, trailLength: 0.34, currentTime: tempo, parameters: ADITIVO }));
-  L.push(new HeatmapLayer({ id: "calor", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getWeight: (d) => Math.max(0.2, Math.log10(Math.max(d.total, 1000)) - 2.5), radiusPixels: 58, intensity: 3.2, threshold: 0.02, aggregation: "SUM",
-    colorRange: [[8, 40, 52, 0], [0, 150, 140, 120], [34, 211, 182, 190], [255, 204, 0, 220], [255, 120, 40, 240], [255, 45, 85, 255]], parameters: ADITIVO }));
-  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: 3.2, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: [255, 255, 255, 200], getLineWidth: 0.8, lineWidthUnits: "pixels", pickable: true, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new PathLayer({ id: "rotas-base", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 42], getWidth: (d) => d.w * 0.7, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new TripsLayer({ id: "pulsos-rota", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => [...RGB[d.g], 255], widthMinPixels: 1.6, capRounded: true, jointRounded: true, trailLength: 0.28, currentTime: tempo, parameters: ADITIVO }));
+  L.push(new HeatmapLayer({ id: "calor", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getWeight: (d) => Math.max(0.2, Math.log10(Math.max(d.total, 1000)) - 2.5), radiusPixels: 54, intensity: 3.6, threshold: 0.015, aggregation: "SUM",
+    colorRange: [[20, 8, 40, 0], [70, 20, 100, 110], [140, 30, 125, 175], [220, 60, 70, 215], [255, 140, 40, 240], [255, 226, 130, 255]], parameters: ADITIVO }));
+  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: 2.5, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: [255, 255, 255, 90], getLineWidth: 0.5, lineWidthUnits: "pixels", pickable: true, onClick: (i) => i.object && abrir(i.object.id) }));
   L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(200 * (1 - (tempo % 1)))], getLineWidth: 1.5, lineWidthUnits: "pixels", parameters: ADITIVO }));
   if (rotaSel) {
     L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 14, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
@@ -176,14 +180,13 @@ const limparRota = () => { rotaSel = null; };
 function montarMapa() {
   const corG = ["match", ["get", "g"], "alta", COR.alta, "media", COR.media, COR.baixa];
   map.addSource("mundo", { type: "geojson", data: mundoGeo });
-  map.addLayer({ id: "mundo-fill", type: "fill", source: "mundo", paint: { "fill-color": "#0a151d" } });
-  map.addLayer({ id: "mundo-line", type: "line", source: "mundo", paint: { "line-color": "#16303d", "line-width": 0.6 } });
+  map.addLayer({ id: "mundo-fill", type: "fill", source: "mundo", paint: { "fill-color": "#0c1118" } });
+  map.addLayer({ id: "mundo-line", type: "line", source: "mundo", paint: { "line-color": "#19232e", "line-width": 0.6 } });
   map.addSource("grade", { type: "geojson", data: grade() });
-  map.addLayer({ id: "grade", type: "line", source: "grade", paint: { "line-color": "#00ffa6", "line-width": 0.5, "line-opacity": 0.07 } });
+  map.addLayer({ id: "grade", type: "line", source: "grade", paint: { "line-color": "#8aa0b5", "line-width": 0.5, "line-opacity": 0.035 } });
   map.addSource("ufs", { type: "geojson", data: ufGeo });
   map.addLayer({ id: "uf-fill", type: "fill", source: "ufs", paint: { "fill-color": corUF(visiveis) } });
-  map.addLayer({ id: "uf-glow", type: "line", source: "ufs", paint: { "line-color": "#00ffa6", "line-width": 4, "line-blur": 4, "line-opacity": 0.14 } });
-  map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#19f0b4", "line-width": 0.8, "line-opacity": 0.5 } });
+  map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#2c3b4c", "line-width": 0.7, "line-opacity": 0.95 } });
   map.addSource("voos", { type: "geojson", data: vazio });
   map.addLayer({ id: "voos-arco", type: "line", source: "voos", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": "#b388ff", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1, 100, 4], "line-opacity": 0.75 } });
   map.addLayer({ id: "voos-ponto", type: "circle", source: "voos", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none" }, paint: { "circle-color": "#b388ff", "circle-radius": ["interpolate", ["linear"], ["get", "n"], 1, 4, 100, 12], "circle-stroke-color": "#fff", "circle-stroke-width": 1 } });
@@ -238,14 +241,14 @@ const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json")
 // ---------- lista e filtros ----------
 function aplicarFiltro() {
   visiveis = alertas.filter((a) => noJanela(a) && (filtroG === "todas" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
-  lista(); atualizarMapa();
+  lista(); atualizarMapa(); atualizarPanorama();
 }
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
       <div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div>
       <div class="sub">${linhaCard(a)}</div>
-      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="chip">${NOME_G[a.gravidade].replace("Prioridade ", "")}</span>${a.regra} · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
+      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}${a.regra} · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
   $("cont").textContent = `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
@@ -290,7 +293,7 @@ function abrir(id) {
   $("b-link").onclick = () => { navigator.clipboard && navigator.clipboard.writeText(location.origin + "/#" + encodeURIComponent(a.id)); $("b-link").textContent = "Link copiado"; };
   mostrarRota(a);
 }
-function fechar() { $("detalhe").hidden = true; sel = null; history.replaceState(null, "", location.pathname); lista(); limparRota(); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 900 }); }
+function fechar() { $("detalhe").hidden = true; sel = null; history.replaceState(null, "", location.pathname); lista(); limparRota(); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 900 }); }
 
 // ---------- fichas de agente público ----------
 let fichas = null;
@@ -472,7 +475,7 @@ function modoGlobo(on) {
     map.easeTo({ center: [-30, 15], zoom: 1.7, pitch: 0, duration: 1600 });
   } else {
     if (map.getLayer("vinc-ext")) { map.setLayoutProperty("vinc-ext", "visibility", "none"); map.setLayoutProperty("vinc-ext-brilho", "visibility", "none"); }
-    map.easeTo({ pitch: 0, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 1200 });
+    map.easeTo({ pitch: 0, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 1200 });
   }
 }
 
@@ -634,3 +637,24 @@ document.addEventListener("keydown", (e) => {
   else if (e.key === "ArrowUp") { e.preventDefault(); _sel = Math.max(0, _sel - 1); marca(); }
   else if (e.key === "Enter") { e.preventDefault(); escolhe(_sel); }
 });
+
+
+// =====================================================================
+// v6: panorama (rankings), painel recolhível
+// =====================================================================
+const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appendChild(pan);
+function atualizarPanorama() {
+  const L = visiveis; if (!L.length) { pan.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div>'; return; }
+  const soma = (f) => { const m = {}; L.forEach((a) => { const k = f(a); if (!k) return; const o = (m[k] ||= { n: 0, v: 0 }); o.n++; o.v += a.total || 0; }); return Object.entries(m).sort((x, y) => y[1].v - x[1].v); };
+  const ufs = soma((a) => a.local && a.local.uf).slice(0, 6), tipos = soma((a) => nomes[a.regra] || a.regra).slice(0, 5);
+  const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++); const tot = L.length;
+  const barras = (arr) => { const mx = Math.max(1, ...arr.map((x) => x[1].v)); return arr.map(([k, o]) => `<div class="pan-l"><span>${esc(k)}</span><div class="barra"><i style="width:${Math.round(100 * o.v / mx)}%"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join(""); };
+  pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} alertas${janela ? " · período filtrado" : ""}</span></div>
+    <div class="pan-sev"><i style="width:${100 * c.alta / tot}%;background:${COR.alta}"></i><i style="width:${100 * c.media / tot}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / tot}%;background:${COR.baixa}"></i></div>
+    <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
+    <div class="pan-h">Estados com mais valor em atenção</div>${barras(ufs)}
+    <div class="pan-h">Por tipo de alerta</div>${barras(tipos)}`;
+}
+atualizarPanorama();
+const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
+bPainel.onclick = () => { document.body.classList.toggle("sem-painel"); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 600 }); };

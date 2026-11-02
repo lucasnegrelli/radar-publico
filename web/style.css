@@ -103,3 +103,47 @@ svg.viz{width:100%;height:auto;display:block;background:var(--s2);border:1px sol
 #paleta .vazio{padding:20px;text-align:center;color:var(--mut);font-size:13px}
 
 @media(max-width:980px){#painel{position:absolute;left:64px;right:0;bottom:0;top:auto;width:auto;height:42%;z-index:12;border-top:1px solid var(--linha2)}#detalhe{width:100%}.marca small,.resumo{display:none}.busca-fake{max-width:none}}
+
+/* ===================== v6: mapa em tela cheia, painéis flutuantes, tipografia ===================== */
+:root{--sans:"Inter Variable",Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Consolas,monospace}
+html,body{font-family:var(--sans);font-size:13.5px}
+.mono,.num,.rot,kbd,h4,.chip,.botao,.tag,.dos,.kpi span,.pan-t,.pan-h{font-family:var(--mono)}
+.num,.kpi b,.card .valor,td.v,.numeros b,.pan-l b{font-variant-numeric:tabular-nums}
+#app{position:relative;display:block}
+#abas{position:absolute;left:0;top:0;bottom:0;z-index:16}
+#centro{position:absolute;left:64px;right:0;top:0;bottom:0}
+#painel{position:absolute;left:76px;top:12px;bottom:104px;width:372px;z-index:12;border:1px solid var(--linha2);border-radius:14px;background:rgba(10,15,22,.9);backdrop-filter:blur(12px);box-shadow:0 18px 50px rgba(0,0,0,.5);transition:transform .25s ease,opacity .2s}
+.sem-painel #painel{transform:translateX(-120%);opacity:0;pointer-events:none}
+#b-painel{position:absolute;z-index:13;left:456px;top:22px;width:24px;height:44px;background:rgba(10,15,22,.9);border:1px solid var(--linha2);border-radius:0 8px 8px 0;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left .25s ease}
+#b-painel:hover{color:var(--acc2)}.sem-painel #b-painel{left:64px}.sem-painel #b-painel svg{transform:rotate(180deg)}
+#camadas{left:auto;right:12px;top:12px;background:rgba(10,15,22,.86)}
+#panorama{position:absolute;right:12px;top:168px;width:286px;z-index:8;background:rgba(10,15,22,.86);backdrop-filter:blur(8px);border:1px solid var(--linha);border-radius:12px;padding:12px 14px}
+#detalhe:not([hidden]) ~ #panorama{display:none}
+.pan-t{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt);margin-bottom:8px}.pan-t span{color:var(--mut);letter-spacing:.02em;text-transform:none;font-size:11px}
+.pan-sev{display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--s3)}.pan-sev i{display:block;height:6px}
+.pan-leg{display:flex;gap:12px;font-size:11px;margin:5px 0 4px}
+.pan-h{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin:12px 0 6px}
+.pan-l{display:grid;grid-template-columns:62px 1fr 64px;gap:8px;align-items:center;font-size:11.5px;margin:4px 0}.pan-l span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}.pan-l b{font-weight:500;color:var(--mut);text-align:right;font-size:11px}
+.pan-l:nth-child(n){}
+#legenda{right:12px;bottom:100px}
+#timeline{left:12px;right:12px}
+/* lista compacta */
+.card{padding:8px 10px 8px 13px;border-radius:9px}
+.card .nome{font-size:13px;font-weight:600}.card .valor{font-size:12.5px;font-weight:600}
+.card .sub{font-size:12px;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .meta{margin-top:4px;font-size:11px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap;gap:5px}
+#itens{gap:6px}
+.cab h2{font-size:15px}
+/* bússola visual: só o dado tem cor */
+#abas button.on{box-shadow:none;background:var(--s3);color:#fff}
+.kpi.n b{color:#fff}.kpi.c b{color:#fff}
+.ameaca{background:transparent}
+@media(max-width:980px){#painel{left:64px;right:0;top:auto;bottom:0;width:auto;height:42%;border-radius:14px 14px 0 0}#b-painel{display:none}#panorama{display:none}#centro{left:0}}
+
+/* ===== v6.1: rolagem escura, sem vazamento, rótulos do panorama ===== */
+*{scrollbar-width:thin;scrollbar-color:#2a3a4e transparent}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:#243244;border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#34506d}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-corner{background:transparent}
+#painel{overflow-x:hidden}#itens>li{min-width:0}.card{min-width:0}.card .topo{min-width:0}.card .nome{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.card .sub{display:block;max-width:100%}.card .meta{max-width:100%}
+.pan-l{grid-template-columns:104px 1fr 58px}
+.pan-l{grid-template-columns:104px 1fr 74px}.pan-l b{white-space:nowrap}
