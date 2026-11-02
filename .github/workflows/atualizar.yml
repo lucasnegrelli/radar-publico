@@ -58,6 +58,8 @@ jobs:
         continue-on-error: true
       - name: Emendas parlamentares (R09)
         run: python ingestao/emendas.py
+      - name: Pagamentos federais a sancionadas (R11)
+        run: python ingestao/despesas_federais.py
       - name: Exportar alertas
         run: python ingestao/exportar_web.py
       - name: Escala, fichas, cota no exterior, risco financeiro

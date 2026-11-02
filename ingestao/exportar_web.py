@@ -10,7 +10,7 @@ con.execute("SET memory_limit='" + os.environ.get("DUCK_MEM", "6GB") + "'"); con
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 ORDEM = {"alta": 0, "media": 1, "baixa": 2}
 NOME_REGRA = {"R01": "Empresa punida recebeu cota parlamentar", "R02": "Contrato com empresa punida",
-              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor", "R06": "Possível fracionamento de compras", "R07": "Fornecedor concentra os contratos da prefeitura", "R08": "Sócio em paraíso fiscal", "R09": "Emenda parlamentar para entidade com ponto de atenção", "R10": "Político eleito é sócio de empresa que vende ao governo"}
+              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor", "R06": "Possível fracionamento de compras", "R07": "Fornecedor concentra os contratos da prefeitura", "R08": "Sócio em paraíso fiscal", "R09": "Emenda parlamentar para entidade com ponto de atenção", "R10": "Político eleito é sócio de empresa que vende ao governo", "R11": "Pagamento federal a empresa sancionada"}
 
 def sql(nome): return (RAIZ / "alertas" / nome).read_text(encoding="utf-8").strip().rstrip(";")
 def fmt_cnpj(d): return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}" if len(d) == 14 and not d.startswith("000") else f"CPF ***{d[-8:-2]}**"
