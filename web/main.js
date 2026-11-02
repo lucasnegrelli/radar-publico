@@ -327,22 +327,26 @@ function fechar() { $("detalhe").hidden = true; sel = null; history.replaceState
 let fichas = null;
 const norm = (x) => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const CARGO = { dep: "Deputado(a) federal", sen: "Senador(a)", pref: "Prefeito(a) eleito(a) em 2024" };
-$("aba-fichas").innerHTML = `<h3>Fichas de agentes públicos</h3><p class="sub2">Busque um deputado, senador ou prefeito. A ficha reúne só dados abertos (gastos, fornecedores, alertas ligados). Não é avaliação de conduta.</p>
-  <input id="busca" type="search" placeholder="Nome, cidade ou UF..." autocomplete="off" style="width:100%;padding:10px 12px;margin:6px 0 12px;background:#06141a;border:1px solid var(--neon);color:#fff;font:14px ui-monospace,Consolas,monospace;outline:none"><div id="res"></div>`;
+$("aba-fichas").innerHTML = `<h3>Pessoas</h3><p class="sub2">Todo político em um lugar: candidaturas, patrimônio declarado, campanha, cota, emendas e pontos de atenção. Só dados abertos; nunca veredito.</p>
+  <input id="busca" type="search" placeholder="Nome, partido, estado ou cargo..." autocomplete="off" style="width:100%;padding:10px 12px;margin:6px 0 8px;background:#06141a;border:1px solid var(--neon);color:#fff;font:14px ui-monospace,Consolas,monospace;outline:none">
+  <div class="filtros" id="f-pessoas"><button data-c="" class="on">Em destaque</button><button data-c="Presidente">Presidente</button><button data-c="Governador">Governador</button><button data-c="Senador">Senador</button><button data-c="Deputado Federal">Dep. federal</button><button data-c="Prefeito">Prefeito</button></div><div id="res"></div>`;
+let _pessoas = null, _filtroP = "";
 async function carregarFichas() {
-  if (fichas) return;
-  $("res").innerHTML = '<p class="sub2">Carregando fichas...</p>';
-  fichas = (await fetch("/data/fichas.json").then((r) => r.json()).catch(() => ({ fichas: [] }))).fichas;
-  fichas.forEach((f) => { f._k = norm([f.n, f.c, f.u, f.p].join(" ")); });
+  if (_pessoas) return;
+  $("res").innerHTML = '<p class="sub2">Carregando pessoas...</p>';
+  _pessoas = (await fetch("/data/pessoas/idx.json").then((r) => r.json()).catch(() => ({ p: [] }))).p;
+  _pessoas.forEach((r) => { r._k = norm([r[1], r[2], r[3], r[4], r[5]].join(" ")); });
   buscarFichas();
 }
 function buscarFichas() {
-  const q = norm($("busca").value).trim();
-  const lista = (q ? fichas.filter((f) => q.split(/\s+/).every((w) => f._k.includes(w))) : fichas.filter((f) => f.n_alertas > 0).sort((a, b) => b.n_alertas - a.n_alertas)).slice(0, 40);
-  $("res").innerHTML = (q ? "" : '<div class="rot">// com alertas ligados</div>') + (lista.map((f, i) => `<div class="card" style="--c:#00ffa6" data-i="${fichas.indexOf(f)}"><div class="topo"><div class="nome">${esc(f.n)}</div>${f.n_alertas ? `<div class="valor num" style="color:var(--media)">${f.n_alertas} alerta${f.n_alertas > 1 ? "s" : ""}</div>` : ""}</div><div class="meta">${CARGO[f.t]}${f.c ? " · " + esc(f.c) : ""}${f.p ? " · " + esc(f.p) : ""}${f.u ? "/" + esc(f.u) : ""}</div></div>`).join("") || '<p class="sub2">Nenhuma ficha encontrada.</p>');
-  $("res").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrirFicha(fichas[Number(c.dataset.i)])));
+  if (!_pessoas) return;
+  const q = norm($("busca").value).trim(), ts = q.split(/\s+/).filter(Boolean);
+  const lista = _pessoas.filter((r) => (!_filtroP || r[5] === _filtroP) && ts.every((t) => r._k.includes(t))).slice(0, 40);
+  $("res").innerHTML = (q ? "" : '<div class="rot">// mais relevantes</div>') + lista.map((r) => `<div class="card" style="--c:#00ffa6" data-id="${esc(r[0])}"><div class="topo"><div class="nome">${esc(r[1])}</div><div class="valor num" style="color:var(--mut)">${r[6]}</div></div><div class="sub">${esc(r[2] && r[2] !== r[1] ? "“" + r[2] + "” · " : "")}${esc(r[5])}${r[4] && r[4] !== "BR" ? " · " + esc(r[4]) : ""}${r[3] ? " · " + esc(r[3]) : ""}</div></div>`).join("") || '<p class="sub2">Ninguém encontrado.</p>';
+  $("res").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrirPessoa(c.dataset.id, CTX_P)));
 }
-$("busca").addEventListener("input", () => fichas && buscarFichas());
+$("busca").addEventListener("input", buscarFichas);
+$("f-pessoas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; _filtroP = b.dataset.c; [...$("f-pessoas").children].forEach((x) => x.classList.toggle("on", x === b)); buscarFichas(); };
 function abrirFicha(f) {
   sel = null; const c = "#00ffa6";
   const anos = Object.entries(f.anos || {}); const max = Math.max(1, ...anos.map(([, v]) => v));
@@ -447,9 +451,17 @@ function linhaSVG(a) {
 let _casos = null;
 async function montarCasos() {
   const d = (_casos ||= await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] })));
-  $("aba-casos").innerHTML = `<h3>Investigações</h3><p class="sub2">Dossiês de casos montados só com dados abertos: o que se consegue levantar, o que falta e quais são os próximos passos.</p>` +
+  $("aba-casos").innerHTML = `<h3>Investigações e risco</h3><p class="sub2">Dossiês de casos montados só com dados abertos: o que se consegue levantar, o que falta e quais são os próximos passos.</p>` +
     d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
   $("aba-casos").querySelectorAll(".card").forEach((e) => (e.onclick = () => abrirCaso(d.casos[Number(e.dataset.i)])));
+  const rf = alertas.filter((a) => a.regra === "RF01");
+  const inc = (dA.incidentes || []).slice(0, 12);
+  $("aba-casos").insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Bancos em observação</h3><p class="sub2">Instituições que crescem rápido e alavancadas (Banco Central), com o dossiê automático: balanço, fundos que seguram o papel, imprensa e diários.</p>
+    ${rf.map((a) => `<div class="card" data-id="${esc(a.id)}" style="--c:#ffb300"><div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div><div class="sub">${esc(a.manchete.trimestres)} trimestres seguidos · ${esc(a.manchete.ate)}</div></div>`).join("") || '<p class="sub2">Nenhum banco acende os critérios agora.</p>'}
+    <h3 style="margin-top:18px">Empresas com sinais combinados</h3><p class="sub2">Mesma empresa em duas ou mais regras: contrato, sanção, emenda, sócio no exterior. É onde vale olhar primeiro.</p>
+    ${inc.map((i) => `<div class="card" data-cn="${esc(i.cnpj)}" style="--c:#ff2d55"><div class="topo"><div class="nome">${esc(i.empresa)}</div><div class="valor num">${brlCurto(i.total)}</div></div><div class="sub">${i.regras.map((r) => esc(nomes[r] || r)).join(" · ")}</div></div>`).join("")}`);
+  $("aba-casos").querySelectorAll("[data-id]").forEach((e) => (e.onclick = () => abrir(e.dataset.id)));
+  $("aba-casos").querySelectorAll("[data-cn]").forEach((e) => (e.onclick = () => { const a = alertas.find((x) => x.cnpj === e.dataset.cn); if (a) abrir(a.id); }));
 }
 function serieSVG(s) {
   const W = 440, H = 190, px = 34, py = 14, n = s.length, mx = Math.max(...s.map((x) => x.ativo || 0)), X = (i) => px + (W - px - 12) * i / Math.max(1, n - 1), Y = (v) => H - 26 - (H - 26 - py) * (v / mx);
@@ -514,19 +526,12 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
   if (b.dataset.aba === "fichas") carregarFichas();
-  if (b.dataset.aba === "exterior") montarExterior();
   if (b.dataset.aba === "justica") montarJustica();
   if (b.dataset.aba === "casos") montarCasos();
-  if (b.dataset.aba === "fontes") montarFontes(); };
+  if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
   [...$("filtros").children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
 
-$("aba-risco").innerHTML = `
-  <h3>Risco financeiro <span class="tag">em construção</span></h3>
-  <p>Este módulo procura o que não aparece em contratos: dinheiro público e de aposentados concentrado em poucos emissores, bancos crescendo rápido demais e fundos que se pagam entre si. É o tipo de sinal que antecede um colapso como o do Banco Master.</p>
-  <div class="caixa"><b>1. Previdência de servidores concentrada</b><p>Quanto da carteira de cada fundo de previdência municipal ou estadual (RPPS) está num único emissor.</p></div>
-  <div class="caixa"><b>2. Banco crescendo fora da curva</b><p>Captação e ativos que dobram em poucos trimestres, com rendimento muito acima do mercado. Fonte: Banco Central.</p></div>
-  <div class="caixa"><b>3. Rede de fundos e empresas</b><p>Fundos que investem uns nos outros e terminam numa empresa recém-criada. Fonte: CVM e CNPJ da Receita.</p></div>`;
 $("aba-sobre").innerHTML = `
   <h3>Como ler este painel</h3>
   <div class="caixa"><b>O que é um alerta</b><p>Um cruzamento automático de bases públicas que encontrou algo fora do esperado. É um ponto de atenção para conferir, não uma acusação.</p></div>
@@ -639,7 +644,7 @@ document.body.appendChild(paleta);
 let _indice = null, _sel = 0, _itens = [];
 async function indice() {
   if (_indice) return _indice;
-  await carregarFichas(); const dc = await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] }));
+  const dc = await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] }));
   const L = [];
   alertas.forEach((a) => L.push({ g: "Alertas", t: a.empresa, s: `${nomes[a.regra] || a.regra}${a.local ? " · " + a.local.cidade + "/" + a.local.uf : ""}`, v: brlCurto(a.total), k: norm([a.empresa, a.cnpj, a.local && a.local.cidade, a.local && a.local.uf].join(" ")), go: () => abrir(a.id) }));
   const ip = await fetch("/data/pessoas/idx.json").then((r) => r.json()).catch(() => ({ p: [] }));
@@ -684,7 +689,7 @@ document.addEventListener("keydown", (e) => {
 const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appendChild(pan);
 function atualizarPanorama() {
   const L = visiveis; if (!L.length) { pan.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div>'; return; }
-  const soma = (f) => { const m = {}; L.forEach((a) => { const k = f(a); if (!k) return; const o = (m[k] ||= { n: 0, v: 0 }); o.n++; o.v += a.total || 0; }); return Object.entries(m).sort((x, y) => y[1].v - x[1].v); };
+  const soma = (f) => { const m = {}; L.filter((a) => a.regra !== "RF01").forEach((a) => { const k = f(a); if (!k) return; const o = (m[k] ||= { n: 0, v: 0 }); o.n++; o.v += a.total || 0; }); return Object.entries(m).sort((x, y) => y[1].v - x[1].v); };
   const ufs = soma((a) => a.local && a.local.uf).slice(0, 6), tipos = soma((a) => nomes[a.regra] || a.regra).slice(0, 5);
   const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++); const tot = L.length;
   const barras = (arr) => { const mx = Math.max(1, ...arr.map((x) => x[1].v)); return arr.map(([k, o]) => `<div class="pan-l"><span>${esc(k)}</span><div class="barra"><i style="width:${Math.round(100 * o.v / mx)}%"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join(""); };
@@ -812,4 +817,22 @@ function escalaHtml() {
     <div><b>${f(_esc.pncp_bi)}</b><span>contratos válidos no PNCP em 2025-26</span></div>
     <div><b>${f(_esc.alertas_bi)}</b><span>em alertas de prioridade alta e média (${_esc.pct_pncp}% do PNCP)</span></div></div>
     <p class="sub2" style="margin:6px 0 0;font-size:11px">Um caso do tamanho do Master (dezenas de bilhões) não aparece em contrato: aparece no balanço dos bancos, nos fundos e nos institutos de previdência.</p>`;
+}
+
+
+// ---------- dados abertos para baixar (o Radar como fonte de dados) ----------
+function dadosAbertos() {
+  if ($("aba-fontes").querySelector("#baixar")) return;
+  const itens = [
+    ["alertas.json", "Todos os alertas com critérios, valores, tabelas de contratos e ligações (JSON)."],
+    ["pessoas/idx.json", "Índice de 35 mil políticos: nome, partido, UF, cargo, ano. Cada ficha completa fica em /data/pessoas/sXX.json (XX = 2 primeiros caracteres do id)."],
+    ["fichas.json", "Cota parlamentar por deputado, senador e prefeito eleito (JSON)."],
+    ["risco.json", "Bancos em observação com balanço, fundos e imprensa (JSON)."],
+    ["viagens.json", "Voos internacionais pagos com a cota da Câmara (JSON)."],
+    ["judiciario.json", "Processos de improbidade por tribunal (DataJud, JSON)."],
+    ["meta.json", "Fontes, cobertura e data de atualização (JSON)."],
+  ];
+  $("aba-fontes").insertAdjacentHTML("beforeend", `<div id="baixar"><h3 style="margin-top:18px">Baixar os dados</h3><p class="sub2">Tudo que o Radar calcula é aberto e atualizado todo dia. Use, cruze, publique. Cite a fonte: Radar Público.</p>
+    ${itens.map((i) => `<div class="caixa"><b><a href="/data/${i[0]}" download>${i[0]}</a></b><p>${esc(i[1])}</p></div>`).join("")}
+    <p class="sub2">Código aberto (MIT): <a href="https://github.com/lucasnegrelli/radar-publico" target="_blank" rel="noopener">github.com/lucasnegrelli/radar-publico</a></p></div>`);
 }

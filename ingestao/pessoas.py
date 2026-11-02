@@ -162,6 +162,15 @@ for pid, p in pessoas.items():
             p["emendas"] = {"anos": e["anos"], "top": e["top"], "alertas": e["alertas"][:8]}
             break
 
+# ---------- voos internacionais pagos com a cota (viagens.json) ----------
+_vj = RAIZ / "web/public/data/viagens.json"
+if _vj.exists():
+    voos = {SQ(d["p"]): d for d in json.loads(_vj.read_text(encoding="utf-8")).get("deputados", [])}
+    for pid, p in pessoas.items():
+        d = voos.get(SQ(p["u"])) or voos.get(SQ(p["n"]))
+        if d and p.get("mandato"):
+            p["voos"] = {"n": d["n"], "v": d["v"], "paises": d["paises"]}
+
 # ---------- pontos de atenção (neutros) + ordenação ----------
 def brl(v):
     if v < 1e6: return "R$ " + f"{v:,.0f}".replace(",", ".")

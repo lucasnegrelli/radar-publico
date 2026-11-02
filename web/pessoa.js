@@ -7,6 +7,7 @@ async function carregarLote(id) {
 }
 let _extras = null;
 const extras = async () => (_extras ||= fetch("/data/pessoas/extras.json").then((r) => r.json()).catch(() => ({})));
+const vo_n = (v) => v.n.toLocaleString("pt-BR");
 const SIT = (s, seg) => {
   const x = (s || "").toLowerCase();
   if (x.startsWith("eleito")) return "Eleito(a)";
@@ -73,6 +74,9 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
       <div class="sub2" style="margin:8px 0 2px">Quem mais recebeu</div><table class="tbl"><tbody>${em.top.map((t) => `<tr><td>${esc(t[0])}</td><td class="num" style="text-align:right">${brlCurto(t[2])}</td></tr>`).join("")}</tbody></table>
       ${(em.alertas || []).length ? `<div class="sub2">Favorecidas com alerta:</div><div class="chips">${ligaAlertas(em.alertas)}</div>` : ""}`;
   }
+  const vo = p.voos
+    ? `<h4>Voos internacionais pagos com a cota</h4><div class="kp2"><div><b>${vo_n(p.voos)}</b><span>voos desde 2023</span></div><div><b>${brlCurto(p.voos.v)}</b><span>em passagens</span></div></div><p class="sub2">${Object.entries(p.voos.paises).map(([k, v]) => esc(k) + " " + v).join(" · ")}. A data é a de emissão da passagem; voo pago pela cota não é irregular por si só.</p>`
+    : "";
   const ult = (p.cand || [])[0];
   const alvoTitulo = ult ? `${ult.cargo}${ult.ue ? " de " + ult.ue : ""}${ult.uf && ult.uf !== "BR" ? "/" + ult.uf : ""} · ${ult.partido} · ${ult.ano}` : (m ? m.tipo : "");
   el.innerHTML = `
@@ -87,6 +91,7 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     ${camp ? `<h4>Campanhas</h4>${camp}` : ""}
     ${mand}
     ${emd}
+    ${vo}
     ${(ex.n || []).length ? `<h4>Na imprensa</h4><ul class="check">${ex.n.map((n) => `<li><a href="${esc(n[3])}" target="_blank" rel="noopener">${esc(n[2])}</a><br><span class="sub2">${esc(n[1])}${n[0] ? " · " + esc(n[0]) : ""}</span></li>`).join("")}</ul><p class="sub2">Manchetes automáticas do Google Notícias que citam o nome. Podem tratar de pessoas homônimas.</p>` : ""}
     <h4>Ver mais</h4>
     <div class="links" style="font-size:12.5px"><a href="https://news.google.com/search?q=${nomeBusca}&hl=pt-BR&gl=BR&ceid=BR:pt-419" target="_blank" rel="noopener">notícias</a> · <a href="https://queridodiario.ok.org.br/pesquisa?term=${nomeBusca}" target="_blank" rel="noopener">diários oficiais</a> · <a href="https://divulgacandcontas.tse.jus.br/divulga/" target="_blank" rel="noopener">DivulgaCand (TSE)</a> · <a href="https://portaldatransparencia.gov.br/pessoa-fisica/busca/lista?termo=${encodeURIComponent(p.n)}" target="_blank" rel="noopener">Portal da Transparência</a></div>
