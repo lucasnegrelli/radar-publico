@@ -9,7 +9,7 @@ svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-l
 /* ===== topo ===== */
 #topo{height:52px;display:flex;align-items:center;gap:18px;padding:0 16px;background:var(--s1);border-bottom:1px solid var(--linha);position:relative;z-index:20}
 .marca{display:flex;align-items:center;gap:10px;white-space:nowrap}.logo{width:26px;height:26px;color:var(--acc)}
-.marca b{font-size:15px;letter-spacing:.32em;color:var(--forte);font-weight:700}.marca small{color:var(--mut);font-size:11.5px;letter-spacing:.04em;padding-left:10px;border-left:1px solid var(--linha2)}
+.marca b{font-size:15px;letter-spacing:.2em;color:var(--forte);font-weight:700}.marca small{color:var(--mut);font-size:11.5px;letter-spacing:.04em;padding-left:10px;border-left:1px solid var(--linha2)}
 .busca-fake{display:flex;align-items:center;gap:10px;flex:1;max-width:520px;margin:0 auto;height:34px;padding:0 12px;background:var(--s2);border:1px solid var(--linha);border-radius:8px;color:var(--mut);cursor:pointer;text-align:left}
 .busca-fake:hover{border-color:var(--acc);color:var(--txt)}.busca-fake svg{width:16px;height:16px;flex:none}.busca-fake span{flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 kbd{font-size:10.5px;color:var(--mut);border:1px solid var(--linha2);border-radius:4px;padding:1px 6px;background:var(--s1)}
