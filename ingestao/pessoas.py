@@ -171,6 +171,11 @@ if _vj.exists():
         if d and p.get("mandato"):
             p["voos"] = {"n": d["n"], "v": d["v"], "paises": d["paises"]}
 
+# ---------- R10: político sócio de empresa que vende ao governo ----------
+r10 = {}
+for a in alertas:
+    if a["regra"] == "R10": r10.setdefault(SQ(a["manchete"]["politico"]), []).append(a["id"])
+
 # ---------- pontos de atenção (neutros) + ordenação ----------
 def brl(v):
     if v < 1e6: return "R$ " + f"{v:,.0f}".replace(",", ".")
@@ -207,6 +212,8 @@ for pid, p in pessoas.items():
         pts.append({"t": "Gasto de cota em 2025 entre os 10% maiores", "d": f"Percentil {m['pct25']} entre os deputados. Gastar muito não é irregular; indica onde olhar."})
     if p.get("emendas") and p["emendas"]["alertas"]:
         pts.append({"t": "Emendas pagaram entidades com ponto de atenção no Radar", "d": f"{len(p['emendas']['alertas'])} entidade(s) favorecida(s) com alerta R09 (sancionada, empresa nova ou capital muito pequeno para o valor).", "alertas": p["emendas"]["alertas"]})
+    if r10.get(SQ(p["n"])):
+        pts.append({"t": "Consta como sócio de empresa que vende ao governo", "d": f"{len(r10[SQ(p['n'])])} empresa(s) com contratos desde 2025 (nome completo e 6 dígitos do CPF coincidem com o sócio na Receita). A base mostra o quadro societário atual.", "alertas": r10[SQ(p['n'])][:5]})
     if p.get("alertas_pref"):
         pts.append({"t": "Doador de campanha virou fornecedor do município", "d": f"{len(p['alertas_pref'])} alerta(s) R05 na cidade.", "alertas": p["alertas_pref"][:5]})
     p["pontos"] = pts[:12]

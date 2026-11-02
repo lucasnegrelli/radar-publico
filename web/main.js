@@ -55,6 +55,7 @@ function manchete(a) {
   const m = a.manchete, E = `<b>${esc(a.empresa)}</b>`;
   if (m.tipo === "R01") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} da cota parlamentar ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
   if (m.tipo === "R02") return `${E} assinou ${plural(a.n, "contrato público", "contratos públicos")} somando <b>${brl(a.total)}</b> ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
+  if (m.tipo === "R10") return `${E} vendeu <b>${brl(a.total)}</b> a ${esc(a.orgao)}${m.orgaos.length > 1 ? " e outros órgãos" : ""} ${periodo(a.inicio, a.fim)}. Consta como sócio(a) <b>${esc(m.politico)}</b>, ${esc(m.cargo.toLowerCase())} eleito(a) em ${m.ano} (${esc(m.partido)}/${esc(m.uf)}).${m.mesmo_municipio ? " O contrato é com o próprio município onde exerce o mandato." : ""}${m.apos_posse ? "" : " Os contratos são anteriores à posse."}`;
   if (m.tipo === "R09") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} de emendas parlamentares ${periodo(a.inicio, a.fim)}. Autor${m.autores.length > 1 ? "es principais" : ""}: <b>${m.autores.map((x) => esc(x.nome)).join(", ")}</b>.${m.sancao ? " A empresa constava em lista de sancionadas no período." : ""}${m.cepim ? " A entidade consta no CEPIM (impedida de receber transferências federais): " + esc(String(m.cepim).toLowerCase()) + "." : ""}${m.nova ? " Foi aberta menos de um ano antes do primeiro pagamento." : ""}${m.capital_peq ? " O valor recebido é muito maior que o capital social." : ""}`;
   if (m.tipo === "R08") return `${E} assinou ${plural(a.n, "contrato", "contratos")} somando <b>${brl(a.total)}</b> com ${esc(a.orgao)}. Tem como sócio <b>${esc(m.socio)}</b> sediado em <b>${esc(m.pais)}</b>, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"} (lista de referência). Ter sócio no exterior é legal; o ponto de atenção é a opacidade de quem recebe dinheiro público.`;
   if (m.tipo === "R06") return `${E} assinou <b>${a.n} contratos</b> com ${esc(a.orgao)} no trimestre ${esc(m.tri)}, cada um entre <b>${brl(m.minimo)}</b> e <b>${brl(m.maximo)}</b>, somando <b>${brl(a.total)}</b>. Todos abaixo da faixa de dispensa de licitação por valor: pode ser uma compra maior dividida em partes.`;
@@ -70,6 +71,7 @@ function linhaCard(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return `${situacaoCurta(m.sancao)} quando recebeu da cota parlamentar`;
   if (m.tipo === "R02") return `${situacaoCurta(m.sancao)} quando assinou contrato público`;
+  if (m.tipo === "R10") return `Sócio: ${m.politico} (${m.cargo.toLowerCase()}, ${m.partido}/${m.uf})`;
   if (m.tipo === "R09") return `Recebeu verba de emenda de ${m.autores[0] ? m.autores[0].nome : "parlamentar"}${m.n_autores > 1 ? " e mais " + (m.n_autores - 1) : ""}: ${[m.cepim && "impedida (CEPIM)", m.sancao && "sancionada", m.nova && "empresa nova", m.capital_peq && "capital pequeno"].filter(Boolean).join(", ")}`;
   if (m.tipo === "R08") return `Sócio sediado em ${m.pais}, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"}`;
   if (m.tipo === "R06") return `${a.n} contratos pequenos no mesmo trimestre, todos abaixo do limite de dispensa`;
@@ -82,6 +84,7 @@ function linhaCard(a) {
 function numeros(a) {
   const m = a.manchete, N = (r, v) => `<div><small>${r}</small><b class="num">${v}</b></div>`;
   if (m.tipo === "R01" || m.tipo === "R02") return N("Total recebido", brlCurto(a.total)) + N(m.tipo === "R01" ? "Pagamentos" : "Contratos", a.n) + N("Punição", esc(a.sancao.lista));
+  if (m.tipo === "R10") return N("Em contratos", brlCurto(a.total)) + N("Contratos", a.n) + N("Após a posse", m.apos_posse);
   if (m.tipo === "R09") return N("Em emendas", brlCurto(a.total)) + N("Pagamentos", a.n) + N("Parlamentares", m.n_autores);
   if (m.tipo === "R08") return N("Em contratos", brlCurto(a.total)) + N("Contratos", a.n) + N("País do sócio", esc(m.pais));
   if (m.tipo === "R06") return N("Soma", brlCurto(a.total)) + N("Contratos", a.n) + N("Maior contrato", brlCurto(m.maximo));
@@ -95,6 +98,7 @@ function checagem(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return ["Abra a nota de cada pagamento e veja o que foi contratado.", `Veja se a punição realmente alcançava a casa legislativa na data do pagamento (o alcance acima diz onde ela valia).`, "Confirme a situação atual da empresa no Portal da Transparência."];
   if (m.tipo === "R02") return ["Abra cada contrato no PNCP e veja quem contratou e o que foi contratado.", "Confira se a punição valia para esse órgão (veja o alcance acima). Punição restrita a outro órgão não impede contratar.", "Procure se o contrato foi suspenso ou anulado depois."];
+  if (m.tipo === "R10") return ["Confirme no Quadro de Sócios (QSA) se a pessoa ainda é sócia e desde quando; a base da Receita mostra a situação atual.", "Veja se há vedação: parlamentar não pode contratar com a administração pública (CF art. 54), e a Lei 14.133 veda contratar com agente do próprio órgão.", "Procure o processo de contratação: foi licitação ou dispensa?", "Cheque se a empresa tem outros alertas (sinais combinados)."];
   if (m.tipo === "R09") return ["Emenda para entidade privada é legal; o ponto de atenção é a combinação com sanção, empresa nova ou capital muito baixo.", "Procure o convênio ou termo de fomento no Transferegov e a prestação de contas da entidade.", "Confira se a entidade tem sede, equipe e histórico compatíveis com o objeto financiado.", "Veja os demais alertas da mesma empresa (sinais combinados)."];
   if (m.tipo === "R08") return ["Multinacionais legítimas costumam ter sócio em Luxemburgo, Suíça ou Países Baixos. O sinal forte é sócio em jurisdição de sigilo clássico (Panamá, Ilhas Virgens, Cayman) numa empresa pequena.", "Descubra quem está por trás do sócio no exterior: o beneficiário final precisa constar no cadastro da Receita.", "Veja se a empresa tem outros contratos públicos e se foi aberta recentemente."];
   if (m.tipo === "R06") return ["Abra os contratos no PNCP: o objeto é o mesmo ou muito parecido entre eles?", "Some os valores: a compra única passaria do limite de dispensa e exigiria licitação?", "Veja se há justificativa de urgência ou de fornecimento de naturezas diferentes."];
@@ -406,6 +410,7 @@ const META = {
   R05: { conf: "média", fp: ["doação legal de quem já era fornecedor antes da eleição", "empresa única da cidade"] },
   R06: { conf: "média", fp: ["compras de naturezas diferentes", "fornecimento contínuo em ata"] },
   R07: { conf: "média", fp: ["mercado local com poucos fornecedores", "serviço contínuo como coleta de lixo ou saúde"] },
+  R10: { conf: "alta", fp: ["pessoa já saiu da sociedade e a base ainda mostra", "contrato anterior à posse", "empresa de grande porte com participação mínima"] },
   R09: { conf: "média", fp: ["entidade nova criada para executar o objeto da emenda", "capital baixo é comum em ONG e associação", "sanção posterior ao pagamento"] },
   R08: { conf: "média", fp: ["multinacional legítima com holding no exterior", "sócio estrangeiro de boa-fé"] },
   RF01: { conf: "média", fp: ["banco grande e legítimo em expansão", "instituição de pagamento mal classificada"] },
@@ -422,6 +427,7 @@ function grafoSVG(a) {
   const m = a.manchete, N = []; const org = a.orgao || (a.tabela.linhas[0] && a.tabela.linhas[0][1] && a.tabela.linhas[0][1].t) || "órgão contratante";
   if (m.tipo === "R01") { [...new Set(a.tabela.linhas.map((l) => l[1].t))].slice(0, 3).forEach((n) => N.push({ l: n, k: "pessoa", e: "cota" })); if (a.sancao) N.push({ l: `${a.sancao.lista}: ${situacaoCurta(a.sancao.tipo)}`, k: "sancao", e: "punida" }); }
   else if (m.tipo === "R05") { N.push({ l: `Prefeitura de ${m.cidade}`, k: "org", e: "contrata" }); N.push({ l: m.prefeito, k: "pessoa", e: "eleito", liga: 0 }); N.push({ l: m.doador, k: "doador", e: "sócio", liga: -1 }); N.push({ l: m.doador, k: "doador", e: "doou", liga: 1, so: 1 }); }
+  else if (m.tipo === "R10") { N.push({ l: org, k: "org", e: "contrata" }); N.push({ l: m.politico, k: "pessoa", e: "sócio" }); }
   else if (m.tipo === "R09") { (m.autores || []).slice(0, 3).forEach((x) => N.push({ l: x.nome, k: "pessoa", e: "emenda" })); if (a.sancao) N.push({ l: `${a.sancao.lista}: ${situacaoCurta(a.sancao.tipo)}`, k: "sancao", e: "punida" }); if (m.abertura) N.push({ l: `Aberta em ${data(m.abertura)}`, k: "obra", e: "nova" }); }
   else if (m.tipo === "R08") { N.push({ l: org, k: "org", e: "contrata" }); N.push({ l: `${m.pais}`, k: "pais", e: "sócio" }); }
   else if (m.tipo === "RF01") { N.push({ l: "Banco Central", k: "org", e: "supervisiona" }); N.push({ l: "Fundos (CVM)", k: "doador", e: "compram papel" }); }
@@ -778,6 +784,15 @@ function porque(a) {
     prio = a.gravidade === "alta" ? "Alta: jurisdição de sigilo clássico e contratos acima de R$ 1 milhão." : a.gravidade === "media" ? "Média: jurisdição de sigilo clássico, ou contratos acima de R$ 1 milhão em país de tributação favorecida." : "Baixa: país de tributação favorecida e contratos moderados.";
     descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro"];
     naoProva = ["Que há dinheiro desviado ou evasão: multinacionais legítimas têm holding em Luxemburgo, Suíça ou Países Baixos.", "Quem é o dono real: o sócio no exterior pode ter um beneficiário final no Brasil."];
+  } else if (m.tipo === "R10") {
+    regra = "Cruzamos os sócios das empresas (Receita Federal) com os políticos eleitos (TSE), por nome completo e pelos dígitos centrais do CPF que a Receita publica, e depois olhamos se a empresa vendeu ao governo desde 2025.";
+    ok("O sócio é o político eleito", `${m.politico}: nome completo e 6 dígitos do CPF coincidem · ${m.cargo} ${m.ano} (${m.partido}/${m.uf})`);
+    ok("A empresa vendeu ao governo (contratos de pelo menos R$ 100 mil no total)", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}, ${per}`);
+    ok(m.apos_posse ? "Há contratos depois da posse" : "Contratos anteriores à posse", `posse em ${data(m.posse)}`);
+    if (m.mesmo_municipio) ok("Contrato com o município onde exerce o mandato", m.ue);
+    prio = a.gravidade === "alta" ? "Alta: parlamentar ou chefe de executivo com contratos depois da posse, ou contrato com o próprio município." : "Média: sociedade com contratos, mas todos antes da posse ou sem o vínculo direto com o mandato.";
+    descartado = ["Estatais e valores com sinais de erro", "Contratos abaixo de R$ 50 mil, antes de 2025, e totais abaixo de R$ 100 mil", "Vice, suplente e candidatos não eleitos"];
+    naoProva = ["Que a contratação foi irregular: pode ser compra de balcão aberta a qualquer empresa, e a participação do político pode ser pequena.", "Que o político ainda é sócio: a base mostra o quadro societário atual, sem data de saída."];
   } else if (m.tipo === "R09") {
     regra = "Procuramos entidades privadas que receberam dinheiro de emendas parlamentares (Portal da Transparência) e que, ao mesmo tempo, aparecem em lista de sancionadas ou no CEPIM (entidades impedidas de receber verba federal), foram abertas há menos de um ano ou têm capital social muito pequeno para o valor recebido.";
     ok("A entidade recebeu emendas de pelo menos R$ 100 mil", `${brl(a.total)} em ${plural(a.n, "pagamento", "pagamentos")}, ${per}`);
