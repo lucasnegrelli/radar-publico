@@ -721,8 +721,8 @@ function atualizarPanorama() {
   pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} alertas${filtroPer !== "todos" ? " · período filtrado" : ""}</span></div>
     <div class="pan-sev"><i style="width:${100 * c.alta / tot}%;background:${COR.alta}"></i><i style="width:${100 * c.media / tot}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / tot}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
-    <div class="pan-h">Onde está o valor em atenção <small>por prioridade</small></div>${estados}
-    <div class="pan-h">O que acendeu <small>tipo · alertas · valor</small></div>${tiposH}${escalaHtml()}`;
+    <div class="pan-h">Valor por estado <small>por prioridade</small></div>${estados}
+    <div class="pan-h">O que acendeu <small>alertas · valor</small></div>${tiposH}${escalaHtml()}`;
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);

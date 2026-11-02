@@ -214,3 +214,14 @@ a{color:var(--acc2)}a:visited{color:#a5b4fc}
 #panorama{top:244px;max-height:calc(100vh - 244px - 64px);overflow:auto;scrollbar-width:thin;scrollbar-color:#2a3a4e transparent}
 .pan-t2{grid-template-columns:12px 1fr 26px 78px}.pan-t2 b{white-space:nowrap}
 .pan-h{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+
+/* camadas discretas: faixa pequena no rodapé; o panorama sobe para o topo */
+#camadas{position:absolute;top:auto !important;left:auto !important;right:12px !important;bottom:44px;display:flex;align-items:center;gap:4px;padding:4px 6px !important;border-radius:99px !important;background:rgba(10,15,22,.72) !important;border:1px solid var(--linha) !important;backdrop-filter:blur(6px)}
+#camadas .cam-t{display:none}
+#camadas label{margin:0 !important;padding:3px 9px !important;border-radius:99px !important;border:1px solid transparent !important;background:transparent !important;font-size:11px;color:var(--mut);gap:6px;white-space:nowrap}
+#camadas label small{display:none}
+#camadas label:hover{color:#fff;border-color:var(--linha2) !important}
+#camadas label:has(input:checked){color:#d6e0ec;background:color-mix(in srgb,var(--k) 14%,transparent) !important;border-color:color-mix(in srgb,var(--k) 45%,transparent) !important}
+#camadas label i{width:7px;height:7px}
+#panorama{top:12px !important;max-height:calc(100vh - 12px - 84px)}
+@media(max-width:1200px){#camadas{flex-wrap:wrap;border-radius:12px !important;max-width:300px}}
