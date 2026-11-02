@@ -1,0 +1,21 @@
+name: Diários oficiais (Querido Diário)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: python ingestao/diarios.py
+      - name: Salvar resultado no repositório
+        run: |
+          git config user.name "radar-publico-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-publica/diarios.json
+          git diff --cached --quiet || git commit -m "diários oficiais: menções das empresas dos alertas"
+          git push
