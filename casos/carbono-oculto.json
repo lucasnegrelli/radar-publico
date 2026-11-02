@@ -1,0 +1,54 @@
+{
+ "id": "carbono-oculto",
+ "titulo": "PCC nos combustíveis e nas fintechs (Carbono Oculto e Fluxo Oculto)",
+ "tipo": "politico",
+ "ordem": 11,
+ "resumo": "Operações da Receita Federal, do Ministério Público de SP e da polícia contra a infiltração do PCC no setor de combustíveis e o uso de fintechs como 'bancos paralelos' para movimentar dinheiro. É o caso mais próximo do tipo de cruzamento do Radar: empresas, CNPJs, sócios e fluxo financeiro.",
+ "situacao": [
+  {
+   "rotulo": "1ª fase (28/08/2025)",
+   "valor": "Operação Carbono Oculto mira esquema no setor de combustíveis e lavagem via fintechs, com centenas de postos em vários estados. A Receita estima R$ 52 bilhões movimentados por postos entre 2020 e 2024."
+  },
+  {
+   "rotulo": "2ª fase (28/05/2026)",
+   "valor": "Operação Fluxo Oculto: seis fintechs teriam movimentado mais de R$ 26 bilhões entre 2022 e 2025 e há desvio de nafta petroquímica."
+  },
+  {
+   "rotulo": "Processo",
+   "valor": "Não há denúncia nem decisão judicial verificadas nas fontes consultadas."
+  }
+ ],
+ "pessoas": [],
+ "marcos": [
+  {
+   "data": "2025-08-28",
+   "tipo": "investigação",
+   "texto": "Primeira fase da Operação Carbono Oculto: esquema do PCC em combustíveis e fintechs, com mandados em vários estados e cerca de 300 postos de combustíveis.",
+   "fonte": "Band",
+   "url": "https://www.band.com.br/nacional/brasil/operacao-mira-esquema-do-pcc-com-combustiveis-e-fintechs-em-8-estados-e-300-postos"
+  },
+  {
+   "data": "2025-08",
+   "tipo": "reportagem",
+   "texto": "Reportagem enquadra o caso como 'PCC na Faria Lima', pela ligação com o mercado financeiro.",
+   "fonte": "Money Times",
+   "url": "https://www.moneytimes.com.br/pcc-na-faria-lima-operacao-mira-esquema-no-setor-de-combustiveis-e-fintechs-igdl/"
+  },
+  {
+   "data": "2026-05-28",
+   "tipo": "investigação",
+   "texto": "Operação Fluxo Oculto desmonta rede com R$ 26 bilhões em fintechs e nafta desviada.",
+   "fonte": "Movimento Econômico",
+   "url": "https://movimentoeconomico.com.br/seguranca/2026/05/28/operacao-desmonta-rede-do-pcc-com-r-26-bi-em-fintechs-e-nafta-desviada/"
+  }
+ ],
+ "consultas": [
+  "Carbono Oculto PCC fintechs",
+  "Fluxo Oculto fintechs PCC",
+  "PCC combustíveis lavagem de dinheiro"
+ ],
+ "lacunas": [
+  "Denúncia do Ministério Público e andamento judicial das duas fases.",
+  "Lista pública de empresas e CNPJs alvo: parte dos autos é sigilosa; quando houver nomes divulgados, o Radar pode cruzar com sócios, contratos e sanções."
+ ]
+}

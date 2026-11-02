@@ -1,0 +1,58 @@
+{
+ "id": "collor",
+ "titulo": "Collor: condenação da Lava Jato (BR Distribuidora)",
+ "tipo": "politico",
+ "ordem": 10,
+ "resumo": "O STF condenou o ex-presidente Fernando Collor em 2023 por corrupção passiva e lavagem de dinheiro ligadas a contratos da BR Distribuidora, em caso que nasceu na Lava Jato. Foi preso em abril de 2025 e passou à prisão domiciliar humanitária em maio de 2025.",
+ "situacao": [
+  {
+   "rotulo": "Condenação",
+   "valor": "STF, 2023: corrupção passiva e lavagem de dinheiro; pena de cerca de 8 anos e 10 meses (algumas reportagens citam 8 anos e 6 meses)."
+  },
+  {
+   "rotulo": "Cumprimento",
+   "valor": "Preso em Maceió em abril de 2025; plenário do STF manteve a prisão por 6 a 4; prisão domiciliar humanitária concedida por Moraes em 1º/05/2025, com parecer favorável da PGR."
+  }
+ ],
+ "pessoas": [
+  "Fernando Collor de Mello"
+ ],
+ "marcos": [
+  {
+   "data": "2023",
+   "tipo": "decisão",
+   "texto": "O STF condena Collor por corrupção passiva e lavagem de dinheiro ligadas à BR Distribuidora.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/noticia/108057/defesa-de-collor-pede-prisao-domiciliar-em-razao-de-comorbidades"
+  },
+  {
+   "data": "2025-04",
+   "tipo": "decisão",
+   "texto": "Collor é preso em Maceió após o STF rejeitar os recursos.",
+   "fonte": "Monitor Mercantil",
+   "url": "https://monitormercantil.com.br/collor-e-preso-em-maceio/"
+  },
+  {
+   "data": "2025-04",
+   "tipo": "decisão",
+   "texto": "O plenário do STF decide manter a prisão de Collor por 6 votos a 4.",
+   "fonte": "SBT News",
+   "url": "https://sbtnews.sbt.com.br/noticia/politica/por-6-votos-a-4-stf-decide-manter-prisao-de-fernando-collor"
+  },
+  {
+   "data": "2025-05-01",
+   "tipo": "decisão",
+   "texto": "Moraes autoriza prisão domiciliar humanitária a Collor, por comorbidades, após parecer favorável da PGR.",
+   "fonte": "BandNews FM",
+   "url": "https://www.band.com.br/bandnews-fm/noticias/moraes-autoriza-prisao-domiciliar-do-ex-presidente-fernando-collor-202505011954"
+  }
+ ],
+ "consultas": [
+  "Fernando Collor prisão domiciliar STF",
+  "Collor BR Distribuidora condenação"
+ ],
+ "lacunas": [
+  "Situação atual do cumprimento da pena depois de meados de 2025.",
+  "Valores desviados e eventual ressarcimento."
+ ]
+}

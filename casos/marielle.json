@@ -1,0 +1,64 @@
+{
+ "id": "marielle",
+ "titulo": "Caso Marielle Franco: mandantes condenados pelo STF",
+ "tipo": "politico",
+ "ordem": 13,
+ "resumo": "Em 25 de fevereiro de 2026 a Primeira Turma do STF condenou os irmãos Domingos e Chiquinho Brazão como mandantes dos assassinatos da vereadora Marielle Franco e do motorista Anderson Gomes. O ex-chefe da Polícia Civil Rivaldo Barbosa foi condenado por obstrução de justiça e corrupção, não pelos homicídios.",
+ "situacao": [
+  {
+   "rotulo": "Brazão",
+   "valor": "Condenados por unanimidade como mandantes; penas somam cerca de 76 anos (as fontes divergem em alguns meses)."
+  },
+  {
+   "rotulo": "Rivaldo Barbosa",
+   "valor": "Condenado por obstrução de justiça e corrupção; o STF não viu prova específica de participação nos homicídios."
+  },
+  {
+   "rotulo": "Executores",
+   "valor": "Ronnie Lessa confessou e colaborou; os executores foram condenados em 2024."
+  }
+ ],
+ "pessoas": [
+  "Chiquinho Brazão",
+  "Domingos Brazão",
+  "Rivaldo Barbosa"
+ ],
+ "marcos": [
+  {
+   "data": "2018-03",
+   "tipo": "investigação",
+   "texto": "Marielle Franco e Anderson Gomes são assassinados no Rio de Janeiro.",
+   "fonte": "A Pública: cobertura do caso",
+   "url": "https://apublica.org/especial/cobertura-do-caso-marielle-franco/"
+  },
+  {
+   "data": "2024",
+   "tipo": "decisão",
+   "texto": "Os executores do crime são condenados.",
+   "fonte": "A Pública",
+   "url": "https://apublica.org/nota/caso-marielle-irmaos-brazao-condenados-pelo-assassinato/"
+  },
+  {
+   "data": "2026-02-25",
+   "tipo": "decisão",
+   "texto": "A Primeira Turma do STF condena os irmãos Brazão como mandantes, por unanimidade, e condena Rivaldo Barbosa por obstrução e corrupção. Foi decretada a perda de cargo público de quatro condenados.",
+   "fonte": "O Povo",
+   "url": "https://mais.opovo.com.br/jornal/politica/2026/02/25/apos-8-anos-stf-condena-irmaos-brazao-e-outros-3-acusados-de-mandar-matar-marielle.html"
+  },
+  {
+   "data": "2026-02-25",
+   "tipo": "decisão",
+   "texto": "Moraes afirma que não há prova específica de que Rivaldo Barbosa participou dos homicídios.",
+   "fonte": "Band",
+   "url": "https://www.band.com.br/noticias/quem-foi-condenado-no-julgamento-da-morte-de-marielle-franco-e-quantos-anos-202602251540"
+  }
+ ],
+ "consultas": [
+  "Marielle Franco Brazão condenação STF",
+  "Rivaldo Barbosa condenado"
+ ],
+ "lacunas": [
+  "Recursos dos condenados.",
+  "A investigação da PGR sobre interferência policial no caso."
+ ]
+}

@@ -1,0 +1,56 @@
+{
+ "id": "americanas",
+ "titulo": "Americanas: fraude contábil e Operação Disclosure",
+ "tipo": "politico",
+ "ordem": 15,
+ "resumo": "O MPF denunciou 13 ex-executivos das Americanas por associação criminosa, falsidade ideológica e manipulação de mercado na fraude contábil revelada em 2023. A Justiça Federal do Rio aceitou a denúncia contra 12 deles, segundo reportagem de outubro de 2026, e a PF fez uma segunda fase em junho de 2026 que teve como alvo o acionista Carlos Sicupira, cujo grupo diz ter sido enganado pela antiga gestão.",
+ "situacao": [
+  {
+   "rotulo": "Denúncia",
+   "valor": "MPF, março de 2025: 13 ex-executivos, tendo Miguel Gutierrez como líder apontado."
+  },
+  {
+   "rotulo": "Justiça",
+   "valor": "A 6ª Vara Federal Criminal do Rio teria aceitado a denúncia contra 12 (um deles fez acordo de colaboração). Há fontes que, até junho de 2026, diziam que a denúncia ainda não tinha sido aceita: confirme a data."
+  },
+  {
+   "rotulo": "Valor da fraude",
+   "valor": "Laudos da PF citam cerca de R$ 54 bilhões; a empresa fala em R$ 25 bilhões após conciliar os balanços."
+  }
+ ],
+ "pessoas": [
+  "Miguel Gutierrez",
+  "Carlos Alberto Sicupira"
+ ],
+ "marcos": [
+  {
+   "data": "2025-03",
+   "tipo": "investigação",
+   "texto": "O MPF denuncia 13 ex-executivos das Americanas por associação criminosa, falsidade ideológica e manipulação de mercado.",
+   "fonte": "Monitor Mercantil",
+   "url": "https://monitormercantil.com.br/mpf-denuncia-13-ex-executivos-das-americanas-por-fraudes-na-empresa/"
+  },
+  {
+   "data": "2026-06",
+   "tipo": "investigação",
+   "texto": "Segunda fase da Operação Disclosure tem como alvo o acionista Carlos Alberto Sicupira e ex-conselheiros e executivos de bancos credores. O grupo de Sicupira diz que foi enganado pela antiga gestão.",
+   "fonte": "Valor Econômico (via Gov. PR)",
+   "url": "https://www.administracao.pr.gov.br/sites/default/arquivos_restritos/files/documento/2026-06/3_-_jornal_valor_economico.pdf"
+  },
+  {
+   "data": "2026-10",
+   "tipo": "decisão",
+   "texto": "Reportagem informa que a Justiça Federal do Rio aceitou a denúncia contra 12 ex-executivos; um deles fez acordo de colaboração.",
+   "fonte": "Times Brasil",
+   "url": "https://timesbrasil.com.br/brasil/fraude-na-americanas-justica-aceita-denuncia-contra-12-ex-executivos/"
+  }
+ ],
+ "consultas": [
+  "Americanas fraude Operação Disclosure",
+  "Americanas denúncia ex-executivos Gutierrez"
+ ],
+ "lacunas": [
+  "Conciliar a data em que a denúncia foi aceita (fontes divergem).",
+  "Se Lemann e Telles são investigados: nenhuma fonte consultada os cita."
+ ]
+}

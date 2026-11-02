@@ -53,7 +53,11 @@ for f in sorted(glob.glob(str(RAIZ / "casos" / "*.json"))):
     c["marcos"] = sorted(c.get("marcos", []), key=lambda m: m["data"])
     novos.append(c)
     print(c["id"], "| manchetes:", len(c["noticias"]), "| pessoas com ficha:", sum(1 for p in c["pessoas"] if p["id"]), "/", len(c["pessoas"]), flush=True)
-casos = sorted(novos, key=lambda c: c.get("ordem", 99)) + base["casos"]
+def ultimo(c):
+    datas = [m["data"] for m in c.get("marcos", [])] or [n["data"] for n in c.get("noticias", []) if n.get("data")]
+    return max(datas) if datas else ""
+for c in novos + base["casos"]: c["ultimo"] = ultimo(c)
+casos = sorted(novos + base["casos"], key=lambda c: c["ultimo"], reverse=True)   # mais recente primeiro
 out = RAIZ / "web/public/data"; out.mkdir(parents=True, exist_ok=True)
 (out / "casos.json").write_text(json.dumps({"casos": casos}, ensure_ascii=False), encoding="utf-8")
 print(len(casos), "casos")

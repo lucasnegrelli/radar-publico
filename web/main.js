@@ -466,7 +466,7 @@ let _casos = null;
 async function montarCasos() {
   const d = (_casos ||= await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] })));
   $("aba-casos").innerHTML = `<h3>Investigações e risco</h3><p class="sub2">Dossiês de casos montados só com dados abertos: o que se consegue levantar, o que falta e quais são os próximos passos.</p>` +
-    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.tipo === "politico" ? `${(c.marcos || []).length} marcos com fonte · ${c.noticias.length} manchetes` : `${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados`}</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
+    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.ultimo ? `<span class="chip" style="--c:#8aa0b5">${esc(String(c.ultimo).length >= 7 ? String(c.ultimo).slice(5, 7) + "/" + String(c.ultimo).slice(0, 4) : c.ultimo)}</span>` : ""}${c.tipo === "politico" ? `${(c.marcos || []).length} marcos com fonte · ${c.noticias.length} manchetes` : `${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados`}</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
   $("aba-casos").querySelectorAll(".card").forEach((e) => (e.onclick = () => abrirCaso(d.casos[Number(e.dataset.i)])));
   const rf = alertas.filter((a) => a.regra === "RF01");
   const inc = (dA.incidentes || []).slice(0, 12);

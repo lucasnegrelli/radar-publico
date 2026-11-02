@@ -1,0 +1,45 @@
+{
+ "id": "rachadinha-flavio",
+ "titulo": "Flávio Bolsonaro: o caso das 'rachadinhas'",
+ "tipo": "politico",
+ "ordem": 17,
+ "resumo": "O Ministério Público do Rio denunciou o então deputado Flávio Bolsonaro e Fabrício Queiroz por suposto esquema de 'rachadinhas' no gabinete na Alerj. O STJ anulou em 2021 as decisões do primeiro juiz do caso (quebras de sigilo), e o Tribunal de Justiça do Rio rejeitou a denúncia em 2022. O mérito das provas não foi julgado.",
+ "situacao": [
+  {
+   "rotulo": "Situação",
+   "valor": "Denúncia rejeitada pelo TJ-RJ em 2022, depois de pedido do MP baseado na decisão do STJ. Sem condenação; sem análise de mérito."
+  },
+  {
+   "rotulo": "Contexto",
+   "valor": "Flávio Bolsonaro foi candidato à Presidência em 2026 e chegou ao segundo turno (dados do TSE)."
+  }
+ ],
+ "pessoas": [
+  "Flávio Nantes Bolsonaro",
+  "Fabrício Queiroz"
+ ],
+ "marcos": [
+  {
+   "data": "2021-03",
+   "tipo": "decisão",
+   "texto": "O STJ anula as decisões do juiz Flávio Itabaiana que quebraram os sigilos bancário e fiscal dos investigados, a pedido da defesa de Flávio.",
+   "fonte": "Correio Braziliense",
+   "url": "https://www.correiobraziliense.com.br/politica/2022/10/5043990-rachadinha-o-que-aconteceu-com-caso-que-envolve-filho-de-bolsonaro.html"
+  },
+  {
+   "data": "2022",
+   "tipo": "decisão",
+   "texto": "O Órgão Especial do TJ-RJ rejeita a denúncia contra Flávio, Queiroz e outras 15 pessoas, após pedido do MP. Não houve análise do conteúdo das provas.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/justica/justica-arquiva-denuncia-contra-flavio-bolsonaro-por-rachadinhas/"
+  }
+ ],
+ "consultas": [
+  "Flávio Bolsonaro rachadinha Queiroz",
+  "Fabrício Queiroz processo"
+ ],
+ "lacunas": [
+  "Qualquer reabertura do caso depois de 2022: não verificada.",
+  "Posição da defesa em detalhe."
+ ]
+}

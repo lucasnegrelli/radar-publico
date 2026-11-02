@@ -1,0 +1,59 @@
+{
+ "id": "overclean",
+ "titulo": "Operação Overclean: desvio de emendas na Bahia",
+ "tipo": "politico",
+ "ordem": 14,
+ "resumo": "A PF apura um esquema de desvio de emendas parlamentares e convênios por meio de empresas ligadas a prefeituras da Bahia. A operação já teve nove fases e alcançou deputados, que negam as acusações. É um caso direto do tipo que o alerta R09 procura nos dados abertos.",
+ "situacao": [
+  {
+   "rotulo": "Fases",
+   "valor": "1ª em dezembro de 2024; 4ª (jun/2025) afastou prefeitos; 5ª (jul/2025) mirou o deputado Elmar Nascimento, com bloqueio de bens determinado pelo STF; 9ª (13/01/2026) teve como principal alvo o deputado Félix Mendonça Júnior (PDT-BA), que nega."
+  },
+  {
+   "rotulo": "Valores",
+   "valor": "As fontes divergem (R$ 857 milhões bloqueados em uma fase; R$ 1,4 bilhão em outra reportagem)."
+  },
+  {
+   "rotulo": "Processo",
+   "valor": "Sem denúncia ou condenação verificadas. Ser alvo de operação não é condenação."
+  }
+ ],
+ "pessoas": [
+  "Elmar Nascimento",
+  "Félix Mendonça Júnior"
+ ],
+ "marcos": [
+  {
+   "data": "2024-12",
+   "tipo": "investigação",
+   "texto": "Primeira fase da Overclean: a PF apura o direcionamento de emendas e convênios a empresas ligadas a prefeituras da Bahia.",
+   "fonte": "Diário do Nordeste",
+   "url": "https://diariodonordeste.verdesmares.com.br/ultima-hora/ba/operacao-overclean-pf-mira-organizacao-criminosa-suspeita-de-desvios-de-emendas-parlamentares-1.3664296"
+  },
+  {
+   "data": "2025-07",
+   "tipo": "decisão",
+   "texto": "O STF bloqueia R$ 857 milhões por suspeita de fraudes em emendas, em fase que mirou o deputado Elmar Nascimento.",
+   "fonte": "Diario de Pernambuco",
+   "url": "https://www.diariodepernambuco.com.br/brasil/2025/07/7794503-stf-bloqueia-rs-857-milhoes-por-suspeita-de-fraudes-em-emendas.html"
+  },
+  {
+   "data": "2026-01-13",
+   "tipo": "investigação",
+   "texto": "Nova fase da Overclean cumpre nove mandados na Bahia e no DF, expedidos pelo STF; o principal alvo é o deputado Félix Mendonça Júnior (PDT-BA), que nega.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/poder-justica/pf-deflagra-nova-fase-da-overclean-deputado-do-pdt-e-alvo/"
+  }
+ ],
+ "consultas": [
+  "Operação Overclean emendas Bahia",
+  "Overclean PF deputado emendas"
+ ],
+ "lacunas": [
+  "Denúncia e andamento no STF.",
+  "A posição de Elmar Nascimento, que não foi localizada nas fontes."
+ ],
+ "alertas_regras": [
+  "R09"
+ ]
+}

@@ -1,0 +1,52 @@
+{
+ "id": "cabral-cunha",
+ "titulo": "Lava Jato fora de Curitiba: Sérgio Cabral e Eduardo Cunha",
+ "tipo": "politico",
+ "ordem": 16,
+ "resumo": "Dois dos maiores condenados da Lava Jato tiveram decisões anuladas ou revistas depois de 2021. Sérgio Cabral foi solto em dezembro de 2022 e teve três condenações anuladas pelo TRF-2 em 2024; uma condenação de Eduardo Cunha foi anulada pelo STF em 2023 por incompetência da Justiça Federal.",
+ "situacao": [
+  {
+   "rotulo": "Sérgio Cabral",
+   "valor": "Solto pelo STF em dez/2022 após mais de seis anos preso. TRF-2 anulou três condenações (cerca de 40 anos) em março de 2024. As penas restantes somavam cerca de 375 anos, sem sentença definitiva na época."
+  },
+  {
+   "rotulo": "Eduardo Cunha",
+   "valor": "Em maio de 2023, a Segunda Turma do STF anulou uma de suas condenações por incompetência da Justiça Federal."
+  }
+ ],
+ "pessoas": [
+  "Sérgio Cabral",
+  "Eduardo Cunha"
+ ],
+ "marcos": [
+  {
+   "data": "2022-12",
+   "tipo": "decisão",
+   "texto": "O STF solta Sérgio Cabral, o último preso da Lava Jato, por excesso de prazo da preventiva.",
+   "fonte": "SBT News",
+   "url": "https://sbtnews.sbt.com.br/noticia/justica/233749-ex-governador-sergio-cabral-e-solto-apos-6-anos-de-prisao"
+  },
+  {
+   "data": "2023-05",
+   "tipo": "decisão",
+   "texto": "A Segunda Turma do STF anula uma das condenações de Eduardo Cunha na Lava Jato por incompetência da Justiça Federal.",
+   "fonte": "O Povo",
+   "url": "https://www.opovo.com.br/noticias/politica/2024/05/23/condenados-na-lava-jato-planejam-retorno-a-vida-publica-apos-absolvicoes.html"
+  },
+  {
+   "data": "2024-03",
+   "tipo": "decisão",
+   "texto": "O TRF-2 anula três condenações de Cabral ligadas à Lava Jato.",
+   "fonte": "Correio Braziliense",
+   "url": "https://www.correiobraziliense.com.br/politica/2024/10/6977533-analise-so-falta-sergio-cabral-no-velorio-da-lava-jato.html"
+  }
+ ],
+ "consultas": [
+  "Sérgio Cabral condenações Lava Jato",
+  "Eduardo Cunha condenação anulada"
+ ],
+ "lacunas": [
+  "Situação processual atual de cada um (as fontes são de 2022 a 2024).",
+  "Elegibilidade de Cunha: depende da análise da Justiça Eleitoral."
+ ]
+}
