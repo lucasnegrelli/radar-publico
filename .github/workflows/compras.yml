@@ -1,5 +1,7 @@
 name: Licitações (compras) do PNCP
 on:
+  schedule:
+    - cron: "47 3 * * 0"
   workflow_dispatch:
     inputs:
       de:
@@ -22,7 +24,11 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           PREFIXO: compras
-        run: python ingestao/pncp_pendentes.py "${{ inputs.de }}" "${{ inputs.ate }}" | tee -a "$GITHUB_OUTPUT"
+        run: |
+          DE="${{ inputs.de }}"; ATE="${{ inputs.ate }}"
+          [ -z "$DE" ] && DE=2025-01
+          [ -z "$ATE" ] && ATE=$(date -u +%Y-%m)
+          python ingestao/pncp_pendentes.py "$DE" "$ATE" | tee -a "$GITHUB_OUTPUT"
   baixar:
     needs: planejar
     if: needs.planejar.outputs.janelas != '[]'
