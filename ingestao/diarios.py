@@ -18,12 +18,15 @@ API = "https://api.queridodiario.org.br/gazettes"
 _rf = RAIZ / "data-publica/empresas_rf.json"
 if _rf.exists(): entrada += json.loads(_rf.read_text(encoding="utf-8"))
 saida = {}
+import time as _t
+_fim = _t.time() + 15 * 60   # teto de 15 min: se a API estiver lenta, grava o que já tem
 for i, e in enumerate(entrada):
+    if _t.time() > _fim: print('tempo esgotado em', i, flush=True); break
     q = urllib.parse.urlencode({"querystring": f'"{e["empresa"]}"', "published_since": "2025-01-01", "size": 5, "excerpt_size": 280, "number_of_excerpts": 2, "sort_by": "descending_date"})
     d = None
-    for t in range(3):
+    for t in range(2):
         try:
-            with urllib.request.urlopen(urllib.request.Request(f"{API}?{q}", headers={"accept": "application/json", "User-Agent": "radar-publico/0.1"}), timeout=60) as r:
+            with urllib.request.urlopen(urllib.request.Request(f"{API}?{q}", headers={"accept": "application/json", "User-Agent": "radar-publico/0.1"}), timeout=25) as r:
                 d = json.loads(r.read()); break
         except Exception as ex:
             time.sleep(5 * (t + 1))
