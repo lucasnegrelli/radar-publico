@@ -3,6 +3,11 @@ CEIS/CNEP (Portal da Transparência), cota da Câmara (CEAP) e do Senado (CEAPS)
 e exporta ceis/cnep em Parquet para dados/tse/ (usado pelas emendas e pelas fichas de pessoa)."""
 import sys, io, zipfile, datetime, pathlib, urllib.request, urllib.error, subprocess
 RAIZ = pathlib.Path(__file__).parent.parent
+import duckdb
+# o banco foi salvo numa máquina Windows: as views emp/estab apontam para caminhos absolutos de lá. São recriadas pelo exportador com caminhos relativos.
+_c = duckdb.connect(str(RAIZ / "dados" / "radar.duckdb"))
+for _v in ("emp", "estab"): _c.execute(f"DROP VIEW IF EXISTS {_v}")
+_c.close()
 CSV = RAIZ / "dados" / "csv"; BR = RAIZ / "dados" / "bruto"
 CSV.mkdir(parents=True, exist_ok=True); BR.mkdir(parents=True, exist_ok=True)
 def get(url, dest):
