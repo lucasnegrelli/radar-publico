@@ -141,6 +141,8 @@ function grade() {
 }
 let _esc = null;
 let alertas = [], visiveis = [], filtroG = "todas", filtroR = "todas", sel = null, nomes = {};
+const RCOR = { R01: "#ff6b81", R02: "#ff2d55", R03: "#ffb300", R04: "#ff8a3d", R05: "#f7d046", R06: "#7cf5de", R07: "#22d3b6", R08: "#b388ff", R09: "#4cc9f0", R10: "#ff7ad9", R11: "#6ea8ff", RF01: "#ffcc00" };
+const RNOME = { R01: "Cota × punida", R02: "Contrato × punida", R03: "Empresa nova", R04: "Capital pequeno", R05: "Doador → fornecedor", R06: "Fracionamento", R07: "Concentração", R08: "Sócio no exterior", R09: "Emenda", R10: "Político sócio", R11: "Pgto federal × punida", RF01: "Banco" };
 const RGB = { alta: [255, 45, 85], media: [255, 179, 0], baixa: [0, 184, 255] };
 const ADITIVO = { depthCompare: "always", depthWriteEnabled: false, blend: true, blendColorOperation: "add", blendColorSrcFactor: "src-alpha", blendColorDstFactor: "one", blendAlphaSrcFactor: "one", blendAlphaDstFactor: "one" };
 function corUF(lista) {
@@ -282,7 +284,7 @@ function lista() {
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
       <div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div>
       <div class="sub">${linhaCard(a)}</div>
-      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}${a.regra} · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
+      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span> · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
   $("cont").textContent = `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
@@ -705,15 +707,22 @@ document.addEventListener("keydown", (e) => {
 const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appendChild(pan);
 function atualizarPanorama() {
   const L = visiveis; if (!L.length) { pan.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div>'; return; }
-  const soma = (f) => { const m = {}; L.filter((a) => a.regra !== "RF01").forEach((a) => { const k = f(a); if (!k) return; const o = (m[k] ||= { n: 0, v: 0 }); o.n++; o.v += a.total || 0; }); return Object.entries(m).sort((x, y) => y[1].v - x[1].v); };
-  const ufs = soma((a) => a.local && a.local.uf).slice(0, 6), tipos = soma((a) => nomes[a.regra] || a.regra).slice(0, 5);
+  const sem = L.filter((a) => a.regra !== "RF01");
+  const porUF = {}, porTipo = {};
+  sem.forEach((a) => {
+    if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o[a.gravidade] += a.total || 0; }
+    const t = (porTipo[a.regra] ||= { v: 0, n: 0 }); t.v += a.total || 0; t.n++;
+  });
+  const ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 7), tipos = Object.entries(porTipo).sort((x, y) => y[1].v - x[1].v);
   const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++); const tot = L.length;
-  const barras = (arr) => { const mx = Math.max(1, ...arr.map((x) => x[1].v)); return arr.map(([k, o]) => `<div class="pan-l"><span>${esc(k)}</span><div class="barra"><i style="width:${Math.round(100 * o.v / mx)}%"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join(""); };
+  const mxU = Math.max(1, ...ufs.map((x) => x[1].v)), mxT = Math.max(1, ...tipos.map((x) => x[1].v));
+  const estados = ufs.map(([u, o]) => `<div class="pan-l"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(6, Math.round(100 * o.v / mxU))}%"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
+  const tiposH = tipos.map(([r, o]) => `<div class="pan-t2" style="--r:${RCOR[r] || "#8aa0b5"}"><i></i><span>${esc(RNOME[r] || r)}</span><em>${o.n}</em><b class="num">${brlCurto(o.v)}</b><div class="trilho2"><u style="width:${Math.max(3, Math.round(100 * o.v / mxT))}%"></u></div></div>`).join("");
   pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} alertas${filtroPer !== "todos" ? " · período filtrado" : ""}</span></div>
     <div class="pan-sev"><i style="width:${100 * c.alta / tot}%;background:${COR.alta}"></i><i style="width:${100 * c.media / tot}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / tot}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
-    <div class="pan-h">Estados com mais valor em atenção</div>${barras(ufs)}
-    <div class="pan-h">Por tipo de alerta</div>${barras(tipos)}${escalaHtml()}`;
+    <div class="pan-h">Onde está o valor em atenção <small>por prioridade</small></div>${estados}
+    <div class="pan-h">O que acendeu <small>tipo · alertas · valor</small></div>${tiposH}${escalaHtml()}`;
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
