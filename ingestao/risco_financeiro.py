@@ -1,6 +1,6 @@
 """Módulo de risco financeiro -> web/public/data/risco.json
 RF01: banco em crescimento acelerado e alavancado de forma sustentada (lista de observação, Banco Central/IF.data).
-      Inclui o Banco Master como CASO DE REFERÊNCIA (backtest: o critério acende de mar/2023 a mar/2025; liquidação em nov/2025).
+      Dossiê automático (balanço, imprensa, diários): ingestao/risco_dossie.py.
 Exposição de fundos (CVM/CDA): quanto de fundos abertos está em papel de cada banco listado."""
 import json, os, pathlib, datetime, duckdb
 
