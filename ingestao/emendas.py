@@ -92,7 +92,7 @@ for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, ca
                {"t": brl(r[6]), "s": None, "u": None, "v": True}, {"t": "–", "s": None, "u": None, "v": False}]
               for r in c.execute("select data, autor, favorecido, municipio, uf, valor, valor from pag where doc = ? order by data", [doc]).fetchall()]
     linhas = [[x[0], {"t": a_["autor"].title()[:56], "s": a_["tipo"], "u": None, "v": False}, x[2], x[3], x[4]] for x, a_ in zip(linhas, [{"autor": r[0], "tipo": r[1]} for r in c.execute("select autor, tipo_emenda from pag where doc = ? order by data", [doc]).fetchall()])][:14]
-    top = c.execute("select autor, sum(valor) v from pag where doc = ? group by 1 order by 2 desc limit 3", [doc]).fetchall()
+    top = c.execute("select autor, sum(valor) v from pag where doc = ? and autor not ilike 'Sem informa%' group by 1 order by 2 desc limit 3", [doc]).fetchall()
     a = {"id": f"R09-{doc}", "regra": "R09", "gravidade": grav, "empresa": (nome or "").upper(), "cnpj": fmt_cnpj(doc), "total": total, "n": n, "inicio": str(ini), "fim": str(fim),
          "origem": BRASILIA, "local": local(doc), "orgao": "Emenda parlamentar (União)", "orgao_uf": None, "orgao_municipio": None,
          "manchete": {"tipo": "R09", "autores": [{"nome": t[0].title(), "valor": t[1]} for t in top], "n_autores": n_aut, "natureza": nat, "nova": bool(nova), "abertura": str(ab) if ab else None,
