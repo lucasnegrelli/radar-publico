@@ -7,7 +7,9 @@ RAIZ = pathlib.Path(__file__).parent.parent
 os.chdir(RAIZ)
 OUT = RAIZ / "web/public/data/pessoas"
 OUT.mkdir(parents=True, exist_ok=True)
-c = duckdb.connect("dados/radar.duckdb", read_only=True)
+c = duckdb.connect()  # em memória: só lê os parquets do TSE (roda igual no GitHub Actions)
+for _v, _f in (("tse_cand", "cand_2024"), ("tse_receitas", "receitas_2024_todas"), ("ceis", "ceis"), ("cnep", "cnep")):
+    c.execute(f"create view {_v} as select * from read_parquet('dados/tse/{_f}.parquet')")
 T = lambda n: f"read_parquet('dados/tse/{n}.parquet')"
 num = lambda col: f"try_cast(replace({col}, ',', '.') as double)"
 norm = lambda s: "".join(ch for ch in unicodedata.normalize("NFD", (s or "").upper()) if unicodedata.category(ch) != "Mn")
@@ -22,7 +24,7 @@ SQ = lambda s: re.sub(r"\s+", " ", norm(s)).strip()
 
 # ---------- candidaturas (uma linha por ano+candidato; fica o último turno) ----------
 partes = []
-for ano in (2018, 2022):
+for ano in (2018, 2020, 2022, 2026):
     partes.append(f"""select '{ano}' ano, SQ_CANDIDATO sq, NM_CANDIDATO nome, NM_URNA_CANDIDATO urna, DS_CARGO cargo, SG_UF uf, NM_UE ue, SG_PARTIDO partido, NR_CANDIDATO numero,
       DS_SIT_TOT_TURNO sit, try_cast(NR_TURNO as int) turno, DT_NASCIMENTO nasc, DS_OCUPACAO ocup from {T('consulta_cand_' + str(ano))}""")
 partes.append("""select ANO_ELEICAO ano, SQ_CANDIDATO sq, NM_CANDIDATO nome, NM_URNA_CANDIDATO urna, DS_CARGO cargo, SG_UF uf, NM_UE ue, SG_PARTIDO partido, NR_CANDIDATO numero,
@@ -60,7 +62,10 @@ c.executemany("insert into m_sq values (?,?,?)", [(str(a), s, pid) for pid, p in
 
 # ---------- patrimônio declarado ----------
 c.execute(f"""create temp table bens as select '2018' ano, SQ_CANDIDATO sq, DS_TIPO_BEM_CANDIDATO tipo, DS_BEM_CANDIDATO descr, {num('VR_BEM_CANDIDATO')} v from {T('bens_2018')}
-  union all select '2022', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2022')}""")
+  union all select '2020', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2020')}
+  union all select '2022', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2022')}
+  union all select '2024', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2024')}
+  union all select '2026', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2026')}""")
 for pid, ano, tot, n in c.execute("select m.pid, b.ano, sum(b.v), count(*) from bens b join m_sq m using (ano, sq) group by 1,2").fetchall():
     pessoas[pid].setdefault("bens", {})[ano] = {"total": round(tot or 0), "n": n}
 for pid, ano, tipo, descr, v in c.execute("""select pid, ano, tipo, descr, v from (select m.pid, b.ano, b.tipo, b.descr, b.v,
@@ -70,7 +75,8 @@ for pid, ano, tipo, descr, v in c.execute("""select pid, ano, tipo, descr, v fro
 # ---------- doadores de campanha (receitas) ----------
 c.execute(f"""create temp table rec as select '2018' ano, SQ_CANDIDATO sq, DS_ORIGEM_RECEITA origem, NR_CPF_CNPJ_DOADOR doc, NM_DOADOR nm, NM_DOADOR_RFB rfb, {num('VR_RECEITA')} v from {T('receitas_2018')}
   union all select '2022', SQ_CANDIDATO, DS_ORIGEM_RECEITA, NR_CPF_CNPJ_DOADOR, NM_DOADOR, NM_DOADOR_RFB, {num('VR_RECEITA')} from {T('receitas_2022')}
-  union all select '2024', SQ_CANDIDATO, DS_ORIGEM_RECEITA, NR_CPF_CNPJ_DOADOR, NM_DOADOR, NM_DOADOR_RFB, {num('VR_RECEITA')} from tse_receitas""")
+  union all select '2024', SQ_CANDIDATO, DS_ORIGEM_RECEITA, NR_CPF_CNPJ_DOADOR, NM_DOADOR, NM_DOADOR_RFB, {num('VR_RECEITA')} from tse_receitas
+  union all select '2026', SQ_CANDIDATO, DS_ORIGEM_RECEITA, NR_CPF_CNPJ_DOADOR, NM_DOADOR, NM_DOADOR_RFB, {num('VR_RECEITA')} from {T('receitas_2026')}""")
 for pid, ano, tot, n in c.execute("select m.pid, r.ano, sum(r.v), count(*) from rec r join m_sq m using (ano, sq) group by 1,2").fetchall():
     pessoas[pid].setdefault("camp", {})[ano] = {"receita": round(tot or 0), "n_rec": n}
 for pid, ano, orig, v in c.execute("select m.pid, r.ano, r.origem, sum(r.v) from rec r join m_sq m using (ano, sq) group by 1,2,3 having sum(r.v) > 0 order by 4 desc").fetchall():
@@ -107,7 +113,8 @@ for pid, ano, doc, nm, rfb, tot in c.execute(q).fetchall():
 
 # ---------- fornecedores de campanha ----------
 c.execute(f"""create temp table forn as select '2018' ano, SQ_CANDIDATO sq, regexp_replace(NR_CPF_CNPJ_FORNECEDOR,'[^0-9]','','g') doc, NM_FORNECEDOR_RFB rfb, NM_FORNECEDOR nm, DS_ORIGEM_DESPESA origem, {num('VR_DESPESA_CONTRATADA')} v from {T('fornec_2018')}
-  union all select '2022', SQ_CANDIDATO, regexp_replace(NR_CPF_CNPJ_FORNECEDOR,'[^0-9]','','g'), NM_FORNECEDOR_RFB, NM_FORNECEDOR, DS_ORIGEM_DESPESA, {num('VR_DESPESA_CONTRATADA')} from {T('fornec_2022')}""")
+  union all select '2022', SQ_CANDIDATO, regexp_replace(NR_CPF_CNPJ_FORNECEDOR,'[^0-9]','','g'), NM_FORNECEDOR_RFB, NM_FORNECEDOR, DS_ORIGEM_DESPESA, {num('VR_DESPESA_CONTRATADA')} from {T('fornec_2022')}
+  union all select '2026', SQ_CANDIDATO, regexp_replace(NR_CPF_CNPJ_FORNECEDOR,'[^0-9]','','g'), NM_FORNECEDOR_RFB, NM_FORNECEDOR, DS_ORIGEM_DESPESA, {num('VR_DESPESA_CONTRATADA')} from {T('fornec_2026')}""")
 for pid, ano, tot in c.execute("select m.pid, f.ano, sum(f.v) from forn f join m_sq m using (ano, sq) group by 1,2").fetchall():
     pessoas[pid].setdefault("camp", {}).setdefault(ano, {})["despesa"] = round(tot or 0)
 for pid, ano, orig, v in c.execute("select pid, ano, origem, v from (select m.pid, f.ano, f.origem, sum(f.v) v, row_number() over (partition by m.pid, f.ano order by sum(f.v) desc) k from forn f join m_sq m using (ano, sq) group by 1,2,3) where k <= 5").fetchall():
@@ -145,6 +152,16 @@ for pid, p in pessoas.items():
             if f and f.get("alertas"):
                 p.setdefault("alertas_pref", []).extend(f["alertas"])
 
+# ---------- emendas parlamentares (ingestao/emendas.py) ----------
+_ea = RAIZ / "data-publica" / "emendas_autor.json"
+emendas = json.loads(_ea.read_text(encoding="utf-8")) if _ea.exists() else {}
+for pid, p in pessoas.items():
+    for chave in {SQ(p["u"]), SQ(p["n"])}:
+        e = emendas.get(chave)
+        if e and sum(e["anos"].values()) > 0:
+            p["emendas"] = {"anos": e["anos"], "top": e["top"], "alertas": e["alertas"][:8]}
+            break
+
 # ---------- pontos de atenção (neutros) + ordenação ----------
 def brl(v):
     if v < 1e6: return "R$ " + f"{v:,.0f}".replace(",", ".")
@@ -179,6 +196,8 @@ for pid, p in pessoas.items():
         pts.append({"t": "Fornecedor da cota parlamentar com alerta no Radar Público", "d": f"{len(m['alertas'])} alerta(s) ligados.", "alertas": m["alertas"][:5]})
     if m and m.get("pct25") and m["pct25"] >= 90:
         pts.append({"t": "Gasto de cota em 2025 entre os 10% maiores", "d": f"Percentil {m['pct25']} entre os deputados. Gastar muito não é irregular; indica onde olhar."})
+    if p.get("emendas") and p["emendas"]["alertas"]:
+        pts.append({"t": "Emendas pagaram entidades com ponto de atenção no Radar", "d": f"{len(p['emendas']['alertas'])} entidade(s) favorecida(s) com alerta R09 (sancionada, empresa nova ou capital muito pequeno para o valor).", "alertas": p["emendas"]["alertas"]})
     if p.get("alertas_pref"):
         pts.append({"t": "Doador de campanha virou fornecedor do município", "d": f"{len(p['alertas_pref'])} alerta(s) R05 na cidade.", "alertas": p["alertas_pref"][:5]})
     p["pontos"] = pts[:12]

@@ -3,6 +3,7 @@
 WITH base AS (
   SELECT *, date_trunc('quarter', data_assinatura) AS tri_ini FROM pncp
   WHERE tipo_pessoa = 'PJ' AND valor_global BETWEEN 15000 AND 70000 AND NOT erro_valor AND NOT estatal AND NOT credenciamento AND n_mesmo_valor < 3
+    AND (modalidade IS NULL OR contratacao_direta)   -- fracionar só faz sentido para fugir de licitação: se já foi pregão, não é fracionamento
 ), g AS (
   SELECT orgao_cnpj, doc14, tri_ini, count(*) n, sum(valor_global) soma FROM base GROUP BY ALL HAVING count(*) >= 4 AND sum(valor_global) >= 200000
 )

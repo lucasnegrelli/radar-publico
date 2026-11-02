@@ -6,11 +6,11 @@ RAIZ = pathlib.Path(__file__).parent.parent
 os.chdir(RAIZ)  # as regras usam caminhos relativos (dados/...)
 LIMITE = 150     # alertas por regra no painel (os de maior valor/gravidade)
 con = duckdb.connect(str(RAIZ / "dados" / "radar.duckdb"))
-con.execute("SET memory_limit='5GB'"); con.execute("SET threads=4"); con.execute("SET preserve_insertion_order=false"); con.execute("SET temp_directory='" + (RAIZ / 'dados' / 'tmp_duck').as_posix() + "'")
+con.execute("SET memory_limit='6GB'"); con.execute("SET threads=4"); con.execute("SET preserve_insertion_order=false"); con.execute("SET temp_directory='" + (RAIZ / 'dados' / 'tmp_duck').as_posix() + "'")
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 ORDEM = {"alta": 0, "media": 1, "baixa": 2}
 NOME_REGRA = {"R01": "Empresa punida recebeu cota parlamentar", "R02": "Contrato com empresa punida",
-              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor", "R06": "Possível fracionamento de compras", "R07": "Fornecedor concentra os contratos da prefeitura", "R08": "Sócio em paraíso fiscal"}
+              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor", "R06": "Possível fracionamento de compras", "R07": "Fornecedor concentra os contratos da prefeitura", "R08": "Sócio em paraíso fiscal", "R09": "Emenda parlamentar para entidade com ponto de atenção"}
 
 def sql(nome): return (RAIZ / "alertas" / nome).read_text(encoding="utf-8").strip().rstrip(";")
 def fmt_cnpj(d): return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}" if len(d) == 14 and not d.startswith("000") else f"CPF ***{d[-8:-2]}**"
@@ -56,7 +56,8 @@ for cnpj, nome, lista, cat, orgao, alc, ini, fim, total, n, d1, d2 in emp:
 
 # ================= regras de contratos (precisam do PNCP em massa) =================
 if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
-    con.execute(sql("00_base_contratos.sql").replace("dados/pncp/", (RAIZ / "dados" / "pncp").as_posix() + "/").replace("dados/cnpj/", (RAIZ / "dados" / "cnpj").as_posix() + "/"))
+    con.execute(sql("00_base_contratos.sql").replace("dados/pncp/", (RAIZ / "dados" / "pncp").as_posix() + "/").replace("dados/cnpj/", (RAIZ / "dados" / "cnpj").as_posix() + "/").replace("dados/compras/", (RAIZ / "dados" / "compras").as_posix() + "/"))
+    MOD = dict(con.execute("select id, modalidade from pncp where modalidade is not null").fetchall())  # como foi contratado (licitação de origem)
     cols = "id, fornecedor, doc, orgao, esfera, uf, municipio, objeto, valor, data, tipo_contrato, categoria"
     def montar(regra, tabela, extra):
         rows = con.execute(f"select * from {tabela} order by case gravidade when 'alta' then 0 when 'media' then 1 else 2 end, valor desc").fetchall()
@@ -84,7 +85,7 @@ if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
         loc = local_de({g[0][ix["doc"]] for g in itens})
         for g in itens:
             r0 = g[0]; doc = r0[ix["doc"]]; tot = sum(x[ix["valor"]] for x in g)
-            tab = [[cel(str(x[ix["data"]])), cel(x[ix["orgao"]][:46], f"{x[ix['municipio']]}/{x[ix['uf']]}"), cel((x[ix["objeto"]] or "")[:90]), cel(brl(x[ix["valor"]]), v=True), cel("ver contrato", u=url_pncp(x[ix["id"]])) if url_pncp(x[ix["id"]]) else cel("–")] for x in sorted(g, key=lambda y: y[ix["data"]])[:12]]
+            tab = [[cel(str(x[ix["data"]])), cel(x[ix["orgao"]][:46], f"{x[ix['municipio']]}/{x[ix['uf']]}"), cel((x[ix["objeto"]] or "")[:90], "como contratou: " + MOD[x[ix["id"]]] if x[ix["id"]] in MOD else None), cel(brl(x[ix["valor"]]), v=True), cel("ver contrato", u=url_pncp(x[ix["id"]])) if url_pncp(x[ix["id"]]) else cel("–")] for x in sorted(g, key=lambda y: y[ix["data"]])[:12]]
             a = {"id": f"{regra}-{r0[ix['grupo']]}" if regra in ("R06", "R07", "R08") else f"{regra}-{doc}" if regra == "R02" else (f"{regra}-{doc}-{r0[ix['municipio']]}-{r0[ix['uf']]}" if regra == "R05" else f"{regra}-{doc}-{r0[ix['id']]}"), "regra": regra, "gravidade": r0[ix["gravidade"]], "empresa": r0[ix["fornecedor"]], "cnpj": fmt_cnpj(doc),
                  "total": tot, "n": len(g), "inicio": str(min(x[ix["data"]] for x in g)), "fim": str(max(x[ix["data"]] for x in g)),
                  "origem": None, "local": loc.get(doc), "orgao": r0[ix["orgao"]], "orgao_uf": r0[ix["uf"]], "orgao_municipio": r0[ix["municipio"]],
@@ -132,6 +133,12 @@ def _xy(nome):
     return next(({"lat": v[0], "lon": v[1]} for k, v in PAIS_XY.items() if k in n), None)
 for a in alertas:
     if a["regra"] == "R08": a["manchete"]["pais_xy"] = _xy(a["manchete"]["pais"])
+
+# 1b) alertas de outros módulos (emendas parlamentares: ingestao/emendas.py)
+_ex = RAIZ / "data-publica" / "alertas_extra.json"
+if _ex.exists():
+    _ids = {a['id'] for a in alertas}
+    alertas += [a for a in json.loads(_ex.read_text(encoding='utf-8')) if a['id'] not in _ids]
 
 # 2) correlação: a mesma empresa em 2+ regras vira "sinais combinados"
 from collections import defaultdict

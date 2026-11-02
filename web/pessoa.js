@@ -5,6 +5,8 @@ async function carregarLote(id) {
   lotes[k] ||= fetch(`/data/pessoas/s${k}.json`).then((r) => r.json()).catch(() => ({}));
   return (await lotes[k])[id];
 }
+let _extras = null;
+const extras = async () => (_extras ||= fetch("/data/pessoas/extras.json").then((r) => r.json()).catch(() => ({})));
 const SIT = (s, seg) => {
   const x = (s || "").toLowerCase();
   if (x.startsWith("eleito")) return "Eleito(a)";
@@ -25,6 +27,7 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
   const p = await carregarLote(id);
   if (!p) { el.innerHTML = '<button class="fechar">×</button><p class="aviso">Ficha não encontrada.</p>'; el.querySelector(".fechar").onclick = () => (el.hidden = true); return; }
   history.replaceState(null, "", "#p-" + id);
+  const ex = (await extras())[id] || {};
   const c = "#00ffa6";
   const nomeBusca = encodeURIComponent('"' + p.n + '"');
   const alvo = (aid) => alertas.find((z) => z.id === aid);
@@ -62,6 +65,14 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
       ${m.pct25 ? `<p class="sub2">Em 2025, gastou mais que ${m.pct25}% dos deputados.</p>` : ""}
       ${(m.forn || []).length ? `<table class="tbl"><tbody>${m.forn.map((f) => `<tr><td>${esc(f[0])}</td><td class="num" style="text-align:right">${brlCurto(f[1])}</td></tr>`).join("")}</tbody></table>` : ""}`;
   }
+  const em = p.emendas;
+  let emd = "";
+  if (em) {
+    const anos = Object.entries(em.anos).sort(); const mx = Math.max(1, ...anos.map(([, v]) => v));
+    emd = `<h4>Emendas parlamentares (autor)</h4>${anos.slice(-8).map(([a, v]) => `<div class="barra-l"><span class="num">${a}</span><div class="trilho"><i style="width:${Math.max(2, Math.round(100 * v / mx))}%"></i></div><b class="num">${brlCurto(v)}</b></div>`).join("")}
+      <div class="sub2" style="margin:8px 0 2px">Quem mais recebeu</div><table class="tbl"><tbody>${em.top.map((t) => `<tr><td>${esc(t[0])}</td><td class="num" style="text-align:right">${brlCurto(t[2])}</td></tr>`).join("")}</tbody></table>
+      ${(em.alertas || []).length ? `<div class="sub2">Favorecidas com alerta:</div><div class="chips">${ligaAlertas(em.alertas)}</div>` : ""}`;
+  }
   const ult = (p.cand || [])[0];
   const alvoTitulo = ult ? `${ult.cargo}${ult.ue ? " de " + ult.ue : ""}${ult.uf && ult.uf !== "BR" ? "/" + ult.uf : ""} · ${ult.partido} · ${ult.ano}` : (m ? m.tipo : "");
   el.innerHTML = `
@@ -69,11 +80,14 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     <div class="dos" style="--c:${c}"><span>FICHA · PESSOA</span><span class="carimbo">DADOS ABERTOS</span></div>
     <h2 style="--c:${c}">${esc(p.n)}</h2>
     <div class="sub2 mono">${p.u && p.u !== p.n ? "“" + esc(p.u) + "” · " : ""}${esc(alvoTitulo)}${p.nasc ? " · nasc. " + esc(p.nasc) : ""}${p.ocup ? " · " + esc(p.ocup.toLowerCase()) : ""}</div>
+    ${ex.w ? `<div class="quem"><b>Quem é</b> ${esc(ex.w.x)} <a href="${esc(ex.w.u)}" target="_blank" rel="noopener">Wikipédia</a> <span class="sub2">(CC BY-SA)</span></div>` : ""}
     ${pontos ? `<h4>Pontos de atenção</h4><ul class="check pessoa-pontos">${pontos}</ul>` : '<div class="manchete" style="--c:' + c + '">Nenhum ponto de atenção apareceu nos cruzamentos feitos. Isso não significa que não exista; significa que estes dados abertos não mostram.</div>'}
     <h4>Candidaturas</h4><table class="tbl"><tbody>${cand || '<tr><td class="sub2">Sem candidatura nos dados de 2018, 2022 e 2024.</td></tr>'}</tbody></table>
     ${bens ? `<h4>Patrimônio declarado à Justiça Eleitoral</h4>${bens}${topB}` : ""}
     ${camp ? `<h4>Campanhas</h4>${camp}` : ""}
     ${mand}
+    ${emd}
+    ${(ex.n || []).length ? `<h4>Na imprensa</h4><ul class="check">${ex.n.map((n) => `<li><a href="${esc(n[3])}" target="_blank" rel="noopener">${esc(n[2])}</a><br><span class="sub2">${esc(n[1])}${n[0] ? " · " + esc(n[0]) : ""}</span></li>`).join("")}</ul><p class="sub2">Manchetes automáticas do Google Notícias que citam o nome. Podem tratar de pessoas homônimas.</p>` : ""}
     <h4>Ver mais</h4>
     <div class="links" style="font-size:12.5px"><a href="https://news.google.com/search?q=${nomeBusca}&hl=pt-BR&gl=BR&ceid=BR:pt-419" target="_blank" rel="noopener">notícias</a> · <a href="https://queridodiario.ok.org.br/pesquisa?term=${nomeBusca}" target="_blank" rel="noopener">diários oficiais</a> · <a href="https://divulgacandcontas.tse.jus.br/divulga/" target="_blank" rel="noopener">DivulgaCand (TSE)</a> · <a href="https://portaldatransparencia.gov.br/pessoa-fisica/busca/lista?termo=${encodeURIComponent(p.n)}" target="_blank" rel="noopener">Portal da Transparência</a></div>
     <p class="aviso">Ficha montada só com dados abertos, sem avaliação de conduta. Doar, receber doação, ter patrimônio e contratar fornecedores é normal em campanha; o Radar só mostra onde vale olhar. Pessoa física aparece com nome abreviado. Pessoas com o mesmo nome podem ser confundidas: confira a data de nascimento.</p>`;
