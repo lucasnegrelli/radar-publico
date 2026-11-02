@@ -5,7 +5,7 @@ import json, sys, time, pathlib, urllib.parse, urllib.request
 RAIZ = pathlib.Path(__file__).parent.parent
 caso = sys.argv[1] if len(sys.argv) > 1 else "master"
 cfg = json.loads((RAIZ / f"casos/{caso}_consultas.json").read_text(encoding="utf-8"))
-API = "https://api.queridodiario.ok.org.br/gazettes"
+API = "https://api.queridodiario.org.br/gazettes"
 vistos, saida = set(), []
 for q in cfg["consultas"]:
     for off in range(0, 300, 50):

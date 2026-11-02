@@ -1,7 +1,8 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
-import { PathLayer, ColumnLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
 const COR = { alta: "#ff2d55", media: "#ffb300", baixa: "#00b8ff" };
@@ -130,7 +131,11 @@ function corUF(lista) {
 }
 
 // ----- dados derivados para o deck.gl -----
-let trilhas = [], colunas = [], pulsos = [], rotaSel = null, overlay = null;
+let trilhas = [], colunas = [], pulsos = [], pontosA = [], rotaSel = null, overlay = null;
+const LAY = { calor: true, rotas: true, todas: false, pontos: true };
+let janela = null;
+const rotasVis = () => (LAY.todas ? trilhas : trilhas.slice(0, 60));
+const noJanela = (a) => !janela || ((a.fim || a.inicio || "").slice(0, 7) >= janela[0] && (a.inicio || a.fim || "").slice(0, 7) <= janela[1]);
 function derivar() {
   const comRota = visiveis.filter((a) => a.local && a.origem);
   trilhas = comRota.map((a, k) => { const caminho = curva([a.origem.lon, a.origem.lat], [a.local.lon, a.local.lat], 28); const fase = (k * 0.137) % 1;
@@ -141,15 +146,17 @@ function derivar() {
     c.n++; c.total += a.total; if (a.gravidade === "alta") c.alta++; if (a.total > c.topo.total) c.topo = a; });
   colunas = [...por.values()].map((c) => ({ ...c, g: c.alta / c.n >= 0.35 ? "alta" : c.alta / c.n > 0 || c.topo.gravidade === "media" ? "media" : "baixa" }));
   pulsos = [...colunas].sort((a, b) => b.total - a.total).slice(0, 18);
+  pontosA = visiveis.filter((a) => a.local).map((a) => ({ id: a.id, g: a.gravidade, pos: [a.local.lon, a.local.lat], total: a.total, empresa: a.empresa, cidade: a.local.cidade, uf: a.local.uf }));
 }
 const altura = (v) => Math.max(8000, (Math.log10(Math.max(v, 1000)) - 2.6) * 95000);
 function camadas(tempo) {
   const L = [];
-  L.push(new PathLayer({ id: "rotas-base", data: trilhas, getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 70], getWidth: (d) => d.w, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
-  L.push(new TripsLayer({ id: "pulsos-rota", data: trilhas, getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => [...RGB[d.g], 255], widthMinPixels: 2.2, capRounded: true, jointRounded: true, trailLength: 0.34, currentTime: tempo, parameters: ADITIVO }));
-  L.push(new ColumnLayer({ id: "colunas", data: colunas, diskResolution: 6, radius: 19000, extruded: true, getPosition: (d) => d.pos, getElevation: (d) => altura(d.total), getFillColor: (d) => [...RGB[d.g], 210],
-    material: { ambient: 0.7, diffuse: 0.5, shininess: 30, specularColor: [255, 255, 255] }, pickable: true, autoHighlight: true, highlightColor: [255, 255, 255, 120], onClick: (i) => i.object && abrir(i.object.topo.id) }));
-  L.push(new ScatterplotLayer({ id: "anel-pulso", data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 10 + 26 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(200 * (1 - (tempo % 1)))], getLineWidth: 1.5, lineWidthUnits: "pixels", parameters: ADITIVO }));
+  L.push(new PathLayer({ id: "rotas-base", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 70], getWidth: (d) => d.w, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new TripsLayer({ id: "pulsos-rota", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => [...RGB[d.g], 255], widthMinPixels: 2.2, capRounded: true, jointRounded: true, trailLength: 0.34, currentTime: tempo, parameters: ADITIVO }));
+  L.push(new HeatmapLayer({ id: "calor", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getWeight: (d) => Math.max(0.2, Math.log10(Math.max(d.total, 1000)) - 2.5), radiusPixels: 58, intensity: 3.2, threshold: 0.02, aggregation: "SUM",
+    colorRange: [[8, 40, 52, 0], [0, 150, 140, 120], [34, 211, 182, 190], [255, 204, 0, 220], [255, 120, 40, 240], [255, 45, 85, 255]], parameters: ADITIVO }));
+  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: 3.2, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: [255, 255, 255, 200], getLineWidth: 0.8, lineWidthUnits: "pixels", pickable: true, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(200 * (1 - (tempo % 1)))], getLineWidth: 1.5, lineWidthUnits: "pixels", parameters: ADITIVO }));
   if (rotaSel) {
     L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 14, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
     L.push(new PathLayer({ id: "sel", data: [rotaSel], getPath: (d) => d.path, getColor: [255, 255, 255, 255], getWidth: 3, widthUnits: "pixels", capRounded: true }));
@@ -187,11 +194,12 @@ function montarMapa() {
   derivar();
   overlay = new MapboxOverlay({ interleaved: false, layers: camadas(0), getTooltip: ({ object, layer }) => {
     if (!object) return null;
+    if (layer.id === "pontos-a") return { className: "deck-tip", html: `<b>${esc(object.empresa)}</b><br>${esc(object.cidade)}/${esc(object.uf)} · ${brlCurto(object.total)}` };
     if (layer.id === "colunas") return { className: "deck-tip", html: `<b>${esc(object.cidade)}/${esc(object.uf)}</b><br>${plural(object.n, "alerta", "alertas")} · ${brlCurto(object.total)}<br><span style="opacity:.7">clique para abrir o maior</span>` };
     if (layer.id === "rotas-base") { const a = alertas.find((x) => x.id === object.id); return a ? { className: "deck-tip", html: `<b>${esc(a.empresa)}</b><br>${brlCurto(a.total)}` } : null; }
     return null; } });
   map.addControl(overlay);
-  map.easeTo({ pitch: 38, duration: 1600 });
+  map.easeTo({ pitch: 0, duration: 800 });
 
   map.on("click", "voos-ponto", () => {});
   ["voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
@@ -229,7 +237,7 @@ const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json")
 
 // ---------- lista e filtros ----------
 function aplicarFiltro() {
-  visiveis = alertas.filter((a) => (filtroG === "todas" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
+  visiveis = alertas.filter((a) => noJanela(a) && (filtroG === "todas" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
   lista(); atualizarMapa();
 }
 function lista() {
@@ -464,7 +472,7 @@ function modoGlobo(on) {
     map.easeTo({ center: [-30, 15], zoom: 1.7, pitch: 0, duration: 1600 });
   } else {
     if (map.getLayer("vinc-ext")) { map.setLayoutProperty("vinc-ext", "visibility", "none"); map.setLayoutProperty("vinc-ext-brilho", "visibility", "none"); }
-    map.easeTo({ pitch: 38, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 1200 });
+    map.easeTo({ pitch: 0, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 1200 });
   }
 }
 
@@ -510,10 +518,11 @@ visiveis = alertas;
 
 // filtro por tipo de alerta
 const cont = {}; alertas.forEach((a) => (cont[a.regra] = (cont[a.regra] || 0) + 1));
-const barra = document.createElement("div"); barra.className = "filtros"; barra.id = "regras";
-barra.innerHTML = `<button data-r="todas" class="on">Todos os tipos</button><button data-r="__comb" style="border-color:#b388ff;color:#b388ff">Sinais combinados</button>` + Object.keys(nomes).filter((r) => cont[r]).map((r) => `<button data-r="${r}" title="${esc(nomes[r])}">${esc(nomes[r])} (${cont[r]})</button>`).join("");
-barra.onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroR = b.dataset.r; [...barra.children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
-$("filtros").before(barra);
+const nComb = alertas.filter((a) => a.correlacao).length;
+const selTipo = document.createElement("select"); selTipo.id = "tipo";
+selTipo.innerHTML = `<option value="todas">Todos os tipos (${alertas.length})</option><option value="__comb">★ Sinais combinados (${nComb})</option>` + Object.keys(nomes).filter((r) => cont[r]).map((r) => `<option value="${r}">${esc(nomes[r])} (${cont[r]})</option>`).join("");
+selTipo.onchange = () => { filtroR = selTipo.value; aplicarFiltro(); };
+$("filtros").before(selTipo);
 const contEl = document.createElement("div"); contEl.id = "cont"; contEl.className = "sub2"; contEl.style.margin = "0 0 10px"; $("itens").before(contEl);
 const bCsv = document.createElement("button"); bCsv.className = "botao"; bCsv.textContent = "Exportar CSV"; bCsv.style.margin = "0 0 10px"; bCsv.onclick = () => exportarCSV(); $("itens").before(bCsv);
 
@@ -532,3 +541,96 @@ $("aba-noticias").innerHTML = `<h3>Notícias</h3><p class="sub2">Manchetes recen
 if (map.loaded()) montarMapa(); else map.on("load", montarMapa);
 
 if (location.hash.length > 1) setTimeout(() => abrir(decodeURIComponent(location.hash.slice(1))), 1800);
+
+
+// =====================================================================
+// UX v5: indicadores, linha do tempo, camadas, busca global, dossiê em abas
+// =====================================================================
+{ // indicadores
+  const emAtencao = alertas.filter((a) => a.gravidade !== "baixa").reduce((s, a) => s + (a.total || 0), 0);
+  $("resumo").innerHTML = `<div class="kpi"><b>${alertas.length.toLocaleString("pt-BR")}</b><span>alertas</span></div><div class="kpi"><b>${brlCurto(emAtencao)}</b><span>em atenção</span></div><div class="kpi n"><b>${alertas.filter((a) => a.novo).length}</b><span>novos (14 dias)</span></div><div class="kpi c"><b>${alertas.filter((a) => a.correlacao).length}</b><span>combinados</span></div>`;
+}
+
+// ----- camadas -----
+[["l-calor", "calor"], ["l-rotas", "rotas"], ["l-todas", "todas"], ["l-pontos", "pontos"]].forEach(([id, k]) => { $(id).onchange = (e) => { LAY[k] = e.target.checked; }; });
+
+// ----- linha do tempo (arraste para filtrar por período) -----
+function montarTimeline() {
+  const por = {}; alertas.forEach((a) => { const m = (a.fim || a.inicio || "").slice(0, 7); if (!m || m < "2023-01") return; (por[m] ||= { alta: 0, media: 0, baixa: 0 })[a.gravidade]++; });
+  const ks = Object.keys(por).sort(); if (ks.length < 2) { $("timeline").style.display = "none"; return; }
+  const meses = []; let [y, m] = ks[0].split("-").map(Number); const [yf, mf] = ks[ks.length - 1].split("-").map(Number);
+  while (y < yf || (y === yf && m <= mf)) { meses.push(`${y}-${String(m).padStart(2, "0")}`); if (++m > 12) { m = 1; y++; } }
+  const n = meses.length, W = 1000, bw = W / n, max = Math.max(1, ...meses.map((k) => { const p = por[k] || {}; return (p.alta || 0) + (p.media || 0) + (p.baixa || 0); }));
+  const barras = meses.map((k, i) => { const p = por[k] || { alta: 0, media: 0, baixa: 0 }; let y0 = 50; return ["baixa", "media", "alta"].map((g) => { const h = 46 * (p[g] || 0) / max; y0 -= h; return h > 0 ? `<rect x="${i * bw + 1}" y="${y0}" width="${Math.max(1, bw - 2)}" height="${h}" fill="${COR[g]}" opacity=".85"/>` : ""; }).join(""); }).join("");
+  const rotulos = [0, Math.floor(n / 2), n - 1].map((i) => `<text x="${Math.min(W - 30, Math.max(2, i * bw))}" y="49" style="font:10px ui-monospace,monospace;fill:#7a8da3">${meses[i]}</text>`).join("");
+  $("timeline").innerHTML = `<div class="tl-h"><span>Linha do tempo · alertas por mês de atividade</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".18" width="0"/>${barras}</svg>`;
+  const svg = $("tl-svg"), br = $("tl-brush"); let ini = null;
+  const idx = (e) => { const r = svg.getBoundingClientRect(); return Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - r.left) / r.width) * n))); };
+  const pinta = (a, b) => { const lo = Math.min(a, b), hi = Math.max(a, b); br.setAttribute("x", lo * bw); br.setAttribute("width", (hi - lo + 1) * bw); };
+  svg.onpointerdown = (e) => { ini = idx(e); svg.setPointerCapture(e.pointerId); pinta(ini, ini); };
+  svg.onpointermove = (e) => { if (ini != null) pinta(ini, idx(e)); };
+  svg.onpointerup = (e) => { if (ini == null) return; const f = idx(e), lo = Math.min(ini, f), hi = Math.max(ini, f); ini = null;
+    janela = [meses[lo], meses[hi]]; $("tl-sel").textContent = lo === hi ? meses[lo] : `${meses[lo]} a ${meses[hi]}`; $("tl-reset").hidden = false; aplicarFiltro(); };
+  $("tl-reset").onclick = () => { janela = null; br.setAttribute("width", 0); $("tl-sel").textContent = ""; $("tl-reset").hidden = true; aplicarFiltro(); };
+}
+montarTimeline();
+
+// ----- dossiê em abas -----
+function tabificar() {
+  const d = $("detalhe"); if (d.hidden) return; const num = d.querySelector(".numeros"); if (!num) return;
+  const resto = []; for (let k = num.nextElementSibling; k; k = k.nextElementSibling) resto.push(k);
+  const grupo = (t) => (/^(Rede de ligações|Linha do tempo|Sinais combinados)$/.test(t) ? "Rede e tempo" : /^(Análise|Checagem)$/.test(t) ? "Análise" : "Dados");
+  const G = { "Dados": [], "Rede e tempo": [], "Análise": [] }; let atual = "Dados";
+  resto.forEach((k) => { if (k.tagName === "H4") atual = grupo(k.textContent.trim()); G[atual].push(k); });
+  const tabs = document.createElement("div"); tabs.className = "dtabs"; const panes = {};
+  Object.entries(G).forEach(([nome, nos], i) => { if (!nos.length) return;
+    const b = document.createElement("button"); b.textContent = nome; if (!panes.__p) b.classList.add("on"); tabs.appendChild(b);
+    const p = document.createElement("div"); p.className = "dpane" + (!panes.__p ? " on" : ""); panes.__p = panes.__p || p; nos.forEach((n) => p.appendChild(n)); panes[nome] = p;
+    b.onclick = () => { tabs.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); Object.entries(panes).forEach(([kk, pp]) => { if (kk !== "__p") pp.classList.toggle("on", pp === p); }); }; });
+  num.after(tabs); let ult = tabs; Object.entries(panes).forEach(([kk, pp]) => { if (kk !== "__p") { ult.after(pp); ult = pp; } });
+}
+{ const _abrir = abrir; abrir = function (id) { _abrir(id); tabificar(); }; }
+
+// ----- busca global (Ctrl+K) -----
+const paleta = document.createElement("div"); paleta.id = "paleta";
+paleta.innerHTML = '<div class="caixa-p"><input id="pal-in" placeholder="Buscar empresa, CNPJ, político, cidade ou caso..." autocomplete="off"><div class="res" id="pal-res"></div></div>';
+document.body.appendChild(paleta);
+let _indice = null, _sel = 0, _itens = [];
+async function indice() {
+  if (_indice) return _indice;
+  await carregarFichas(); const dc = await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] }));
+  const L = [];
+  alertas.forEach((a) => L.push({ g: "Alertas", t: a.empresa, s: `${nomes[a.regra] || a.regra}${a.local ? " · " + a.local.cidade + "/" + a.local.uf : ""}`, v: brlCurto(a.total), k: norm([a.empresa, a.cnpj, a.local && a.local.cidade, a.local && a.local.uf].join(" ")), go: () => abrir(a.id) }));
+  fichas.forEach((f) => L.push({ g: "Agentes públicos", t: f.n, s: `${CARGO[f.t]}${f.c ? " · " + f.c : ""}${f.p ? " · " + f.p : ""}${f.u ? "/" + f.u : ""}`, v: f.n_alertas ? f.n_alertas + " alerta(s)" : "", k: f._k, go: () => abrirFicha(f) }));
+  dc.casos.forEach((c) => L.push({ g: "Investigações", t: c.titulo, s: c.resumo, v: "", k: norm(c.titulo + " " + c.resumo), go: () => abrirCaso(c) }));
+  return (_indice = L);
+}
+function pintaPaleta(lista) {
+  _itens = lista; _sel = 0; const por = {}; lista.forEach((x) => (por[x.g] ||= []).push(x)); let i = 0;
+  $("pal-res").innerHTML = lista.length ? Object.entries(por).map(([g, xs]) => `<div class="grp">${esc(g)}</div>${xs.map((x) => `<div class="it ${i++ === 0 ? "on" : ""}" data-i="${_itens.indexOf(x)}"><div><b>${esc(x.t)}</b><small>${esc(x.s)}</small></div><span class="v">${esc(x.v)}</span></div>`).join("")}`).join("") : '<div class="vazio">Nada encontrado. Tente o nome da empresa, o CNPJ ou a cidade.</div>';
+  $("pal-res").querySelectorAll(".it").forEach((e) => { e.onclick = () => escolhe(Number(e.dataset.i)); e.onmousemove = () => { _sel = Number(e.dataset.i); marca(); }; });
+}
+const marca = () => $("pal-res").querySelectorAll(".it").forEach((e) => { const on = Number(e.dataset.i) === _sel; e.classList.toggle("on", on); if (on) e.scrollIntoView({ block: "nearest" }); });
+function escolhe(i) { const x = _itens[i]; if (!x) return; fechaPaleta(); x.go(); }
+async function buscaPaleta() {
+  const q = norm($("pal-in").value).trim(); const L = await indice();
+  if (!q) { pintaPaleta([...L.filter((x) => x.g === "Investigações"), ...alertas.filter((a) => a.gravidade === "alta").slice(0, 6).map((a) => L.find((x) => x.t === a.empresa && x.g === "Alertas")).filter(Boolean)]); return; }
+  const ts = q.split(/\s+/); const hit = L.filter((x) => ts.every((t) => x.k.includes(t)));
+  const ord = (x) => (norm(x.t).startsWith(q) ? 0 : norm(x.t).includes(q) ? 1 : 2);
+  const por = {}; hit.sort((a, b) => ord(a) - ord(b)).forEach((x) => { const arr = (por[x.g] ||= []); if (arr.length < 6) arr.push(x); });
+  pintaPaleta(["Alertas", "Agentes públicos", "Investigações"].flatMap((g) => por[g] || []));
+}
+function abrePaleta() { paleta.classList.add("on"); $("pal-in").value = ""; $("pal-in").focus(); buscaPaleta(); }
+function fechaPaleta() { paleta.classList.remove("on"); }
+$("b-busca").onclick = abrePaleta; paleta.onclick = (e) => { if (e.target === paleta) fechaPaleta(); };
+$("pal-in").oninput = buscaPaleta;
+document.addEventListener("keydown", (e) => {
+  const tag = (document.activeElement && document.activeElement.tagName) || "";
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); abrePaleta(); return; }
+  if (e.key === "/" && tag !== "INPUT" && tag !== "SELECT") { e.preventDefault(); abrePaleta(); return; }
+  if (!paleta.classList.contains("on")) { if (e.key === "Escape" && !$("detalhe").hidden) $("detalhe").querySelector(".fechar").click(); return; }
+  if (e.key === "Escape") fechaPaleta();
+  else if (e.key === "ArrowDown") { e.preventDefault(); _sel = Math.min(_itens.length - 1, _sel + 1); marca(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); _sel = Math.max(0, _sel - 1); marca(); }
+  else if (e.key === "Enter") { e.preventDefault(); escolhe(_sel); }
+});

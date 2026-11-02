@@ -4,7 +4,7 @@ Roda no GitHub Actions: a conexão TLS do servidor deles falha no Windows local.
 import json, time, pathlib, urllib.parse, urllib.request
 RAIZ = pathlib.Path(__file__).parent.parent
 entrada = json.loads((RAIZ / "data-publica/empresas.json").read_text(encoding="utf-8"))
-API = "https://api.queridodiario.ok.org.br/gazettes"
+API = "https://api.queridodiario.org.br/gazettes"
 saida = {}
 for i, e in enumerate(entrada):
     q = urllib.parse.urlencode({"querystring": f'"{e["empresa"]}"', "published_since": "2025-01-01", "size": 5, "excerpt_size": 280, "number_of_excerpts": 2, "sort_by": "descending_date"})

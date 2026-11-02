@@ -3,31 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Radar Público · Monitor de dinheiro público</title>
+  <title>Harpia · monitor de dinheiro público</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header id="topo">
-    <div class="marca"><span class="alvo"></span><b>Radar Público</b><small>monitor de dinheiro público · dados abertos</small></div>
-    <nav id="abas">
-      <button data-aba="alertas" class="on">Alertas</button>
-      <button data-aba="casos">Investigações</button>
-      <button data-aba="risco">Risco financeiro</button>
-      <button data-aba="fichas">Fichas</button>
-      <button data-aba="exterior">Exterior</button>
-      <button data-aba="justica">Judiciário</button>
-      <button data-aba="noticias">Notícias</button>
-      <button data-aba="fontes">Fontes</button>
-      <button data-aba="sobre">Como ler</button>
-    </nav>
+    <div class="marca">
+      <svg viewBox="0 0 24 24" class="logo"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.2"/></svg>
+      <b id="marca-nome">HARPIA</b><small>monitor de dinheiro público</small>
+    </div>
+    <button id="b-busca" class="busca-fake" aria-label="Buscar">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/></svg>
+      <span>Buscar empresa, político, cidade ou caso</span><kbd>Ctrl K</kbd>
+    </button>
     <div class="resumo" id="resumo"></div>
     <div class="ameaca" id="ameaca"></div>
   </header>
 
-  <main>
+  <div id="app">
+    <nav id="abas" aria-label="Seções">
+      <button data-aba="alertas" class="on" title="Alertas"><svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
+      <button data-aba="casos" title="Investigações"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
+      <button data-aba="risco" title="Risco financeiro"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg><span>Risco</span></button>
+      <button data-aba="fichas" title="Fichas de agentes públicos"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Fichas</span></button>
+      <button data-aba="exterior" title="Exterior"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18"/></svg><span>Exterior</span></button>
+      <button data-aba="justica" title="Judiciário"><svg viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z"/></svg><span>Justiça</span></button>
+      <button data-aba="noticias" title="Notícias"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span>Notícias</span></button>
+      <button data-aba="fontes" title="Fontes e cobertura"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Fontes</span></button>
+      <button data-aba="sobre" title="Como ler"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17v.5"/></svg><span>Ajuda</span></button>
+    </nav>
+
     <aside id="painel">
       <section id="aba-alertas" class="aba on">
-        <div class="rot">// alvos monitorados</div>
+        <div class="cab"><h2>Alertas</h2><span id="cont-topo" class="sub2"></span></div>
         <div class="filtros" id="filtros">
           <button data-g="todas" class="on">Todos</button>
           <button data-g="alta">Alta</button>
@@ -38,27 +46,31 @@
       </section>
       <section id="aba-casos" class="aba"></section>
       <section id="aba-risco" class="aba"></section>
-      <section id="aba-fontes" class="aba"></section>
       <section id="aba-fichas" class="aba"></section>
       <section id="aba-exterior" class="aba"></section>
       <section id="aba-justica" class="aba"></section>
       <section id="aba-noticias" class="aba"></section>
+      <section id="aba-fontes" class="aba"></section>
       <section id="aba-sobre" class="aba"></section>
     </aside>
 
-    <div id="mapa"></div>
-    <div class="varre" id="varre"></div>
-    <div class="scan"></div><div class="vinheta"></div>
-    <i class="cb tl"></i><i class="cb tr"></i><i class="cb bl"></i><i class="cb br"></i>
-    <div id="coords">LAT --.-- · LON --.--</div>
-    <section id="detalhe" hidden></section>
-    <div id="legenda">
-      <span style="color:#ff2d55"><i style="background:#ff2d55"></i>Prioridade alta</span>
-      <span style="color:#ffb300"><i style="background:#ffb300"></i>Média</span>
-      <span style="color:#00b8ff"><i style="background:#00b8ff"></i>Baixa</span>
-      <label class="tg"><input type="checkbox" id="tg-voos"> Voos internacionais pagos com a cota</label><span class="mudo">Clique num alerta para ver a rota do dinheiro</span>
-    </div>
-  </main>
+    <main id="centro">
+      <div id="mapa"></div>
+      <div class="varre" id="varre" hidden></div>
+      <div id="camadas">
+        <div class="cam-t">Camadas</div>
+        <label><input type="checkbox" id="l-calor" checked> Calor de valor</label>
+        <label><input type="checkbox" id="l-rotas" checked> Rotas do dinheiro</label>
+        <label><input type="checkbox" id="l-todas"> Todas as rotas <small>(pesado)</small></label>
+        <label><input type="checkbox" id="l-pontos" checked> Pontos</label>
+        <label><input type="checkbox" id="tg-voos"> Voos internacionais</label>
+      </div>
+      <div id="legenda"><span style="color:#ff2d55"><i style="background:#ff2d55"></i>Alta</span><span style="color:#ffb300"><i style="background:#ffb300"></i>Média</span><span style="color:#00b8ff"><i style="background:#00b8ff"></i>Baixa</span></div>
+      <div id="timeline"></div>
+      <div id="coords"></div>
+      <section id="detalhe" hidden></section>
+    </main>
+  </div>
   <script type="module" src="/main.js"></script>
 </body>
 </html>
