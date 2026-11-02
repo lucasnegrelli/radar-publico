@@ -12,6 +12,10 @@
   {
    "rotulo": "Sergio Moro",
    "valor": "Considerado parcial (suspeito) pela Segunda Turma do STF no caso do triplex, por 3 votos a 2."
+  },
+  {
+   "rotulo": "Desdobramentos",
+   "valor": "Triplex e sítio de Atibaia: arquivamento por prescrição e rejeição de denúncia na Justiça Federal do DF, segundo a imprensa (datas a confirmar)."
   }
  ],
  "pessoas": [
@@ -20,11 +24,18 @@
  ],
  "marcos": [
   {
-   "data": "2021-03-08",
+   "data": "2021",
    "tipo": "decisão",
-   "texto": "O ministro Edson Fachin anula as condenações de Lula da 13ª Vara Federal de Curitiba (triplex do Guarujá, sítio de Atibaia e doações ao Instituto Lula) e manda os processos para a Justiça Federal em Brasília. As provas foram mantidas.",
-   "fonte": "Crusoé",
-   "url": "https://crusoe.com.br/?p=140738"
+   "texto": "A Justiça Federal em Brasília rejeita a nova denúncia contra Lula sobre o sítio de Atibaia, segundo a imprensa (data exata a confirmar).",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/justica/justica-arquiva-caso-do-triplex-contra-lula/"
+  },
+  {
+   "data": "2021",
+   "tipo": "decisão",
+   "texto": "O MPF reconhece a prescrição e pede o arquivamento do caso do triplex do Guarujá (data exata a confirmar).",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/justica/mpf-pede-arquivamento-de-caso-do-triplex-contra-lula/"
   },
   {
    "data": "2021-03",
@@ -32,6 +43,13 @@
    "texto": "A Segunda Turma do STF considera Moro parcial no julgamento do caso do triplex, por 3 votos a 2.",
    "fonte": "Monitor Mercantil",
    "url": "https://monitormercantil.com.br/segunda-turma-mantem-julgamento-da-suspeicao-de-moro/"
+  },
+  {
+   "data": "2021-03-08",
+   "tipo": "decisão",
+   "texto": "O ministro Edson Fachin anula as condenações de Lula da 13ª Vara Federal de Curitiba (triplex do Guarujá, sítio de Atibaia e doações ao Instituto Lula) e manda os processos para a Justiça Federal em Brasília. As provas foram mantidas.",
+   "fonte": "Crusoé",
+   "url": "https://crusoe.com.br/?p=140738"
   },
   {
    "data": "2021-04-15",

@@ -1,0 +1,52 @@
+{
+ "id": "eduardo-bolsonaro",
+ "titulo": "Eduardo Bolsonaro: coação ao STF",
+ "tipo": "politico",
+ "ordem": 3,
+ "resumo": "A PGR denunciou o deputado Eduardo Bolsonaro e o blogueiro Paulo Figueiredo por coação no curso do processo: eles teriam buscado sanções e tarifas dos Estados Unidos contra o Brasil e ministros do STF para influenciar o julgamento de Jair Bolsonaro. A Primeira Turma aceitou a denúncia e ele virou réu.",
+ "situacao": [
+  {
+   "rotulo": "Situação",
+   "valor": "Réu por coação no curso do processo (pena prevista de 1 a 4 anos). Em maio de 2026, a PGR pediu a condenação nas alegações finais. Julgamento: não verificado."
+  },
+  {
+   "rotulo": "Defesa",
+   "valor": "Não localizada nas fontes consultadas."
+  }
+ ],
+ "pessoas": [
+  "Eduardo Bolsonaro",
+  "Paulo Figueiredo"
+ ],
+ "marcos": [
+  {
+   "data": "2025",
+   "tipo": "investigação",
+   "texto": "A PGR denuncia Eduardo Bolsonaro e Paulo Figueiredo ao STF por coação no curso do processo.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticia/112209/pgr-denuncia-eduardo-bolsonaro-e-paulo-figueiredo-ao-stf"
+  },
+  {
+   "data": "2025",
+   "tipo": "decisão",
+   "texto": "A Primeira Turma do STF aceita a denúncia por unanimidade e Eduardo Bolsonaro vira réu por coação.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticia/114232/1-turma-aceita-denuncia-e-eduardo-bolsonaro-vira-reu-por-coacao"
+  },
+  {
+   "data": "2026-05",
+   "tipo": "investigação",
+   "texto": "Nas alegações finais, a PGR pede ao STF a condenação de Eduardo Bolsonaro por coação.",
+   "fonte": "Agência Brasil",
+   "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2026-05/pgr-pede-ao-supremo-condenacao-de-eduardo-bolsonaro-por-coacao"
+  }
+ ],
+ "consultas": [
+  "Eduardo Bolsonaro coação STF julgamento",
+  "Paulo Figueiredo denúncia STF"
+ ],
+ "lacunas": [
+  "Data e resultado do julgamento da ação penal.",
+  "Se ele segue com mandato e residindo nos Estados Unidos (as fontes divergem)."
+ ]
+}

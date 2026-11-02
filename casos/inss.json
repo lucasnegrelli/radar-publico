@@ -11,11 +11,15 @@
   },
   {
    "rotulo": "Indiciamentos",
-   "valor": "PF indiciou 48 pessoas em um dos inquéritos, entre elas o ex-presidente do INSS e o Careca do INSS."
+   "valor": "A PF indiciou 48 pessoas (14/07/2026), entre elas o ex-presidente do INSS e o Careca do INSS. A PGR ainda decide sobre denúncia."
   },
   {
    "rotulo": "Lulinha",
    "valor": "Investigado pela PF segundo a imprensa; a CPMI aprovou quebra de sigilo. Sem denúncia nem condenação nas fontes consultadas. A defesa nega."
+  },
+  {
+   "rotulo": "CPMI",
+   "valor": "Terminou sem relatório final aprovado (março de 2026). O pedido de indiciar 216 pessoas, inclusive Lulinha, foi rejeitado."
   }
  ],
  "pessoas": [
@@ -31,11 +35,11 @@
    "url": "https://lexlegal.com.br/tudo-sobre/operacao-sem-desconto/"
   },
   {
-   "data": "2025",
+   "data": "2026",
    "tipo": "investigação",
-   "texto": "A PF indicia 48 pessoas por descontos indevidos de aposentados do INSS.",
-   "fonte": "SBT News",
-   "url": "https://sbtnews.sbt.com.br/noticia/politica/pf-indicia-48-por-descontos-indevidos-de-aposentados-do-inss"
+   "texto": "A CPMI do INSS aprova a quebra de sigilo de Lulinha e convoca o ex-ministro André Moura.",
+   "fonte": "Compre Rural",
+   "url": "https://comprerural.com/cpmi-do-inss-aprova-quebra-de-sigilo-de-lulinha-e-convoca-andre-moura/"
   },
   {
    "data": "2026-02",
@@ -45,11 +49,25 @@
    "url": "https://www.band.com.br/noticias/esquema-do-inss-por-que-lulinha-e-investigado-pela-pf-202602271100"
   },
   {
-   "data": "2026",
+   "data": "2026-03",
    "tipo": "investigação",
-   "texto": "A CPMI do INSS aprova a quebra de sigilo de Lulinha e convoca o ex-ministro André Moura.",
-   "fonte": "Compre Rural",
-   "url": "https://comprerural.com/cpmi-do-inss-aprova-quebra-de-sigilo-de-lulinha-e-convoca-andre-moura/"
+   "texto": "O relator da CPMI, deputado Alfredo Gaspar, pede o indiciamento de 216 pessoas, entre elas Lulinha, Vorcaro e o Careca do INSS. Pedido de indiciamento de CPMI não tem efeito formal sem denúncia do Ministério Público.",
+   "fonte": "JB",
+   "url": "https://www.jb.com.br/brasil/politica/2026/03/1059116-relator-bolsonarista-da-cpmi-do-inss-pede-indiciamento-de-216-pessoas.html"
+  },
+  {
+   "data": "2026-03-28",
+   "tipo": "decisão",
+   "texto": "A CPMI rejeita o relatório do relator por 19 votos a 12 e encerra os trabalhos sem relatório final aprovado. A base do governo havia apresentado relatório paralelo com 130 pedidos de indiciamento.",
+   "fonte": "Senado Notícias",
+   "url": "https://www12.senado.leg.br/noticias/materias/2026/03/28/cpmi-do-inss-termina-sem-relatorio-final"
+  },
+  {
+   "data": "2026-07-14",
+   "tipo": "investigação",
+   "texto": "A PF indicia o Careca do INSS e o ex-presidente do INSS por fraude bilionária. O relatório, com 48 indiciados, vai ao STF e segue para a PGR, que decidirá sobre a denúncia.",
+   "fonte": "Band",
+   "url": "https://www.band.com.br/politica/noticias/pf-indicia-careca-do-inss-ex-presidente-da-entidade-por-fraude-bilionaria-202607141740"
   }
  ],
  "consultas": [
@@ -58,7 +76,8 @@
   "Operação Sem Desconto INSS fraude"
  ],
  "lacunas": [
-  "Denúncia do Ministério Público: não verificada. Estar citado em reportagem, depoimento ou quebra de sigilo não equivale a ser acusado.",
-  "Valor total do prejuízo e ressarcimento dos aposentados."
+  "Denúncia da PGR e eventual ação penal: não verificadas. Estar citado em reportagem, depoimento ou pedido de indiciamento de CPMI não equivale a ser acusado.",
+  "Valor total do prejuízo e ressarcimento dos aposentados.",
+  "Qual é a investigação específica da PF sobre Lulinha e o seu estágio atual (as reportagens são anteriores a julho de 2026)."
  ]
 }

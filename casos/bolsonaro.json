@@ -12,6 +12,18 @@
   {
    "rotulo": "TSE",
    "valor": "Inelegível (decisão de 2023). Reportagens apontam inelegibilidade até 2060 após a condenação; a contagem é discutida."
+  },
+  {
+   "rotulo": "Cartão de vacina",
+   "valor": "Inquérito arquivado pelo STF em 28/03/2025, a pedido da PGR, por falta de provas além da delação de Mauro Cid. Pode ser reaberto se surgirem novas provas."
+  },
+  {
+   "rotulo": "Joias sauditas",
+   "valor": "PF indiciou Bolsonaro e outras 11 pessoas. Não há denúncia da PGR nas fontes consultadas; uma reportagem registra pedido de arquivamento do inquérito (data a confirmar)."
+  },
+  {
+   "rotulo": "Cumprimento da pena",
+   "valor": "Prisão domiciliar humanitária concedida por Moraes em 24/03/2026, com parecer favorável da PGR e tornozeleira, mantida ao fim do prazo inicial de 90 dias, segundo a imprensa."
   }
  ],
  "pessoas": [
@@ -27,6 +39,34 @@
    "url": "https://www.band.com.br/noticias/bolsonaro-pode-ficar-inelegivel-ate-2060-apos-condenacao-202509121542"
   },
   {
+   "data": "2024",
+   "tipo": "investigação",
+   "texto": "A PF indicia Bolsonaro e outras 11 pessoas no caso das joias sauditas; a PGR pede mais documentos antes de decidir sobre denúncia.",
+   "fonte": "Folha de Pernambuco",
+   "url": "https://www.folhape.com.br/politica/apos-pf-indiciar-bolsonaro-pgr-solicita-mais-documentos-sobre-joias/356519/"
+  },
+  {
+   "data": "2024-03",
+   "tipo": "investigação",
+   "texto": "A PF indicia Bolsonaro por fraude em cartão de vacinação contra a covid-19.",
+   "fonte": "O Povo",
+   "url": "https://www.opovo.com.br/noticias/mundo/2024/03/19/pf-indicia-bolsonaro-por-fraude-em-cartao-de-vacinacao-contra-a-covid-19.html"
+  },
+  {
+   "data": "2025-03-27",
+   "tipo": "decisão",
+   "texto": "A PGR (Paulo Gonet) pede o arquivamento do inquérito do cartão de vacina por falta de provas além da colaboração de Mauro Cid.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/noticia/107308/pgr-pede-arquivamento-de-inquerito-sobre-cartao-de-vacina-de-bolsonaro"
+  },
+  {
+   "data": "2025-03-28",
+   "tipo": "decisão",
+   "texto": "Moraes arquiva o inquérito do cartão de vacina. Segundo a decisão, a lei veda denúncia baseada só em delação; o arquivamento vale salvo surgimento de novas provas.",
+   "fonte": "Folha de Pernambuco",
+   "url": "https://www.folhape.com.br/politica/alexandre-de-moraes-arquiva-investigacao-contra-bolsonaro-sobre-fraude/401003/"
+  },
+  {
    "data": "2025-09-11",
    "tipo": "decisão",
    "texto": "A Primeira Turma do STF condena Bolsonaro a 27 anos e 3 meses de prisão, em regime inicial fechado, no processo da trama golpista. Os réus condenados ficam inelegíveis por oito anos e há condenação coletiva de R$ 30 milhões por danos do 8 de janeiro.",
@@ -34,11 +74,39 @@
    "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2025-09/stf-condena-bolsonaro-27-anos-e-tres-meses-de-prisao/"
   },
   {
+   "data": "2025-10",
+   "tipo": "reportagem",
+   "texto": "Mais de um ano depois do indiciamento, o caso das joias segue sem decisão da PGR sobre denunciar ou arquivar.",
+   "fonte": "Jornal de Brasília",
+   "url": "https://jornaldebrasilia.com.br/noticias/politica-e-poder/caso-de-joias-sauditas-de-bolsonaro-aguarda-definicao-da-pgr-ha-mais-de-um-ano/"
+  },
+  {
    "data": "2025-11-25",
    "tipo": "decisão",
    "texto": "O ministro Alexandre de Moraes manda executar as penas dos condenados do núcleo central e comunicar o TSE sobre a inelegibilidade.",
    "fonte": "JB",
    "url": "https://www.jb.com.br/brasil/justica/2025/11/1057755-moraes-manda-comunicar-tse-sobre-inelegibilidade-de-bolsonaro.html"
+  },
+  {
+   "data": "2026",
+   "tipo": "reportagem",
+   "texto": "A chamada Lei da Dosimetria, se aplicada, pode reduzir a pena de Bolsonaro; a aplicação depende de pedido da defesa e de nova análise do STF.",
+   "fonte": "InfoMoney",
+   "url": "https://www.infomoney.com.br/?p=3313120"
+  },
+  {
+   "data": "2026-03-24",
+   "tipo": "decisão",
+   "texto": "Moraes concede prisão domiciliar humanitária a Bolsonaro após parecer favorável da PGR (problemas de saúde).",
+   "fonte": "Money Times",
+   "url": "https://www.moneytimes.com.br/moraes-concede-prisao-domiciliar-a-bolsonaro-apos-parecer-favoravel-da-pgr-gaep/"
+  },
+  {
+   "data": "2026-08",
+   "tipo": "reportagem",
+   "texto": "Ao completar um ano de prisão, Bolsonaro segue em domiciliar com tornozeleira; a medida foi mantida ao fim do prazo inicial.",
+   "fonte": "O Povo",
+   "url": "https://www.opovo.com.br/noticias/politica/2026/08/05/bolsonaro-completa-um-ano-preso-relembre-o-caso.html"
   }
  ],
  "consultas": [
@@ -48,7 +116,7 @@
   "Bolsonaro cartão de vacina processo"
  ],
  "lacunas": [
-  "Caso das joias e fraude no cartão de vacina: não há marcos verificados nesta rodada (veja as manchetes abaixo).",
-  "Recursos, pedidos de anistia e a situação atual da execução da pena (posteriores a novembro de 2025)."
+  "Pedidos da defesa (revisão criminal, dosimetria, anistia) e a situação da execução da pena depois de agosto de 2026.",
+  "Decisão do STF sobre o pedido de arquivamento do caso das joias."
  ]
 }
