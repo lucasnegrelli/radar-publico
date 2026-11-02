@@ -13,6 +13,8 @@
       <button data-aba="alertas" class="on">Alertas</button>
       <button data-aba="risco">Risco financeiro</button>
       <button data-aba="fichas">Fichas</button>
+      <button data-aba="exterior">Exterior</button>
+      <button data-aba="justica">Judiciário</button>
       <button data-aba="noticias">Notícias</button>
       <button data-aba="sobre">Como ler</button>
     </nav>
@@ -34,21 +36,20 @@
       </section>
       <section id="aba-risco" class="aba"></section>
       <section id="aba-fichas" class="aba"></section>
+      <section id="aba-exterior" class="aba"></section>
+      <section id="aba-justica" class="aba"></section>
       <section id="aba-noticias" class="aba"></section>
       <section id="aba-sobre" class="aba"></section>
     </aside>
 
     <div id="mapa"></div>
-    <div class="varre" id="varre"></div>
-    <div class="scan"></div><div class="vinheta"></div>
-    <i class="cb tl"></i><i class="cb tr"></i><i class="cb bl"></i><i class="cb br"></i>
     <div id="coords">LAT --.-- · LON --.--</div>
     <section id="detalhe" hidden></section>
     <div id="legenda">
       <span style="color:#ff2d55"><i style="background:#ff2d55"></i>Prioridade alta</span>
       <span style="color:#ffb300"><i style="background:#ffb300"></i>Média</span>
       <span style="color:#00b8ff"><i style="background:#00b8ff"></i>Baixa</span>
-      <span class="mudo">Rota: de Brasília (quem pagou) até a cidade da empresa (quem recebeu)</span>
+      <label class="tg"><input type="checkbox" id="tg-voos"> Voos internacionais pagos com a cota</label><span class="mudo">Clique num alerta para ver a rota do dinheiro</span>
     </div>
   </main>
   <script type="module" src="/main.js"></script>

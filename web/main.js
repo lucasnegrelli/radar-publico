@@ -47,6 +47,7 @@ function manchete(a) {
   const m = a.manchete, E = `<b>${esc(a.empresa)}</b>`;
   if (m.tipo === "R01") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} da cota parlamentar ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
   if (m.tipo === "R02") return `${E} assinou ${plural(a.n, "contrato público", "contratos públicos")} somando <b>${brl(a.total)}</b> ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
+  if (m.tipo === "R08") return `${E} assinou ${plural(a.n, "contrato", "contratos")} somando <b>${brl(a.total)}</b> com ${esc(a.orgao)}. Tem como sócio <b>${esc(m.socio)}</b> sediado em <b>${esc(m.pais)}</b>, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"} (lista de referência). Ter sócio no exterior é legal; o ponto de atenção é a opacidade de quem recebe dinheiro público.`;
   if (m.tipo === "R06") return `${E} assinou <b>${a.n} contratos</b> com ${esc(a.orgao)} no trimestre ${esc(m.tri)}, cada um entre <b>${brl(m.minimo)}</b> e <b>${brl(m.maximo)}</b>, somando <b>${brl(a.total)}</b>. Todos abaixo da faixa de dispensa de licitação por valor: pode ser uma compra maior dividida em partes.`;
   if (m.tipo === "R07") return `${E} concentra <b>${Math.round(m.share * 100)}%</b> de tudo que ${esc(a.orgao)} contratou em <b>${m.ano}</b> (${brl(a.total)} de ${brl(m.total_orgao)}).`;
   if (m.tipo === "RF01") return m.ref
@@ -60,6 +61,7 @@ function linhaCard(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return `${situacaoCurta(m.sancao)} quando recebeu da cota parlamentar`;
   if (m.tipo === "R02") return `${situacaoCurta(m.sancao)} quando assinou contrato público`;
+  if (m.tipo === "R08") return `Sócio sediado em ${m.pais}, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"}`;
   if (m.tipo === "R06") return `${a.n} contratos pequenos no mesmo trimestre, todos abaixo do limite de dispensa`;
   if (m.tipo === "R07") return `Fica com ${Math.round(m.share * 100)}% do dinheiro contratado pela prefeitura em ${m.ano}`;
   if (m.tipo === "RF01") return m.ref ? `Caso de referência: o critério acenderia ${m.trimestres} trimestres antes da liquidação` : `Crescimento acelerado e alavancado há ${m.trimestres} trimestres`;
@@ -70,6 +72,7 @@ function linhaCard(a) {
 function numeros(a) {
   const m = a.manchete, N = (r, v) => `<div><small>${r}</small><b class="num">${v}</b></div>`;
   if (m.tipo === "R01" || m.tipo === "R02") return N("Total recebido", brlCurto(a.total)) + N(m.tipo === "R01" ? "Pagamentos" : "Contratos", a.n) + N("Punição", esc(a.sancao.lista));
+  if (m.tipo === "R08") return N("Em contratos", brlCurto(a.total)) + N("Contratos", a.n) + N("País do sócio", esc(m.pais));
   if (m.tipo === "R06") return N("Soma", brlCurto(a.total)) + N("Contratos", a.n) + N("Maior contrato", brlCurto(m.maximo));
   if (m.tipo === "R07") return N("Do fornecedor", brlCurto(a.total)) + N("Do órgão no ano", brlCurto(m.total_orgao)) + N("Participação", Math.round(m.share * 100) + "%");
   if (m.tipo === "RF01") return N("Captações", brlCurto(m.captacao)) + N("Em 12 meses", (m.yoy >= 0 ? "+" : "") + Math.round(m.yoy * 100) + "%") + N("Ativo / patrimônio", (m.alav || 0).toFixed(1) + "x");
@@ -81,6 +84,7 @@ function checagem(a) {
   const m = a.manchete;
   if (m.tipo === "R01") return ["Abra a nota de cada pagamento e veja o que foi contratado.", `Veja se a punição realmente alcançava a casa legislativa na data do pagamento (o alcance acima diz onde ela valia).`, "Confirme a situação atual da empresa no Portal da Transparência."];
   if (m.tipo === "R02") return ["Abra cada contrato no PNCP e veja quem contratou e o que foi contratado.", "Confira se a punição valia para esse órgão (veja o alcance acima). Punição restrita a outro órgão não impede contratar.", "Procure se o contrato foi suspenso ou anulado depois."];
+  if (m.tipo === "R08") return ["Multinacionais legítimas costumam ter sócio em Luxemburgo, Suíça ou Países Baixos. O sinal forte é sócio em jurisdição de sigilo clássico (Panamá, Ilhas Virgens, Cayman) numa empresa pequena.", "Descubra quem está por trás do sócio no exterior: o beneficiário final precisa constar no cadastro da Receita.", "Veja se a empresa tem outros contratos públicos e se foi aberta recentemente."];
   if (m.tipo === "R06") return ["Abra os contratos no PNCP: o objeto é o mesmo ou muito parecido entre eles?", "Some os valores: a compra única passaria do limite de dispensa e exigiria licitação?", "Veja se há justificativa de urgência ou de fornecimento de naturezas diferentes."];
   if (m.tipo === "R07") return ["Em alguns serviços há poucos fornecedores (coleta de lixo, saúde, merenda). Concentração não é irregularidade por si só.", "Confira se houve licitação aberta com mais de um concorrente.", "Compare o preço pago com o de prefeituras de porte parecido."];
   if (m.tipo === "RF01") return ["Alavancagem de 10x a 20x é comum em banco. O sinal relevante é o crescimento sustentado muito acima dos pares.", "Veja quem compra o papel: fundos de previdência de servidores e bancos públicos concentrados num emissor pequeno são o ponto crítico.", "Compare a remuneração oferecida (CDBs, LCIs, LFs) com a taxa de mercado: rendimento muito acima da média exige explicação.", "Consulte o Índice de Basileia e as demonstrações no IF.data do Banco Central."];
@@ -90,102 +94,104 @@ function checagem(a) {
 }
 
 // ---------- mapa ----------
+const MAPA_BOUNDS = [[-75, -34.5], [-33, 5.6]];
 const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
-  style: { version: 8, sources: {}, layers: [{ id: "fundo", type: "background", paint: { "background-color": "#02060a" } }] },
-  bounds: [[-74, -34], [-34, 5.5]], fitBoundsOptions: { padding: { left: 60, right: 40, top: 30, bottom: 70 } },
-  minZoom: 3, maxZoom: 9, dragRotate: false, pitchWithRotate: false,
+  style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, layers: [{ id: "fundo", type: "background", paint: { "background-color": "#04090e" } }] },
+  bounds: MAPA_BOUNDS, fitBoundsOptions: { padding: 8 },
+  minZoom: 1.5, maxZoom: 10, dragRotate: false, pitchWithRotate: false,
 });
 map.touchZoomRotate.disableRotation();
 const vazio = { type: "FeatureCollection", features: [] };
-const MAX_COMETAS = 36;
 
-function curva(a, b, n = 36) {
+function curva(a, b, n = 40) {
   const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, dx = b[0] - a[0], dy = b[1] - a[1];
   const c = [mx - dy * 0.22, my + dx * 0.22 * (dx >= 0 ? 1 : -1) + Math.abs(dx) * 0.05];
   return Array.from({ length: n + 1 }, (_, i) => { const t = i / n, u = 1 - t;
     return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]; });
 }
-function grade() {
-  const f = [];
-  for (let x = -75; x <= -30; x += 5) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[x, -36], [x, 8]] } });
-  for (let y = -35; y <= 7; y += 5) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[-76, y], [-28, y]] } });
-  return { type: "FeatureCollection", features: f };
-}
 
-let alertas = [], visiveis = [], filtroG = "todas", filtroR = "todas", sel = null, rotas = [], nomes = {};
+let alertas = [], visiveis = [], filtroG = "todas", filtroR = "todas", sel = null, nomes = {};
 const ptsGeo = (lista) => ({ type: "FeatureCollection", features: lista.filter((a) => a.local).map((a) => ({ type: "Feature", properties: { id: a.id, g: a.gravidade, t: Math.log10(Math.max(a.total, 1000)) }, geometry: { type: "Point", coordinates: [a.local.lon, a.local.lat] } })) });
-function rotasDe(lista) {
-  return lista.filter((a) => a.local && a.origem).map((a, k) => ({ id: a.id, g: a.gravidade,
-    linha: curva([a.origem.lon, a.origem.lat], [a.local.lon, a.local.lat]), fase: (k * 0.211) % 1 }));
-}
-const rotasGeo = (rs) => ({ type: "FeatureCollection", features: rs.map((r) => ({ type: "Feature", properties: { id: r.id, g: r.g }, geometry: { type: "LineString", coordinates: r.linha } })) });
 function corUF(lista) {
   const por = {}; lista.filter((a) => a.local).forEach((a) => { por[a.local.uf] = (por[a.local.uf] || 0) + 1; });
   const casos = ["match", ["get", "uf"]];
-  Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 25 ? "#2c5a73" : n >= 8 ? "#23465c" : n >= 3 ? "#1d3a4e" : "#182d3f"));
-  casos.push("#0e1a24"); return casos;
+  Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 40 ? "#244a5e" : n >= 15 ? "#1d3d50" : n >= 5 ? "#18323f" : "#132a36"));
+  casos.push("#0f212b"); return casos;
 }
 function atualizarMapa() {
   if (!map.getSource("pontos")) return;
-  rotas = rotasDe(visiveis);
   map.getSource("pontos").setData(ptsGeo(visiveis));
-  map.getSource("rotas").setData(rotasGeo(rotas));
   map.setPaintProperty("uf-fill", "fill-color", corUF(visiveis));
 }
+function mostrarRota(a) {
+  if (!map.getSource("rota")) return;
+  const o = a.origem, d = a.local;
+  if (!o || !d) { map.getSource("rota").setData(vazio); return; }
+  map.getSource("rota").setData({ type: "Feature", properties: { g: a.gravidade }, geometry: { type: "LineString", coordinates: curva([o.lon, o.lat], [d.lon, d.lat]) } });
+  const b = new maplibregl.LngLatBounds([o.lon, o.lat], [o.lon, o.lat]).extend([d.lon, d.lat]);
+  map.fitBounds(b, { padding: { top: 90, bottom: 90, left: 90, right: 560 }, maxZoom: 7, duration: 1100 });
+}
+const limparRota = () => map.getSource("rota") && map.getSource("rota").setData(vazio);
 
 function montarMapa() {
   const corG = ["match", ["get", "g"], "alta", COR.alta, "media", COR.media, COR.baixa];
-  map.addSource("grade", { type: "geojson", data: grade() });
-  map.addLayer({ id: "grade", type: "line", source: "grade", paint: { "line-color": "#00ffa6", "line-width": 0.5, "line-opacity": 0.09 } });
+  // mundo ao fundo, discreto
+  map.addSource("mundo", { type: "geojson", data: mundoGeo });
+  map.addLayer({ id: "mundo-fill", type: "fill", source: "mundo", paint: { "fill-color": "#0a151d" } });
+  map.addLayer({ id: "mundo-line", type: "line", source: "mundo", paint: { "line-color": "#16303d", "line-width": 0.6 } });
+  // Brasil em destaque
   map.addSource("ufs", { type: "geojson", data: ufGeo });
   map.addLayer({ id: "uf-fill", type: "fill", source: "ufs", paint: { "fill-color": corUF(visiveis) } });
-  map.addLayer({ id: "uf-glow", type: "line", source: "ufs", paint: { "line-color": "#00ffa6", "line-width": 5, "line-blur": 5, "line-opacity": 0.16 } });
-  map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#19f0b4", "line-width": 0.9, "line-opacity": 0.55 } });
-  rotas = rotasDe(visiveis);
-  map.addSource("rotas", { type: "geojson", data: rotasGeo(rotas) });
-  map.addLayer({ id: "rotas-glow", type: "line", source: "rotas", paint: { "line-color": corG, "line-width": 7, "line-blur": 6, "line-opacity": 0.3 } });
-  map.addLayer({ id: "rotas", type: "line", source: "rotas", layout: { "line-cap": "round" }, paint: { "line-color": corG, "line-width": 1.4, "line-opacity": 0.75 } });
-  map.addLayer({ id: "rotas-sel", type: "line", source: "rotas", filter: ["==", ["get", "id"], ""], paint: { "line-color": "#ffffff", "line-width": 3.2, "line-opacity": 1 } });
-  map.addSource("pontos", { type: "geojson", data: ptsGeo(visiveis) });
-  map.addLayer({ id: "anel1", type: "circle", source: "pontos", paint: { "circle-color": "rgba(0,0,0,0)", "circle-radius": 10, "circle-stroke-color": corG, "circle-stroke-width": 1.6, "circle-stroke-opacity": 0.8 } });
-  map.addLayer({ id: "anel2", type: "circle", source: "pontos", paint: { "circle-color": "rgba(0,0,0,0)", "circle-radius": 10, "circle-stroke-color": corG, "circle-stroke-width": 1.2, "circle-stroke-opacity": 0.6 } });
-  map.addLayer({ id: "pulso", type: "circle", source: "pontos", paint: { "circle-color": corG, "circle-radius": 14, "circle-opacity": 0.28, "circle-blur": 0.9 } });
-  map.addLayer({ id: "pontos", type: "circle", source: "pontos", paint: { "circle-color": corG, "circle-radius": ["interpolate", ["linear"], ["get", "t"], 3, 3.5, 5, 6, 7, 11], "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.1 } });
-  map.addSource("cometas", { type: "geojson", data: vazio });
-  map.addLayer({ id: "cometas", type: "circle", source: "cometas", paint: { "circle-color": ["case", ["==", ["get", "r"], 3.4], "#ffffff", corG], "circle-radius": ["get", "r"], "circle-opacity": ["get", "o"], "circle-blur": 0.3 } });
-  const el = document.createElement("div"); el.innerHTML = '<div style="color:#00ffa6;font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.14em;text-shadow:0 0 8px #00ffa6">◉ BRASÍLIA</div>';
+  map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#2d7f78", "line-width": 0.9, "line-opacity": 0.8 } });
+  // voos internacionais (opcional)
+  map.addSource("voos", { type: "geojson", data: vazio });
+  map.addLayer({ id: "voos-arco", type: "line", source: "voos", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": "#b388ff", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1, 100, 4], "line-opacity": 0.7 } });
+  map.addLayer({ id: "voos-ponto", type: "circle", source: "voos", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none" }, paint: { "circle-color": "#b388ff", "circle-radius": ["interpolate", ["linear"], ["get", "n"], 1, 4, 100, 12], "circle-stroke-color": "#fff", "circle-stroke-width": 1 } });
+  map.addLayer({ id: "voos-nome", type: "symbol", source: "voos", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none", "text-field": ["concat", ["get", "pais"], " · ", ["to-string", ["get", "n"]]], "text-font": ["Open Sans Regular"], "text-size": 11, "text-offset": [0, 1.2], "text-anchor": "top" }, paint: { "text-color": "#d9c8ff", "text-halo-color": "#04090e", "text-halo-width": 1.5 } });
+  // rota do alerta selecionado
+  map.addSource("rota", { type: "geojson", data: vazio });
+  map.addLayer({ id: "rota-brilho", type: "line", source: "rota", paint: { "line-color": corG, "line-width": 8, "line-blur": 6, "line-opacity": 0.35 } });
+  map.addLayer({ id: "rota", type: "line", source: "rota", layout: { "line-cap": "round" }, paint: { "line-color": "#ffffff", "line-width": 2.4 } });
+  // alertas agrupados
+  map.addSource("pontos", { type: "geojson", data: ptsGeo(visiveis), cluster: true, clusterRadius: 42, clusterMaxZoom: 8,
+    clusterProperties: { alta: ["+", ["case", ["==", ["get", "g"], "alta"], 1, 0]], media: ["+", ["case", ["==", ["get", "g"], "media"], 1, 0]] } });
+  const corC = ["case", [">=", ["/", ["get", "alta"], ["get", "point_count"]], 0.35], COR.alta, [">=", ["/", ["+", ["get", "alta"], ["get", "media"]], ["get", "point_count"]], 0.35], COR.media, COR.baixa];
+  map.addLayer({ id: "cluster", type: "circle", source: "pontos", filter: ["has", "point_count"], paint: { "circle-color": corC, "circle-opacity": 0.85, "circle-radius": ["step", ["get", "point_count"], 14, 5, 18, 20, 23, 60, 29], "circle-stroke-color": "#04090e", "circle-stroke-width": 2 } });
+  map.addLayer({ id: "cluster-n", type: "symbol", source: "pontos", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Open Sans Regular"], "text-size": 12 }, paint: { "text-color": "#04090e" } });
+  map.addLayer({ id: "pontos", type: "circle", source: "pontos", filter: ["!", ["has", "point_count"]], paint: { "circle-color": corG, "circle-radius": ["interpolate", ["linear"], ["get", "t"], 3, 4, 5, 7, 7, 11], "circle-stroke-color": "#04090e", "circle-stroke-width": 1.5 } });
+  const el = document.createElement("div"); el.innerHTML = '<div style="color:#00ffa6;font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-shadow:0 0 6px #000">◉ BRASÍLIA</div>';
   new maplibregl.Marker({ element: el, anchor: "left" }).setLngLat(BRASILIA).addTo(map);
 
-  const abrirDe = (e) => abrir(e.features[0].properties.id);
-  map.on("click", "pontos", abrirDe); map.on("click", "rotas", abrirDe);
-  ["pontos", "rotas"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
+  map.on("click", "cluster", async (e) => {
+    const f = e.features[0]; const z = await map.getSource("pontos").getClusterExpansionZoom(f.properties.cluster_id);
+    map.easeTo({ center: f.geometry.coordinates, zoom: z + 0.3 });
+  });
+  map.on("click", "pontos", (e) => abrir(e.features[0].properties.id));
+  ["pontos", "cluster", "voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
   const dica = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
   map.on("mousemove", "pontos", (e) => { const a = alertas.find((x) => x.id === e.features[0].properties.id); if (a) dica.setLngLat(e.lngLat).setHTML(`<b>${esc(a.empresa)}</b><br>${esc(a.local.cidade)}/${esc(a.local.uf)} · ${brlCurto(a.total)}`).addTo(map); });
   map.on("mouseleave", "pontos", () => dica.remove());
-
-  const t0 = performance.now(), varre = $("varre"), mapaEl = $("mapa");
-  const posVarre = () => { const p = map.project(BRASILIA); varre.style.left = p.x + mapaEl.offsetLeft + "px"; varre.style.top = p.y + "px"; };
-  map.on("move", posVarre); posVarre();
+  map.on("mousemove", "voos-ponto", (e) => dica.setLngLat(e.lngLat).setHTML(`<b>${esc(e.features[0].properties.pais)}</b><br>${e.features[0].properties.n} voos pagos com a cota`).addTo(map));
+  map.on("mouseleave", "voos-ponto", () => dica.remove());
   map.on("mousemove", (e) => { $("coords").textContent = `LAT ${e.lngLat.lat.toFixed(2)} · LON ${e.lngLat.lng.toFixed(2)}`; });
-  let quadroN = 0;
-  (function quadro(t) {
-    if ((quadroN++ & 1) && !map.isMoving()) { requestAnimationFrame(quadro); return; }  // metade dos quadros: alivia a CPU
-    const s = (t - t0) / 1000;
-    map.setPaintProperty("pulso", "circle-radius", 13 + 5 * Math.sin(s * 2.4));
-    const f1 = (s / 2.4) % 1, f2 = (s / 2.4 + 0.5) % 1;
-    map.setPaintProperty("anel1", "circle-radius", 7 + 30 * f1); map.setPaintProperty("anel1", "circle-stroke-opacity", 0.85 * (1 - f1));
-    map.setPaintProperty("anel2", "circle-radius", 7 + 30 * f2); map.setPaintProperty("anel2", "circle-stroke-opacity", 0.85 * (1 - f2));
-    const fs = [];
-    rotas.slice(0, MAX_COMETAS).forEach((r) => {
-      const p = ((s / 3.2) + r.fase) % 1, n = r.linha.length - 1;
-      for (let k = 0; k < 8; k++) { const q = p - k * 0.012; if (q < 0) continue;
-        fs.push({ type: "Feature", properties: { g: r.g, r: k === 0 ? 3.4 : 2.6 - k * 0.2, o: k === 0 ? 1 : 0.65 - k * 0.07 }, geometry: { type: "Point", coordinates: r.linha[Math.floor(q * n)] } }); }
-    });
-    map.getSource("cometas").setData({ type: "FeatureCollection", features: fs });
-    requestAnimationFrame(quadro);
-  })(t0);
+  $("tg-voos").onchange = (e) => alternarVoos(e.target.checked);
 }
+async function alternarVoos(on) {
+  const v = on ? "visible" : "none";
+  ["voos-arco", "voos-ponto", "voos-nome"].forEach((l) => map.setLayoutProperty(l, "visibility", v));
+  if (!on) return;
+  const d = await dadosViagens();
+  const fs = [];
+  d.paises.forEach((p) => {
+    fs.push({ type: "Feature", properties: { pais: p.pais, n: p.n }, geometry: { type: "LineString", coordinates: curva(BRASILIA, [p.lon, p.lat], 50) } });
+    fs.push({ type: "Feature", properties: { pais: p.pais, n: p.n }, geometry: { type: "Point", coordinates: [p.lon, p.lat] } });
+  });
+  map.getSource("voos").setData({ type: "FeatureCollection", features: fs });
+  map.fitBounds([[-80, -40], [10, 45]], { padding: 40, duration: 1200 });
+}
+let _viagens = null;
+const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json").then((r) => r.json()).catch(() => ({ voos: [], deputados: [], paises: [] })));
 
 // ---------- lista e filtros ----------
 function aplicarFiltro() {
@@ -207,7 +213,6 @@ function lista() {
 function abrir(id) {
   const a = alertas.find((x) => x.id === id); if (!a) return;
   sel = id; lista();
-  if (map.getLayer("rotas-sel")) map.setFilter("rotas-sel", ["==", ["get", "id"], id]);
   const c = COR[a.gravidade], t = a.tabela, s = a.sancao;
   const cab = t.cols.map((h, i) => `<th${i === 3 ? ' style="text-align:right"' : ""}>${h}</th>`).join("");
   const linhas = t.linhas.map((l) => "<tr>" + l.map((x) => `<td${x.v ? ' class="v num"' : ""}>${x.u ? `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>` : x.s ? `<b>${esc(x.t)}</b><br><span class="sub2">${esc(x.s)}</span>` : esc(x.t)}</td>`).join("") + "</tr>").join("");
@@ -226,14 +231,14 @@ function abrir(id) {
     <h4>${esc(t.titulo)}</h4>
     <table style="--c:${c}"><thead><tr>${cab}</tr></thead><tbody>${linhas}</tbody></table>
     ${a.n > t.linhas.length ? `<p class="sub2" style="margin-top:6px">Mostrando ${t.linhas.length} de ${a.n} registros.</p>` : ""}
-    ${blocoSancao}${blocoEmpresa}${blocoVinculo}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
+    ${blocoSancao}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
     <h4>Checagem</h4><ul class="check">${checagem(a).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
     <p class="aviso">Isto é um ponto de atenção feito a partir de dados públicos, não uma conclusão. Pode haver explicação legal.</p>
     <div class="links" style="margin-top:12px;font-size:12.5px">Fontes: <a href="https://www3.bcb.gov.br/ifdata" target="_blank" rel="noopener">Banco Central (IF.data)</a> · <a href="https://dados.cvm.gov.br" target="_blank" rel="noopener">CVM</a> · <a href="https://pncp.gov.br" target="_blank" rel="noopener">PNCP</a> · <a href="https://portaldatransparencia.gov.br/sancoes/consulta" target="_blank" rel="noopener">Portal da Transparência</a> · <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener">Câmara</a> · <a href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener">Senado</a> · <a href="https://dadosabertos.rfb.gov.br" target="_blank" rel="noopener">Receita (CNPJ)</a></div>`;
   $("detalhe").querySelector(".fechar").onclick = fechar;
-  if (a.local) map.flyTo({ center: [a.local.lon + 1.6, a.local.lat], zoom: 5.2, duration: 1200 });
+  mostrarRota(a);
 }
-function fechar() { $("detalhe").hidden = true; sel = null; lista(); map.setFilter("rotas-sel", ["==", ["get", "id"], ""]); map.fitBounds([[-74, -34], [-34, 5.5]], { padding: { left: 60, right: 40, top: 30, bottom: 70 }, duration: 900 }); }
+function fechar() { $("detalhe").hidden = true; sel = null; lista(); limparRota(); map.fitBounds(MAPA_BOUNDS, { padding: 8, duration: 900 }); }
 
 // ---------- fichas de agente público ----------
 let fichas = null;
@@ -277,11 +282,38 @@ function abrirFicha(f) {
   $("detalhe").querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
 }
 
+// ---------- exterior (voos da cota) e judiciário (DataJud) ----------
+async function montarExterior() {
+  const d = await dadosViagens(), el = $("aba-exterior");
+  const tot = d.voos.reduce((s, x) => s + x.v, 0);
+  el.innerHTML = `<h3>Exterior</h3><p class="sub2">Voos internacionais pagos com a cota parlamentar da Câmara (2023 a 2026). A data é a da <b>emissão</b> da passagem, não do voo. Não é rastreamento de ninguém: é o que a Câmara publica.</p>
+    <div class="caixa"><b>${d.voos.length}</b> voos para <b>${d.paises.length}</b> países, somando <b>${brlCurto(tot)}</b>.</div>
+    <div class="rot">// por país</div><table class="tbl"><tbody>${d.paises.map((p) => `<tr><td>${esc(p.pais)}</td><td class="num" style="text-align:right">${p.n} voos</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>
+    <div class="rot" style="margin-top:14px">// quem mais voou ao exterior com a cota</div>
+    <table class="tbl"><tbody>${d.deputados.slice(0, 15).map((p) => `<tr><td><b>${esc(p.p)}</b><br><span class="sub2">${esc(p.pt || "")}${p.uf ? "/" + esc(p.uf) : ""} · ${Object.entries(p.paises).map(([k, v]) => k + " " + v).join(", ")}</span></td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>
+    <p class="aviso">Voo ao exterior pago pela cota não é irregularidade por si só (há regras próprias de uso). Veja o trecho e o passageiro na nota da Câmara.</p>`;
+  $("tg-voos").checked = true; alternarVoos(true);
+}
+async function montarJustica() {
+  const el = $("aba-justica");
+  const d = await fetch("/data/judiciario.json").then((r) => r.json()).catch(() => null);
+  if (!d || !d.tribunais.length) { el.innerHTML = '<h3>Judiciário</h3><p class="sub2">Dados do DataJud ainda não carregados.</p>'; return; }
+  const max = Math.max(...d.tribunais.map((t) => t.total));
+  el.innerHTML = `<h3>Judiciário</h3><p class="sub2">${esc(d.classe)} por tribunal (DataJud, CNJ). Mostra quanto chega à Justiça, não a conduta de ninguém. Estados maiores têm mais processos.</p>
+    <table class="tbl"><tbody>${d.tribunais.sort((a, b) => b.total - a.total).map((t) => {
+      const anos = Object.entries(t.anos).slice(-8), m = Math.max(1, ...anos.map(([, v]) => v));
+      const spark = anos.map(([a, v]) => `<i title="${a}: ${v}" style="display:inline-block;width:5px;margin-right:1px;height:${Math.max(2, Math.round(16 * v / m))}px;background:var(--neon);vertical-align:bottom"></i>`).join("");
+      return `<tr><td>${esc(t.sigla)}</td><td style="width:90px"><div class="barra"><i style="width:${Math.round(100 * t.total / max)}%"></i></div></td><td class="num" style="text-align:right">${t.total.toLocaleString("pt-BR")}</td><td>${spark}</td></tr>`; }).join("")}</tbody></table>
+    <p class="aviso">As barras pequenas mostram as ações ajuizadas por ano (últimos 8 anos). O DataJud não informa as partes, então não dá para ligar processo a político.</p>`;
+}
+
 // ---------- abas ----------
 $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
   [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
-  if (b.dataset.aba === "fichas") carregarFichas(); };
+  if (b.dataset.aba === "fichas") carregarFichas();
+  if (b.dataset.aba === "exterior") montarExterior();
+  if (b.dataset.aba === "justica") montarJustica(); };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
   [...$("filtros").children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
 
@@ -299,11 +331,13 @@ $("aba-sobre").innerHTML = `
   <div class="caixa"><b>Inspiração e créditos</b><p>Operação Serenata de Amor e Querido Diário (Open Knowledge Brasil), ambos de código aberto.</p></div>`;
 
 // ---------- carga ----------
-const [dA, dN, ufGeo, dR] = await Promise.all([
+const [dA, dN, ufGeo, dR, mundoGeo, dDiarios] = await Promise.all([
   fetch("/data/alertas.json").then((r) => r.json()).catch(() => ({ alertas: [] })),
   fetch("/data/noticias.json").then((r) => r.json()).catch(() => ({ itens: [] })),
   fetch("/data/uf.geojson").then((r) => r.json()),
   fetch("/data/risco.json").then((r) => r.json()).catch(() => ({ alertas: [] })),
+  fetch("/data/mundo.geojson").then((r) => r.json()),
+  fetch("/data/diarios.json").then((r) => r.json()).catch(() => ({})),
 ]);
 ufGeo.features.forEach((f) => { f.properties.uf = UF_COD[Number(f.properties.codarea)]; });
 nomes = { ...(dA.regras || {}), RF01: "Risco financeiro: banco em crescimento acelerado" };
