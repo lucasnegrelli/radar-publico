@@ -1,0 +1,64 @@
+{
+ "id": "inss",
+ "titulo": "Fraude nos descontos do INSS",
+ "tipo": "politico",
+ "ordem": 4,
+ "resumo": "Descontos indevidos em aposentadorias e pensões por entidades associativas, apurados pela Polícia Federal e pela CGU (Operação Sem Desconto, abril de 2025) e por uma CPMI no Congresso. A investigação alcançou o lobista Antônio Carlos Camilo Antunes, o 'Careca do INSS', e, em reportagens e na CPMI, Fábio Luís Lula da Silva (Lulinha), que nega e diz haver motivação política.",
+ "situacao": [
+  {
+   "rotulo": "Operação Sem Desconto",
+   "valor": "Primeira fase em abril de 2025, com 211 mandados de busca e 6 de prisão temporária em 13 estados e no DF."
+  },
+  {
+   "rotulo": "Indiciamentos",
+   "valor": "PF indiciou 48 pessoas em um dos inquéritos, entre elas o ex-presidente do INSS e o Careca do INSS."
+  },
+  {
+   "rotulo": "Lulinha",
+   "valor": "Investigado pela PF segundo a imprensa; a CPMI aprovou quebra de sigilo. Sem denúncia nem condenação nas fontes consultadas. A defesa nega."
+  }
+ ],
+ "pessoas": [
+  "Fábio Luís Lula da Silva",
+  "Antônio Carlos Camilo Antunes"
+ ],
+ "marcos": [
+  {
+   "data": "2025-04",
+   "tipo": "investigação",
+   "texto": "PF e CGU deflagram a Operação Sem Desconto sobre descontos associativos não autorizados em benefícios do INSS.",
+   "fonte": "Lex Legal: tudo sobre a Operação Sem Desconto",
+   "url": "https://lexlegal.com.br/tudo-sobre/operacao-sem-desconto/"
+  },
+  {
+   "data": "2025",
+   "tipo": "investigação",
+   "texto": "A PF indicia 48 pessoas por descontos indevidos de aposentados do INSS.",
+   "fonte": "SBT News",
+   "url": "https://sbtnews.sbt.com.br/noticia/politica/pf-indicia-48-por-descontos-indevidos-de-aposentados-do-inss"
+  },
+  {
+   "data": "2026-02",
+   "tipo": "investigação",
+   "texto": "Reportagem explica por que Lulinha é investigado pela PF no caso. Dados enviados à CPMI citam repasses atribuídos ao Careca do INSS; a defesa afirma motivação política.",
+   "fonte": "Band",
+   "url": "https://www.band.com.br/noticias/esquema-do-inss-por-que-lulinha-e-investigado-pela-pf-202602271100"
+  },
+  {
+   "data": "2026",
+   "tipo": "investigação",
+   "texto": "A CPMI do INSS aprova a quebra de sigilo de Lulinha e convoca o ex-ministro André Moura.",
+   "fonte": "Compre Rural",
+   "url": "https://comprerural.com/cpmi-do-inss-aprova-quebra-de-sigilo-de-lulinha-e-convoca-andre-moura/"
+  }
+ ],
+ "consultas": [
+  "Careca do INSS Polícia Federal",
+  "CPMI do INSS Lulinha",
+  "Operação Sem Desconto INSS fraude"
+ ],
+ "lacunas": [
+  "Denúncia do Ministério Público: não verificada. Estar citado em reportagem, depoimento ou quebra de sigilo não equivale a ser acusado.",
+  "Valor total do prejuízo e ressarcimento dos aposentados."
+ ]
+}

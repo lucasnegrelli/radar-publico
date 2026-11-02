@@ -1,0 +1,60 @@
+{
+ "id": "lava-jato-lula",
+ "titulo": "Lula e a Lava Jato",
+ "tipo": "politico",
+ "ordem": 2,
+ "resumo": "As condenações de Lula na Lava Jato (triplex, sítio de Atibaia, Instituto Lula) foram anuladas pelo STF em 2021 por incompetência da 13ª Vara Federal de Curitiba; a Segunda Turma também reconheceu a parcialidade do ex-juiz Sergio Moro no caso do triplex. Lula foi eleito presidente em 2022 e reeleito em 2026.",
+ "situacao": [
+  {
+   "rotulo": "Condenações",
+   "valor": "Anuladas pelo STF (março de 2021, confirmadas pelo plenário em abril de 2021). Provas mantidas; processos remetidos à Justiça Federal do DF."
+  },
+  {
+   "rotulo": "Sergio Moro",
+   "valor": "Considerado parcial (suspeito) pela Segunda Turma do STF no caso do triplex, por 3 votos a 2."
+  }
+ ],
+ "pessoas": [
+  "Luiz Inácio Lula da Silva",
+  "Sergio Moro"
+ ],
+ "marcos": [
+  {
+   "data": "2021-03-08",
+   "tipo": "decisão",
+   "texto": "O ministro Edson Fachin anula as condenações de Lula da 13ª Vara Federal de Curitiba (triplex do Guarujá, sítio de Atibaia e doações ao Instituto Lula) e manda os processos para a Justiça Federal em Brasília. As provas foram mantidas.",
+   "fonte": "Crusoé",
+   "url": "https://crusoe.com.br/?p=140738"
+  },
+  {
+   "data": "2021-03",
+   "tipo": "decisão",
+   "texto": "A Segunda Turma do STF considera Moro parcial no julgamento do caso do triplex, por 3 votos a 2.",
+   "fonte": "Monitor Mercantil",
+   "url": "https://monitormercantil.com.br/segunda-turma-mantem-julgamento-da-suspeicao-de-moro/"
+  },
+  {
+   "data": "2021-04-15",
+   "tipo": "decisão",
+   "texto": "O plenário do STF confirma a anulação das condenações de Lula, por 8 votos a 3.",
+   "fonte": "Suno",
+   "url": "https://www.suno.com.br/noticias/?p=139940"
+  },
+  {
+   "data": "2022",
+   "tipo": "decisão",
+   "texto": "Lula, com direitos políticos restabelecidos, vence a eleição presidencial (dados do TSE).",
+   "fonte": "TSE (DivulgaCand)",
+   "url": "https://divulgacandcontas.tse.jus.br/divulga/"
+  }
+ ],
+ "consultas": [
+  "Lula Lava Jato STF",
+  "Moro suspeição STF Lula",
+  "Lula processos Justiça Federal Brasília"
+ ],
+ "lacunas": [
+  "Os processos remetidos a Brasília após a anulação: o andamento e o desfecho não foram verificados nesta rodada.",
+  "A atuação de Moro como senador e as ações contra ele no TRE-PR: fora do escopo desta versão."
+ ]
+}

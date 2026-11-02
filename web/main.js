@@ -464,7 +464,7 @@ let _casos = null;
 async function montarCasos() {
   const d = (_casos ||= await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] })));
   $("aba-casos").innerHTML = `<h3>Investigações e risco</h3><p class="sub2">Dossiês de casos montados só com dados abertos: o que se consegue levantar, o que falta e quais são os próximos passos.</p>` +
-    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
+    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.tipo === "politico" ? `${(c.marcos || []).length} marcos com fonte · ${c.noticias.length} manchetes` : `${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados`}</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
   $("aba-casos").querySelectorAll(".card").forEach((e) => (e.onclick = () => abrirCaso(d.casos[Number(e.dataset.i)])));
   const rf = alertas.filter((a) => a.regra === "RF01");
   const inc = (dA.incidentes || []).slice(0, 12);
@@ -486,6 +486,7 @@ function serieSVG(s) {
   return `<svg class="viz" viewBox="0 0 ${W} ${H}">${eixo}${linha("ativo", "#00ffa6")}${linha("captacao", "#ffb300")}${linha("pl", "#00b8ff")}${rot}</svg><div class="leg"><span><i style="background:#00ffa6"></i>Ativo</span><span><i style="background:#ffb300"></i>Captações</span><span><i style="background:#00b8ff"></i>Patrimônio líquido</span><span>R$ bilhões</span></div>`;
 }
 async function abrirCaso(c) {
+  if (c.tipo === "politico") return abrirCasoPessoa(c);
   const dd = await fetch("/data/caso_" + c.id + "_diarios.json").then((r) => r.json()).catch(() => ({ diarios: [] }));
   const porCid = {}; dd.diarios.forEach((x) => { const k = x.cidade + "/" + x.uf; (porCid[k] ||= []).push(x); });
   const cidades = Object.entries(porCid).sort((a, b) => b[1].length - a[1].length);
@@ -868,4 +869,30 @@ function dadosAbertos() {
   $("aba-fontes").insertAdjacentHTML("beforeend", `<div id="baixar"><h3 style="margin-top:18px">Baixar os dados</h3><p class="sub2">Tudo que o Radar calcula é aberto e atualizado todo dia. Use, cruze, publique. Cite a fonte: Radar Público.</p>
     ${itens.map((i) => `<div class="caixa"><b><a href="/data/${i[0]}" download>${i[0]}</a></b><p>${esc(i[1])}</p></div>`).join("")}
     <p class="sub2">Código aberto (MIT): <a href="https://github.com/lucasnegrelli/radar-publico" target="_blank" rel="noopener">github.com/lucasnegrelli/radar-publico</a></p></div>`);
+}
+
+
+// ---------- caso de pessoa exposta politicamente: decisão x investigação x reportagem x defesa, sempre com fonte ----------
+const TIPO_MARCO = { "decisão": ["#00ffa6", "DECISÃO"], "investigação": ["#ffb300", "INVESTIGAÇÃO"], "reportagem": ["#00b8ff", "REPORTAGEM"], "defesa": ["#b388ff", "DEFESA"] };
+function abrirCasoPessoa(c) {
+  const cor = "#ffb300";
+  const mdata = (d) => { const p = String(d).split("-"); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : p.length === 2 ? `${p[1]}/${p[0]}` : d; };
+  $("detalhe").hidden = false; $("detalhe").style.setProperty("--c", cor);
+  $("detalhe").innerHTML = `<button class="fechar" aria-label="Fechar">×</button>
+    <div class="dos" style="--c:${cor}"><span>CASO · ${esc(c.id.toUpperCase())}</span><span class="carimbo">FONTES ABERTAS</span></div>
+    <h2 style="--c:${cor}">${esc(c.titulo)}</h2>
+    <div class="manchete" style="--c:${cor}">${esc(c.resumo)}</div>
+    <h4>Situação</h4>${c.situacao.map((s) => `<div class="situ"><b>${esc(s.rotulo)}</b><span>${esc(s.valor)}</span></div>`).join("")}
+    <p class="sub2">Registramos decisões, investigações, reportagens e a versão da defesa, sempre com fonte. Investigação, denúncia ou citação não são condenação.</p>
+    <h4>Linha do tempo</h4><div class="linha-c">${c.marcos.map((m) => { const t = TIPO_MARCO[m.tipo] || ["#8aa0b5", m.tipo.toUpperCase()]; return `<div class="marco" style="--k:${t[0]}"><div class="m-d num">${esc(mdata(m.data))} <i style="color:${t[0]}">${t[1]}</i></div><div class="m-t">${esc(m.texto)}</div>${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.fonte || "fonte")}</a>` : ""}</div>`; }).join("")}</div>
+    ${c.pessoas.length ? `<h4>Pessoas citadas</h4><div class="chips">${c.pessoas.map((p) => p.id ? `<a href="#" class="chip-al" data-p="${esc(p.id)}">${esc(p.nome)} · ficha</a>` : `<span class="chip-al" style="opacity:.7">${esc(p.nome)}</span>`).join(" ")}</div><p class="sub2">A ficha reúne candidaturas, patrimônio declarado, campanha, emendas e cota. Quem não tem ficha nunca foi candidato nos dados do TSE.</p>` : ""}
+    ${(c.alertas || []).length ? `<h4>Alertas do Radar ligados ao tema</h4><ul class="check">${c.alertas.map((a) => `<li><a href="#" data-id="${esc(a.id)}">${esc(a.empresa)}</a> <span class="sub2">· ${esc(nomes[a.regra] || a.regra)} · ${brlCurto(a.total)}</span></li>`).join("")}</ul>` : ""}
+    <h4>Manchetes recentes</h4><ul class="check">${c.noticias.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.titulo)}</a><br><span class="sub2">${esc(n.fonte)}${n.data ? " · " + esc(n.data) : ""}</span></li>`).join("") || '<li class="sub2">Nenhuma manchete encontrada.</li>'}</ul>
+    <p class="sub2">Manchetes automáticas do Google Notícias; podem tratar de homônimos e não representam o Radar.</p>
+    ${(c.lacunas || []).length ? `<h4>O que falta verificar</h4><ul class="check">${c.lacunas.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    <p class="aviso">Material informativo montado com fontes públicas. Presunção de inocência: ninguém é culpado antes de decisão judicial definitiva. Encontrou erro? Use o botão de sinalizar.</p>`;
+  $("detalhe").querySelector(".fechar").onclick = () => { $("detalhe").hidden = true; };
+  $("detalhe").querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
+  $("detalhe").querySelectorAll("a[data-p]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrirPessoa(x.dataset.p, CTX_P); }));
+  $("detalhe").scrollTop = 0;
 }

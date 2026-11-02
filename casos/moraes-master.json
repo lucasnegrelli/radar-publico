@@ -1,0 +1,55 @@
+{
+ "id": "moraes-master",
+ "titulo": "Moraes e o contrato do escritório da esposa com o Banco Master",
+ "tipo": "politico",
+ "ordem": 5,
+ "resumo": "Reportagens do O Globo e de outros veículos informam que o escritório de Viviane Barci de Moraes, esposa do ministro do STF Alexandre de Moraes, tinha contrato com o Banco Master. O escritório diz que o trabalho foi legítimo e o ministro nega irregularidades. Não há acusação formal nas fontes consultadas.",
+ "situacao": [
+  {
+   "rotulo": "Contrato",
+   "valor": "Cerca de R$ 129 milhões previstos (R$ 131 milhões em outra reportagem); dados da Receita enviados a uma comissão do Congresso indicam mais de R$ 80 milhões pagos, segundo a imprensa. O escritório não confirma os números e diz que dados fiscais são sigilosos."
+  },
+  {
+   "rotulo": "Versão do escritório",
+   "valor": "Contratado em fevereiro de 2024, atuou até novembro de 2025, com 15 advogados; diz que nunca atuou pelo banco no STF."
+  },
+  {
+   "rotulo": "Situação",
+   "valor": "Sem denúncia nem decisão judicial nas fontes consultadas. Moraes nega irregularidades."
+  }
+ ],
+ "pessoas": [
+  "Alexandre de Moraes"
+ ],
+ "marcos": [
+  {
+   "data": "2025-12",
+   "tipo": "reportagem",
+   "texto": "O Globo revela contrato do escritório Barci de Moraes Advogados com o Banco Master, de cerca de R$ 129 milhões; a PF teria encontrado uma cópia no celular de Vorcaro.",
+   "fonte": "Money Times",
+   "url": "https://www.moneytimes.com.br/esposa-de-alexandre-de-moraes-diz-ter-feito-94-reunioes-em-contrato-de-r-129-milhoes-com-banco-master-igdl/"
+  },
+  {
+   "data": "2026-03",
+   "tipo": "defesa",
+   "texto": "Viviane Barci diz ter produzido 36 pareceres e feito 94 reuniões para o banco, e publica nota sobre o contrato.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/poder-justica/leia-a-integra-de-nota-de-viviane-barci-sobre-contrato-com-banco-master/"
+  },
+  {
+   "data": "2026-04",
+   "tipo": "reportagem",
+   "texto": "Dados da Receita indicam que o banco pagou mais de R$ 80 milhões ao escritório em 22 parcelas, segundo a imprensa.",
+   "fonte": "Itatiaia",
+   "url": "https://www.itatiaia.com.br/politica/banco-master-pagou-mais-de-r-80-milhoes-a-escritorio-de-mulher-de-moraes-em-22-meses/"
+  }
+ ],
+ "consultas": [
+  "Viviane Barci Banco Master contrato",
+  "Alexandre de Moraes Banco Master"
+ ],
+ "lacunas": [
+  "Qualquer investigação formal sobre o contrato: não há registro verificado.",
+  "Os valores vêm de reportagens sobre dados fiscais sigilosos; não foram confirmados em documento público."
+ ]
+}

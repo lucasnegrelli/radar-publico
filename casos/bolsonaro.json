@@ -1,0 +1,54 @@
+{
+ "id": "bolsonaro",
+ "titulo": "Bolsonaro: trama golpista e inelegibilidade",
+ "tipo": "politico",
+ "ordem": 3,
+ "resumo": "Em setembro de 2025 a Primeira Turma do STF condenou Jair Bolsonaro a 27 anos e 3 meses de prisão no processo da trama golpista. Ele já estava inelegível por decisão do TSE (abuso de poder político e uso indevido de meios de comunicação na campanha de 2022).",
+ "situacao": [
+  {
+   "rotulo": "Ação penal da trama golpista",
+   "valor": "Condenado a 27 anos e 3 meses (STF, Primeira Turma, 11/09/2025). Execução da pena determinada em 25/11/2025."
+  },
+  {
+   "rotulo": "TSE",
+   "valor": "Inelegível (decisão de 2023). Reportagens apontam inelegibilidade até 2060 após a condenação; a contagem é discutida."
+  }
+ ],
+ "pessoas": [
+  "Jair Messias Bolsonaro",
+  "Alexandre de Moraes"
+ ],
+ "marcos": [
+  {
+   "data": "2023",
+   "tipo": "decisão",
+   "texto": "O TSE declara Bolsonaro inelegível por oito anos por abuso de poder político e uso indevido de meios de comunicação na campanha de 2022.",
+   "fonte": "Band Jornalismo",
+   "url": "https://www.band.com.br/noticias/bolsonaro-pode-ficar-inelegivel-ate-2060-apos-condenacao-202509121542"
+  },
+  {
+   "data": "2025-09-11",
+   "tipo": "decisão",
+   "texto": "A Primeira Turma do STF condena Bolsonaro a 27 anos e 3 meses de prisão, em regime inicial fechado, no processo da trama golpista. Os réus condenados ficam inelegíveis por oito anos e há condenação coletiva de R$ 30 milhões por danos do 8 de janeiro.",
+   "fonte": "Agência Brasil",
+   "url": "https://agenciabrasil.ebc.com.br/justica/noticia/2025-09/stf-condena-bolsonaro-27-anos-e-tres-meses-de-prisao/"
+  },
+  {
+   "data": "2025-11-25",
+   "tipo": "decisão",
+   "texto": "O ministro Alexandre de Moraes manda executar as penas dos condenados do núcleo central e comunicar o TSE sobre a inelegibilidade.",
+   "fonte": "JB",
+   "url": "https://www.jb.com.br/brasil/justica/2025/11/1057755-moraes-manda-comunicar-tse-sobre-inelegibilidade-de-bolsonaro.html"
+  }
+ ],
+ "consultas": [
+  "Bolsonaro condenação STF trama golpista",
+  "Bolsonaro inelegibilidade TSE",
+  "Bolsonaro caso das joias processo",
+  "Bolsonaro cartão de vacina processo"
+ ],
+ "lacunas": [
+  "Caso das joias e fraude no cartão de vacina: não há marcos verificados nesta rodada (veja as manchetes abaixo).",
+  "Recursos, pedidos de anistia e a situação atual da execução da pena (posteriores a novembro de 2025)."
+ ]
+}

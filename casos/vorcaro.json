@@ -1,0 +1,78 @@
+{
+ "id": "vorcaro",
+ "titulo": "Daniel Vorcaro e o Banco Master",
+ "tipo": "politico",
+ "ordem": 1,
+ "resumo": "Dono do Banco Master, preso pela Polícia Federal na Operação Compliance Zero. A PF apura fraude em carteiras de crédito e intimidação; a investigação alcançou políticos. O dossiê financeiro do banco (balanço, fundos, diários) está na seção Investigações e risco.",
+ "situacao": [
+  {
+   "rotulo": "Vorcaro",
+   "valor": "Preso preventivamente (decisão do ministro André Mendonça, STF); investigado. Sem condenação."
+  },
+  {
+   "rotulo": "Banco Master",
+   "valor": "Em liquidação extrajudicial (Banco Central, nov/2025)."
+  }
+ ],
+ "pessoas": [
+  "Daniel Vorcaro",
+  "Ciro Nogueira",
+  "Jaques Wagner"
+ ],
+ "marcos": [
+  {
+   "data": "2025-11",
+   "tipo": "decisão",
+   "texto": "Banco Central decreta a liquidação extrajudicial do Banco Master.",
+   "fonte": "Band: entenda a trajetória",
+   "url": "https://www.band.com.br/nacional/brasil/entenda-a-trajetoria-de-daniel-vorcaro-e-a-polemica-do-banco-master"
+  },
+  {
+   "data": "2025-11",
+   "tipo": "investigação",
+   "texto": "Vorcaro é detido ao tentar embarcar em jato particular no aeroporto de Guarulhos; os relatos divergem quanto ao dia exato, e ele passa um período solto com medidas cautelares.",
+   "fonte": "Diario de Pernambuco",
+   "url": "https://diariodepernambuco.com.br/dpmais/quem-e-daniel-vorcaro-e-por-que-ele-foi-preso/"
+  },
+  {
+   "data": "2026-03-04",
+   "tipo": "decisão",
+   "texto": "PF prende Vorcaro novamente, na terceira fase da Operação Compliance Zero. A prisão preventiva foi determinada pelo ministro André Mendonça (STF), que citou suposta rede de intimidação e corrupção de agentes públicos.",
+   "fonte": "Conjur",
+   "url": "https://www.conjur.com.br/2026-mar-04/daniel-vorcaro-dono-do-banco-master-e-preso-novamente-pela-pf/"
+  },
+  {
+   "data": "2026",
+   "tipo": "decisão",
+   "texto": "A Segunda Turma do STF mantém a prisão preventiva por unanimidade, segundo a imprensa.",
+   "fonte": "Revista Oeste",
+   "url": "https://revistaoeste.com/politica/defesa-de-daniel-vorcaro-se-manifesta-sobre-prisao/"
+  },
+  {
+   "data": "2026",
+   "tipo": "investigação",
+   "texto": "PF rejeita propostas de delação premiada de Vorcaro.",
+   "fonte": "Gazeta do Povo",
+   "url": "https://www.gazetadopovo.com.br/republica/pf-rejeita-segunda-proposta-de-delacao-de-vorcaro/"
+  },
+  {
+   "data": "2026",
+   "tipo": "investigação",
+   "texto": "Segundo a PF, o banco teria criado carteiras de crédito fictícias e emitido cerca de R$ 50 bilhões em CDBs sem comprovar capacidade de pagamento. Operações relacionadas tiveram como alvos os senadores Ciro Nogueira e Jaques Wagner (ser alvo de operação não é condenação).",
+   "fonte": "Itatiaia",
+   "url": "https://www.itatiaia.com.br/politica/pf-rejeita-nova-proposta-de-delacao-premiada-de-daniel-vorcaro/"
+  }
+ ],
+ "consultas": [
+  "Vorcaro Banco Master",
+  "Compliance Zero Polícia Federal Master",
+  "Banco Master liquidação Banco Central"
+ ],
+ "lacunas": [
+  "A denúncia e o andamento da ação penal: os autos estão sob sigilo parcial.",
+  "Quais fundos de previdência de servidores (RPPS) compraram papéis do banco: o DAIR não é dado aberto em lote."
+ ],
+ "alertas_regras": [
+  "RF01"
+ ]
+}

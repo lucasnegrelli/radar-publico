@@ -1,0 +1,57 @@
+{
+ "id": "emendas-stf",
+ "titulo": "Emendas parlamentares e o orçamento secreto",
+ "tipo": "politico",
+ "ordem": 6,
+ "resumo": "O STF declarou inconstitucional o orçamento secreto (emendas do relator) no fim de 2022. Desde 2024 o ministro Flávio Dino, relator das ações, suspende repasses e manda a PF investigar emendas de comissão e emendas Pix. É o caso em que mais se encaixam os dados do Radar: quem indica, quem recebe, e se a entidade tem sanção ou impedimento.",
+ "situacao": [
+  {
+   "rotulo": "Orçamento secreto",
+   "valor": "Declarado inconstitucional pelo STF (fim de 2022)."
+  },
+  {
+   "rotulo": "Emendas de comissão e Pix",
+   "valor": "Dino suspendeu R$ 4,2 bi em dezembro de 2024 e mandou a PF abrir inquérito; em agosto de 2025 mandou investigar 964 emendas Pix (R$ 694 mi)."
+  }
+ ],
+ "pessoas": [
+  "Flávio Dino",
+  "Arthur Lira",
+  "Rodrigo Pacheco"
+ ],
+ "marcos": [
+  {
+   "data": "2022-12",
+   "tipo": "decisão",
+   "texto": "O STF julga inconstitucional o orçamento secreto.",
+   "fonte": "Movimento Econômico",
+   "url": "https://movimentoeconomico.com.br/economia/justica/2025/08/25/dino-manda-pf-investigar-emendas-parlamentares-que-somam-r-694-mi/"
+  },
+  {
+   "data": "2024-12-23",
+   "tipo": "decisão",
+   "texto": "Dino suspende o pagamento de R$ 4,2 bilhões em emendas de comissão e determina que a PF abra inquérito para investigar o fluxo do dinheiro, com possível oitiva de parlamentares.",
+   "fonte": "Brasil de Fato",
+   "url": "https://www.brasildefato.com.br/2024/12/23/dino-suspende-r-4-2-bi-de-emendas-parlamentares-e-determina-que-pf-abra-inquerito-para-investigar-fluxo-do-dinheiro"
+  },
+  {
+   "data": "2025-08-25",
+   "tipo": "decisão",
+   "texto": "Dino manda a PF investigar emendas Pix que somam R$ 694 milhões e pede ao TCU informações sobre as transferências.",
+   "fonte": "Monitor Mercantil",
+   "url": "https://monitormercantil.com.br/dino-manda-pf-investigar-emendas-pix-que-somam-r-694-mi/"
+  }
+ ],
+ "consultas": [
+  "Flávio Dino emendas Pix Polícia Federal",
+  "orçamento secreto STF emendas investigação",
+  "emendas parlamentares desvio operação PF"
+ ],
+ "lacunas": [
+  "Resultado dos inquéritos da PF sobre as emendas: não há responsabilização verificada.",
+  "Quem são os parlamentares investigados: os nomes não saíram nas fontes consultadas."
+ ],
+ "alertas_regras": [
+  "R09"
+ ]
+}
