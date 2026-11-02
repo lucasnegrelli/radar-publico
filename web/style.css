@@ -147,3 +147,15 @@ html,body{font-family:var(--sans);font-size:13.5px}
 .card .sub{display:block;max-width:100%}.card .meta{max-width:100%}
 .pan-l{grid-template-columns:104px 1fr 58px}
 .pan-l{grid-template-columns:104px 1fr 74px}.pan-l b{white-space:nowrap}
+
+/* ===== v7: por que é alerta; sem linha do tempo ===== */
+#timeline{display:none!important}
+#painel{bottom:12px}#legenda{bottom:16px}
+select.sel{width:100%;height:32px;margin-bottom:8px;padding:0 10px;background:var(--s2);color:var(--txt);border:1px solid var(--linha);border-radius:8px;font:12.5px var(--sans);outline:none}select.sel:focus{border-color:var(--acc)}
+.criterios{display:grid;gap:6px;margin:6px 0 10px}
+.crit{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;background:var(--s2);border:1px solid var(--linha);border-radius:9px}
+.crit i{font-style:normal;flex:none;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.crit.ok i{background:rgba(34,211,182,.18);color:var(--acc2)}.crit.par i{background:var(--s3);color:var(--mut)}
+.crit b{display:block;color:#fff;font-weight:600;font-size:13px;line-height:1.35}.crit span{display:block;color:var(--mut);font-size:12.5px;margin-top:2px}
+.prio{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 9%,var(--s2));border-radius:9px;font-size:13px}.prio b{color:var(--c);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono)}.prio span{color:var(--txt)}
+#detalhe h5{margin:14px 0 6px;font-size:12px;color:var(--txt);font-weight:600}

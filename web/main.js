@@ -4,7 +4,7 @@ import "@fontsource/jetbrains-mono/500.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
-import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { ArcLayer, PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
@@ -102,11 +102,13 @@ function checagem(a) {
 
 // ---------- mapa ----------
 const MAPA_BOUNDS = [[-75, -34.5], [-33, 5.6]];
-const pad = () => ({ top: 24, bottom: 112, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
+const pad = () => ({ top: 24, bottom: 24, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
 const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
-  style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, layers: [{ id: "fundo", type: "background", paint: { "background-color": "#05080c" } }] },
-  bounds: MAPA_BOUNDS, fitBoundsOptions: { padding: { top: 24, bottom: 112, left: 420, right: 24 } },
+  style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, projection: { type: "globe" },
+    sky: { "sky-color": "#020407", "sky-horizon-blend": 0.5, "horizon-color": "#143f55", "horizon-fog-blend": 0.8, "fog-color": "#020407", "fog-ground-blend": 0.15, "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 7.5, 0] },
+    layers: [{ id: "fundo", type: "background", paint: { "background-color": "#07111b" } }] },
+  center: [-60, -14], zoom: 3.35, pitch: 30, bearing: 0,
   minZoom: 1.5, maxZoom: 10, dragRotate: true, pitchWithRotate: true, maxPitch: 60,
 });
 const vazio = { type: "FeatureCollection", features: [] };
@@ -130,8 +132,8 @@ const ADITIVO = { blend: true, blendColorOperation: "add", blendColorSrcFactor: 
 function corUF(lista) {
   const por = {}; lista.filter((a) => a.local).forEach((a) => { por[a.local.uf] = (por[a.local.uf] || 0) + 1; });
   const casos = ["match", ["get", "uf"]];
-  Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 40 ? "#202f40" : n >= 15 ? "#1a2736" : n >= 5 ? "#152030" : "#111a26"));
-  casos.push("#0e151d"); return casos;
+  Object.entries(por).forEach(([u, n]) => casos.push(u, n >= 40 ? "#27394d" : n >= 15 ? "#213142" : n >= 5 ? "#1b2a39" : "#162231"));
+  casos.push("#131e2a"); return casos;
 }
 
 // ----- dados derivados para o deck.gl -----
@@ -139,11 +141,25 @@ let trilhas = [], colunas = [], pulsos = [], pontosA = [], rotaSel = null, overl
 const LAY = { calor: true, rotas: true, todas: false, pontos: true };
 let janela = null;
 const rotasVis = () => (LAY.todas ? trilhas : trilhas.slice(0, 60));
-const noJanela = (a) => !janela || ((a.fim || a.inicio || "").slice(0, 7) >= janela[0] && (a.inicio || a.fim || "").slice(0, 7) <= janela[1]);
+let filtroPer = "todos";
+const noJanela = (a) => {
+  if (filtroPer === "todos") return true;
+  const f = (a.fim || a.inicio || "").slice(0, 10), hoje = new Date(), d = (n) => new Date(hoje.getTime() - n * 864e5).toISOString().slice(0, 10);
+  if (filtroPer === "30") return f >= d(30); if (filtroPer === "90") return f >= d(90); if (filtroPer === "365") return f >= d(365);
+  if (filtroPer === "2026") return f.startsWith("2026"); if (filtroPer === "2025") return f.startsWith("2025"); return f < "2025";
+};
+function gc(s, t, n = 44, k = 0.2) {
+  const r = Math.PI / 180, v = (p) => [Math.cos(p[1] * r) * Math.cos(p[0] * r), Math.cos(p[1] * r) * Math.sin(p[0] * r), Math.sin(p[1] * r)];
+  const a = v(s), b = v(t), w = Math.acos(Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))), dist = w * 6371000, out = [];
+  for (let i = 0; i <= n; i++) { const f = i / n, A = w < 1e-6 ? 1 - f : Math.sin((1 - f) * w) / Math.sin(w), B = w < 1e-6 ? f : Math.sin(f * w) / Math.sin(w);
+    const x = A * a[0] + B * b[0], y = A * a[1] + B * b[1], z = A * a[2] + B * b[2];
+    out.push([Math.atan2(y, x) / r, Math.asin(z) / r, Math.sin(Math.PI * f) * dist * k]); }
+  return out;
+}
 function derivar() {
   const comRota = visiveis.filter((a) => a.local && a.origem);
-  trilhas = comRota.map((a, k) => { const caminho = curva([a.origem.lon, a.origem.lat], [a.local.lon, a.local.lat], 28); const fase = (k * 0.137) % 1;
-    return { id: a.id, g: a.gravidade, w: Math.min(2.6, 0.7 + Math.log10(Math.max(a.total, 1000)) * 0.28), path: caminho, ts: caminho.map((_, i) => fase + i / 28 * 0.9) }; });
+  trilhas = comRota.map((a, k) => { const caminho = gc([a.origem.lon, a.origem.lat], [a.local.lon, a.local.lat], 28); const fase = (k * 0.137) % 1;
+    return { id: a.id, g: a.gravidade, s: [a.origem.lon, a.origem.lat], t: [a.local.lon, a.local.lat], w: Math.min(2.6, 0.7 + Math.log10(Math.max(a.total, 1000)) * 0.28), path: caminho, ts: caminho.map((_, i) => fase + i / 28 * 0.9) }; });
   const por = new Map();
   visiveis.filter((a) => a.local).forEach((a) => { const k = a.local.cidade + "|" + a.local.uf; let c = por.get(k);
     if (!c) por.set(k, (c = { pos: [a.local.lon, a.local.lat], cidade: a.local.cidade, uf: a.local.uf, n: 0, total: 0, topo: a, alta: 0 }));
@@ -155,15 +171,13 @@ function derivar() {
 const altura = (v) => Math.max(8000, (Math.log10(Math.max(v, 1000)) - 2.6) * 95000);
 function camadas(tempo) {
   const L = [];
-  L.push(new PathLayer({ id: "rotas-base", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 42], getWidth: (d) => d.w * 0.7, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
-  L.push(new TripsLayer({ id: "pulsos-rota", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getTimestamps: (d) => d.ts, getColor: (d) => [...RGB[d.g], 255], widthMinPixels: 1.6, capRounded: true, jointRounded: true, trailLength: 0.28, currentTime: tempo, parameters: ADITIVO }));
-  L.push(new HeatmapLayer({ id: "calor", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getWeight: (d) => Math.max(0.2, Math.log10(Math.max(d.total, 1000)) - 2.5), radiusPixels: 54, intensity: 3.6, threshold: 0.015, aggregation: "SUM",
-    colorRange: [[20, 8, 40, 0], [70, 20, 100, 110], [140, 30, 125, 175], [220, 60, 70, 215], [255, 140, 40, 240], [255, 226, 130, 255]], parameters: ADITIVO }));
-  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: 2.5, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: [255, 255, 255, 90], getLineWidth: 0.5, lineWidthUnits: "pixels", pickable: true, onClick: (i) => i.object && abrir(i.object.id) }));
-  L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(200 * (1 - (tempo % 1)))], getLineWidth: 1.5, lineWidthUnits: "pixels", parameters: ADITIVO }));
+  L.push(new ScatterplotLayer({ id: "brilho", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => 5 + 2 * Math.max(0, Math.log10(Math.max(d.total, 1000)) - 3), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 16], parameters: ADITIVO }));
+  L.push(new PathLayer({ id: "arcos", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], 120], getWidth: (d) => d.w * 0.9, widthUnits: "pixels", capRounded: true, pickable: true, parameters: ADITIVO, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: 2.6, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: [255, 255, 255, 100], getLineWidth: 0.5, lineWidthUnits: "pixels", pickable: true, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * (tempo % 1), stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(190 * (1 - (tempo % 1)))], getLineWidth: 1.3, lineWidthUnits: "pixels", parameters: ADITIVO }));
   if (rotaSel) {
-    L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 14, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
-    L.push(new PathLayer({ id: "sel", data: [rotaSel], getPath: (d) => d.path, getColor: [255, 255, 255, 255], getWidth: 3, widthUnits: "pixels", capRounded: true }));
+    L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 12, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
+    L.push(new PathLayer({ id: "sel", data: [rotaSel], getPath: (d) => d.path, getColor: [255, 255, 255, 255], getWidth: 2.6, widthUnits: "pixels", capRounded: true }));
   }
   return L;
 }
@@ -171,17 +185,17 @@ function atualizarMapa() { if (!overlay) return; derivar(); map.setPaintProperty
 function mostrarRota(a) {
   const o = a.origem, d = a.local;
   if (!o || !d) { rotaSel = null; return; }
-  rotaSel = { g: a.gravidade, path: curva([o.lon, o.lat], [d.lon, d.lat], 60) };
+  rotaSel = { g: a.gravidade, path: gc([o.lon, o.lat], [d.lon, d.lat], 70) };
   const b = new maplibregl.LngLatBounds([o.lon, o.lat], [o.lon, o.lat]).extend([d.lon, d.lat]);
-  map.fitBounds(b, { padding: { top: 90, bottom: 90, left: 90, right: 560 }, maxZoom: 7, duration: 1100 });
+  map.fitBounds(b, { padding: { top: 90, bottom: 90, left: 90, right: 560 }, maxZoom: 6, duration: 1100 });
 }
 const limparRota = () => { rotaSel = null; };
 
 function montarMapa() {
   const corG = ["match", ["get", "g"], "alta", COR.alta, "media", COR.media, COR.baixa];
   map.addSource("mundo", { type: "geojson", data: mundoGeo });
-  map.addLayer({ id: "mundo-fill", type: "fill", source: "mundo", paint: { "fill-color": "#0c1118" } });
-  map.addLayer({ id: "mundo-line", type: "line", source: "mundo", paint: { "line-color": "#19232e", "line-width": 0.6 } });
+  map.addLayer({ id: "mundo-fill", type: "fill", source: "mundo", paint: { "fill-color": "#101923" } });
+  map.addLayer({ id: "mundo-line", type: "line", source: "mundo", paint: { "line-color": "#1f2d3c", "line-width": 0.6 } });
   map.addSource("grade", { type: "geojson", data: grade() });
   map.addLayer({ id: "grade", type: "line", source: "grade", paint: { "line-color": "#8aa0b5", "line-width": 0.5, "line-opacity": 0.035 } });
   map.addSource("ufs", { type: "geojson", data: ufGeo });
@@ -195,14 +209,13 @@ function montarMapa() {
   new maplibregl.Marker({ element: el, anchor: "left" }).setLngLat(BRASILIA).addTo(map);
 
   derivar();
-  overlay = new MapboxOverlay({ interleaved: false, layers: camadas(0), getTooltip: ({ object, layer }) => {
+  overlay = new MapboxOverlay({ interleaved: true, layers: camadas(0), getTooltip: ({ object, layer }) => {
     if (!object) return null;
     if (layer.id === "pontos-a") return { className: "deck-tip", html: `<b>${esc(object.empresa)}</b><br>${esc(object.cidade)}/${esc(object.uf)} · ${brlCurto(object.total)}` };
     if (layer.id === "colunas") return { className: "deck-tip", html: `<b>${esc(object.cidade)}/${esc(object.uf)}</b><br>${plural(object.n, "alerta", "alertas")} · ${brlCurto(object.total)}<br><span style="opacity:.7">clique para abrir o maior</span>` };
-    if (layer.id === "rotas-base") { const a = alertas.find((x) => x.id === object.id); return a ? { className: "deck-tip", html: `<b>${esc(a.empresa)}</b><br>${brlCurto(a.total)}` } : null; }
+    if (layer.id === "arcos") { const a = alertas.find((x) => x.id === object.id); return a ? { className: "deck-tip", html: `<b>${esc(a.empresa)}</b><br>${brlCurto(a.total)}` } : null; }
     return null; } });
   map.addControl(overlay);
-  map.easeTo({ pitch: 0, duration: 800 });
 
   map.on("click", "voos-ponto", () => {});
   ["voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
@@ -278,6 +291,7 @@ function abrir(id) {
     <div class="sub2 mono">CNPJ ${esc(a.cnpj)}${a.local ? " · " + esc(a.local.cidade) + "/" + esc(a.local.uf) : ""}</div>
     <div class="manchete" style="--c:${c}">${manchete(a)}</div>
     <div class="numeros" style="--c:${c}">${numeros(a)}</div>
+    <h4>Por que este alerta acendeu</h4>${porque(a)}
     <h4>Rede de ligações</h4>${grafoSVG(a)}${linhaSVG(a) ? `<h4>Linha do tempo</h4>${linhaSVG(a)}` : ""}${blocoCorr}
     <h4>${esc(t.titulo)}</h4>
     <table style="--c:${c}"><thead><tr>${cab}</tr></thead><tbody>${linhas}</tbody></table>
@@ -462,7 +476,7 @@ async function montarFontes() {
 
 // ---------- globo 3D (vínculos com o exterior) ----------
 function modoGlobo(on) {
-  globoAtivo = on; map.setProjection({ type: on ? "globe" : "mercator" });
+  globoAtivo = on; 
   if (on) {
     overlay.setProps({ layers: [] });
     if (!map.getSource("vinc-ext")) {
@@ -472,10 +486,10 @@ function modoGlobo(on) {
       map.addLayer({ id: "vinc-ext", type: "line", source: "vinc-ext", paint: { "line-color": ["case", ["==", ["get", "n"], 1], "#ff2d55", "#b388ff"], "line-width": 1.6, "line-opacity": 0.9 } });
     }
     map.setLayoutProperty("vinc-ext", "visibility", "visible"); map.setLayoutProperty("vinc-ext-brilho", "visibility", "visible");
-    map.easeTo({ center: [-30, 15], zoom: 1.7, pitch: 0, duration: 1600 });
+    map.easeTo({ center: [-30, 15], zoom: 1.9, pitch: 10, duration: 1600 });
   } else {
     if (map.getLayer("vinc-ext")) { map.setLayoutProperty("vinc-ext", "visibility", "none"); map.setLayoutProperty("vinc-ext-brilho", "visibility", "none"); }
-    map.easeTo({ pitch: 0, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 1200 });
+    map.easeTo({ pitch: 30, duration: 800 }); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 1200 });
   }
 }
 
@@ -526,6 +540,10 @@ const selTipo = document.createElement("select"); selTipo.id = "tipo";
 selTipo.innerHTML = `<option value="todas">Todos os tipos (${alertas.length})</option><option value="__comb">★ Sinais combinados (${nComb})</option>` + Object.keys(nomes).filter((r) => cont[r]).map((r) => `<option value="${r}">${esc(nomes[r])} (${cont[r]})</option>`).join("");
 selTipo.onchange = () => { filtroR = selTipo.value; aplicarFiltro(); };
 $("filtros").before(selTipo);
+const selPer = document.createElement("select"); selPer.id = "periodo"; selPer.className = "sel";
+selPer.innerHTML = '<option value="todos">Qualquer período</option><option value="30">Atividade nos últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="365">Últimos 12 meses</option><option value="2026">Em 2026</option><option value="2025">Em 2025</option><option value="antes">Antes de 2025</option>';
+selPer.onchange = () => { filtroPer = selPer.value; aplicarFiltro(); };
+$("filtros").before(selPer);
 const contEl = document.createElement("div"); contEl.id = "cont"; contEl.className = "sub2"; contEl.style.margin = "0 0 10px"; $("itens").before(contEl);
 const bCsv = document.createElement("button"); bCsv.className = "botao"; bCsv.textContent = "Exportar CSV"; bCsv.style.margin = "0 0 10px"; bCsv.onclick = () => exportarCSV(); $("itens").before(bCsv);
 
@@ -541,7 +559,11 @@ $("resumo").innerHTML = `<span><b class="num">${alertas.length}</b>alertas</span
 }
 lista();
 $("aba-noticias").innerHTML = `<h3>Notícias</h3><p class="sub2">Manchetes recentes sobre gasto público, fraude e fiscalização.</p><ul class="news">${dN.itens.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.titulo)}</a><small>${esc(n.fonte)}</small></li>`).join("") || "<li class='sub2'>Sem notícias carregadas.</li>"}</ul>`;
-if (map.loaded()) montarMapa(); else map.on("load", montarMapa);
+let _montado = false;
+const iniciarMapa = () => { if (_montado) return; _montado = true; montarMapa(); };
+if (map.isStyleLoaded()) iniciarMapa();
+map.on("load", iniciarMapa);
+map.on("styledata", () => { if (map.isStyleLoaded()) iniciarMapa(); });
 
 if (location.hash.length > 1) setTimeout(() => abrir(decodeURIComponent(location.hash.slice(1))), 1800);
 
@@ -576,14 +598,13 @@ function montarTimeline() {
     janela = [meses[lo], meses[hi]]; $("tl-sel").textContent = lo === hi ? meses[lo] : `${meses[lo]} a ${meses[hi]}`; $("tl-reset").hidden = false; aplicarFiltro(); };
   $("tl-reset").onclick = () => { janela = null; br.setAttribute("width", 0); $("tl-sel").textContent = ""; $("tl-reset").hidden = true; aplicarFiltro(); };
 }
-montarTimeline();
 
 // ----- dossiê em abas -----
 function tabificar() {
   const d = $("detalhe"); if (d.hidden) return; const num = d.querySelector(".numeros"); if (!num) return;
   const resto = []; for (let k = num.nextElementSibling; k; k = k.nextElementSibling) resto.push(k);
-  const grupo = (t) => (/^(Rede de ligações|Linha do tempo|Sinais combinados)$/.test(t) ? "Rede e tempo" : /^(Análise|Checagem)$/.test(t) ? "Análise" : "Dados");
-  const G = { "Dados": [], "Rede e tempo": [], "Análise": [] }; let atual = "Dados";
+  const grupo = (t) => (/^Por que este alerta acendeu$/.test(t) ? "Por quê" : /^(Rede de ligações|Linha do tempo|Sinais combinados)$/.test(t) ? "Rede e tempo" : /^(Análise|Checagem)$/.test(t) ? "Análise" : "Dados");
+  const G = { "Por quê": [], "Dados": [], "Rede e tempo": [], "Análise": [] }; let atual = "Por quê";
   resto.forEach((k) => { if (k.tagName === "H4") atual = grupo(k.textContent.trim()); G[atual].push(k); });
   const tabs = document.createElement("div"); tabs.className = "dtabs"; const panes = {};
   Object.entries(G).forEach(([nome, nos], i) => { if (!nos.length) return;
@@ -649,7 +670,7 @@ function atualizarPanorama() {
   const ufs = soma((a) => a.local && a.local.uf).slice(0, 6), tipos = soma((a) => nomes[a.regra] || a.regra).slice(0, 5);
   const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++); const tot = L.length;
   const barras = (arr) => { const mx = Math.max(1, ...arr.map((x) => x[1].v)); return arr.map(([k, o]) => `<div class="pan-l"><span>${esc(k)}</span><div class="barra"><i style="width:${Math.round(100 * o.v / mx)}%"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join(""); };
-  pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} alertas${janela ? " · período filtrado" : ""}</span></div>
+  pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} alertas${filtroPer !== "todos" ? " · período filtrado" : ""}</span></div>
     <div class="pan-sev"><i style="width:${100 * c.alta / tot}%;background:${COR.alta}"></i><i style="width:${100 * c.media / tot}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / tot}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
     <div class="pan-h">Estados com mais valor em atenção</div>${barras(ufs)}
@@ -658,3 +679,95 @@ function atualizarPanorama() {
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
 bPainel.onclick = () => { document.body.classList.toggle("sem-painel"); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 600 }); };
+
+
+// =====================================================================
+// Transparência: por que isto é um alerta
+// =====================================================================
+function porque(a) {
+  const m = a.manchete, s = a.sancao, R = nomes[a.regra] || a.regra, C = [];
+  const ok = (t, o) => C.push({ ok: true, t, o }), parcial = (t, o) => C.push({ ok: null, t, o });
+  let regra = "", prio = "", descartado = [], naoProva = [];
+  const per = a.inicio === a.fim ? data(a.inicio) : `${data(a.inicio)} a ${data(a.fim)}`;
+  if (m.tipo === "R01") {
+    regra = "Procuramos pagamentos da cota parlamentar (dinheiro público de gabinete) feitos a empresas que, na data do pagamento, estavam na lista oficial de empresas punidas.";
+    ok("A empresa constava como punida", `${s.lista} · ${s.tipo}`);
+    ok("O pagamento caiu dentro da vigência da punição", `pagamentos em ${per}; punição ${s.fim ? "de " + data(s.inicio) + " até " + data(s.fim) : "desde " + data(s.inicio) + ", sem data final"}`);
+    ok("A punição alcança o Congresso", alcance(s.alcance));
+    prio = a.gravidade === "alta" ? "Alta: a punição valia para toda a administração, então não há dúvida de que alcançava a Câmara ou o Senado." : a.gravidade === "media" ? "Média: o órgão que puniu não informou o alcance. Pode ou não valer para o Congresso." : "Baixa: a punição valia só no órgão que a aplicou. Provavelmente não impedia contratar com a Câmara ou o Senado.";
+    descartado = ["Punições de alcance estadual ou municipal que não chegam ao Congresso", "Pagamentos de data anterior ao início da punição ou posterior ao fim"];
+    naoProva = ["Que o gasto foi irregular: o serviço pode ter sido prestado de verdade.", "Que o parlamentar sabia da punição: o cadastro nem sempre é consultado."];
+  } else if (m.tipo === "R02") {
+    regra = "Procuramos contratos públicos assinados com empresas que, na data da assinatura, estavam na lista oficial de punidas, e só mantemos quando a punição de fato alcança o órgão que contratou.";
+    ok("A empresa constava como punida", `${s.lista} · ${s.tipo}`);
+    ok("Contratos assinados dentro da vigência da punição", `${plural(a.n, "contrato", "contratos")} em ${per}`);
+    ok("A punição alcança o órgão contratante (esfera e estado)", alcance(s.alcance));
+    prio = a.gravidade === "alta" ? "Alta: punição que vale em todo o governo ou em toda a esfera do órgão contratante." : a.gravidade === "media" ? "Média: o alcance não foi informado ou é restrito à esfera e ao Poder de quem puniu." : "Baixa: punição restrita ao órgão que a aplicou; pode nem valer para quem contratou.";
+    descartado = ["Punições que não alcançam a esfera e o estado do contratante", "Fornecedores que são estatais ou administração pública", "Contratos com valor digitado errado e valores repetidos de credenciamento"];
+    naoProva = ["Que a contratação foi ilegal: a punição pode ter sido suspensa por decisão judicial.", "Que o órgão errou: muitos órgãos não consultam o cadastro na hora."];
+  } else if (m.tipo === "R03") {
+    regra = "Procuramos empresas muito novas que fecham contratos grandes, um padrão típico de empresa aberta só para receber aquele contrato.";
+    ok("Empresa com menos de 180 dias de vida na assinatura", `${m.dias} dias (aberta em ${data(m.abertura)})`);
+    ok("Contrato de valor alto (mínimo R$ 200 mil)", brl(a.total));
+    if (m.capital != null) parcial("Capital social informado", brl(m.capital));
+    prio = m.dias < 90 && a.total >= 1e6 ? `Alta: menos de 90 dias de vida e contrato acima de R$ 1 milhão.` : m.dias < 90 ? "Média: menos de 90 dias de vida, mas o contrato é menor que R$ 1 milhão." : a.total >= 1e6 ? "Média: contrato acima de R$ 1 milhão, mas a empresa já tem mais de 90 dias." : "Baixa: empresa nova e contrato de valor moderado.";
+    descartado = ["Consórcios, concessionárias, SPEs, PPPs, fundos e cooperativas (nascem novos por desenho)", "Credenciamento e contratos com o mesmo valor repetido entre fornecedores", "Fornecedores estatais", "Valores com sinais de erro de digitação"];
+    naoProva = ["Que a empresa é de fachada: empresas legítimas nascem para atender um cliente específico.", "Que houve direcionamento: o contrato pode ter sido competitivo."];
+  } else if (m.tipo === "R04") {
+    regra = "Procuramos contratos muito maiores que o capital social da empresa contratada, sinal de que ela pode não ter porte para executar.";
+    ok(`Contrato vale ${(m.vezes || 0).toLocaleString("pt-BR")} vezes o capital social`, `contrato ${brl(a.total)} · capital ${brl(m.capital || 0)} (faixa considerada: de 50 a 1.000 vezes)`);
+    ok("Contrato entre R$ 500 mil e R$ 300 milhões", brl(a.total));
+    prio = a.gravidade === "alta" ? "Alta: pelo menos 100 vezes o capital e valor entre R$ 2 mi e R$ 100 mi." : "Média: desproporção relevante, mas valor fora da faixa em que o erro de digitação é menos provável.";
+    descartado = ["Contratos acima de 1.000 vezes o capital (quase sempre valor digitado errado)", "Valores redondos em milhares que, divididos por mil, voltam ao normal (erro de escala)", "Credenciamento, consórcios e estatais"];
+    naoProva = ["Que a empresa não consegue executar: capital baixo é comum em empresa de serviço.", "Que o valor está certo: o PNCP tem erros de digitação. Confira no contrato."];
+  } else if (m.tipo === "R05") {
+    regra = "Procuramos empresas cujo sócio doou para a campanha de um prefeito eleito em 2024 e que passaram a ser contratadas pela prefeitura dele depois da posse.";
+    ok("Um sócio da empresa doou à campanha", `${m.doador} (${QUALIF[m.qualificacao] || "sócio(a)"}) doou ${brl(m.doacao)}`);
+    ok("O candidato foi eleito prefeito em 2024", `${m.prefeito} (${m.partido}) · ${m.cidade}/${m.uf}`);
+    ok("A empresa fechou contratos com essa prefeitura depois da posse (1º/jan/2025)", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}, ${per}`);
+    prio = a.gravidade === "alta" ? "Alta: contratos acima de R$ 1 milhão e doação de pelo menos R$ 5 mil." : a.gravidade === "media" ? "Média: contratos acima de R$ 300 mil e doação relevante ou sócio-administrador." : "Baixa: vínculo existe, mas valores menores.";
+    descartado = ["Contratos abaixo de R$ 50 mil", "Fornecedores estatais", "Valores com sinais de erro e credenciamento", "Doações de empresas (proibidas desde 2015) e de partidos"];
+    naoProva = ["Que houve troca de favores: doar para campanha é legal.", "Que a empresa foi beneficiada sem licitação: veja a modalidade do contrato.", "Que a empresa não fornecia à prefeitura antes: só olhamos a partir de 2025."];
+  } else if (m.tipo === "R06") {
+    regra = "Procuramos o mesmo órgão contratando a mesma empresa várias vezes no trimestre, sempre abaixo da faixa que permite dispensar licitação. Pode indicar uma compra grande dividida em partes.";
+    ok("Mesmo órgão e mesma empresa", `${a.orgao}`);
+    ok("Quatro ou mais contratos no trimestre", `${a.n} contratos em ${m.tri}`);
+    ok("Cada contrato na faixa de dispensa (R$ 15 mil a R$ 70 mil)", `de ${brl(m.minimo)} a ${brl(m.maximo)}`);
+    ok("Soma de pelo menos R$ 200 mil", brl(a.total));
+    prio = a.gravidade === "alta" ? "Alta: oito ou mais contratos e soma acima de R$ 500 mil." : a.gravidade === "media" ? "Média: cinco ou mais contratos." : "Baixa: o mínimo de quatro contratos.";
+    descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro de digitação"];
+    naoProva = ["Que houve fracionamento: compras diferentes podem ser legítimas.", "Que o preço foi acima do mercado."];
+  } else if (m.tipo === "R07") {
+    regra = "Procuramos uma única empresa concentrando mais da metade do que uma prefeitura contratou num ano.";
+    ok(`Uma empresa recebeu ${Math.round(m.share * 100)}% do valor contratado pelo órgão no ano`, `${brl(a.total)} de ${brl(m.total_orgao)} em ${m.ano} (limite: 50%)`);
+    ok("Órgão com volume relevante (mínimo R$ 2 mi e 5 contratos no ano)", brl(m.total_orgao));
+    prio = a.gravidade === "alta" ? "Alta: 70% ou mais e órgão com mais de R$ 10 milhões contratados no ano." : a.gravidade === "media" ? "Média: 60% ou mais do valor." : "Baixa: entre 50% e 60%.";
+    descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro"];
+    naoProva = ["Que houve direcionamento: serviços contínuos (lixo, saúde, merenda) costumam ter poucos fornecedores.", "Que o contrato foi sem concorrência."];
+  } else if (m.tipo === "R08") {
+    regra = "Procuramos empresas que vendem ao governo e têm sócio sediado em países de sigilo ou tributação favorecida (lista de referência da Receita).";
+    ok(`A empresa tem sócio sediado em ${m.pais}`, `${m.socio}`);
+    ok(m.nivel === 1 ? "País da lista de sigilo clássico (nível 1)" : "País da lista de tributação favorecida (nível 2)", m.pais);
+    ok("Contratos de pelo menos R$ 300 mil", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}`);
+    prio = a.gravidade === "alta" ? "Alta: jurisdição de sigilo clássico e contratos acima de R$ 1 milhão." : a.gravidade === "media" ? "Média: jurisdição de sigilo clássico, ou contratos acima de R$ 1 milhão em país de tributação favorecida." : "Baixa: país de tributação favorecida e contratos moderados.";
+    descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro"];
+    naoProva = ["Que há dinheiro desviado ou evasão: multinacionais legítimas têm holding em Luxemburgo, Suíça ou Países Baixos.", "Quem é o dono real: o sócio no exterior pode ter um beneficiário final no Brasil."];
+  } else if (m.tipo === "RF01") {
+    regra = "Procuramos bancos cuja captação cresce muito e de forma sustentada, com muita alavancagem: um padrão que costuma anteceder problemas, embora seja comum em bancos em expansão legítima.";
+    ok("Captações acima de R$ 5 bilhões", brlCurto(m.captacao));
+    ok("Crescimento de 50% ou mais em 12 meses", `${m.yoy >= 0 ? "+" : ""}${Math.round(m.yoy * 100)}%`);
+    ok("Ativo pelo menos 10 vezes o patrimônio líquido", `${(m.alav || 0).toFixed(1)} vezes`);
+    ok(`Padrão sustentado por ${m.trimestres} trimestres seguidos`, `posição em ${m.ate}`);
+    prio = a.gravidade === "media" ? "Média: quatro ou mais trimestres seguidos." : "Baixa: dois ou três trimestres seguidos.";
+    descartado = ["Instituições de pagamento", "Bancos com captação abaixo de R$ 5 bilhões", "Crescimento isolado de um trimestre"];
+    naoProva = ["Que o banco tem problema: bancos grandes em expansão também acendem.", "Quem compra o papel do banco: isso exige dados que não são abertos (veja Fontes)."];
+  }
+  const linhas = C.map((c) => `<div class="crit ${c.ok ? "ok" : "par"}"><i>${c.ok ? "✓" : "•"}</i><div><b>${esc(c.t)}</b><span>${esc(c.o)}</span></div></div>`).join("");
+  const lista = (arr) => `<ul class="check">${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  return `<p class="sub2" style="margin:0 0 8px"><b style="color:#fff">${esc(R)}</b> (regra ${a.regra}). ${esc(regra)}</p>
+    <div class="criterios">${linhas}</div>
+    <div class="prio" style="--c:${COR[a.gravidade]}"><b>Prioridade ${esc(NOME_G[a.gravidade].replace("Prioridade ", ""))}</b><span>${esc(prio)}</span></div>
+    <p class="sub2" style="margin:6px 0 0">Prioridade mede quão forte é o sinal e quão pouca dúvida resta. Não mede gravidade de nenhum ato.</p>
+    <h5>O que foi descartado antes de te mostrar isto</h5>${lista(descartado)}
+    <h5>O que este alerta não prova</h5>${lista(naoProva)}`;
+}
