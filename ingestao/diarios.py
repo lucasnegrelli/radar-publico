@@ -3,7 +3,17 @@ Entrada: data-publica/empresas.json  Saída: data-publica/diarios.json  (id do a
 Roda no GitHub Actions: a conexão TLS do servidor deles falha no Windows local."""
 import json, time, pathlib, urllib.parse, urllib.request
 RAIZ = pathlib.Path(__file__).parent.parent
-entrada = json.loads((RAIZ / "data-publica/empresas.json").read_text(encoding="utf-8"))
+_al = RAIZ / "web/public/data/alertas.json"
+if _al.exists():  # empresas dos alertas mais valiosos (atualiza a cada rodada)
+    _a = [a for a in json.loads(_al.read_text(encoding="utf-8"))["alertas"] if a["regra"] != "RF01" and len(a["empresa"]) >= 12]
+    _a.sort(key=lambda a: -a["total"]); _vistos = set(); entrada = []
+    for a in _a:
+        if a["empresa"] in _vistos: continue
+        _vistos.add(a["empresa"]); entrada.append({"id": a["id"], "empresa": a["empresa"], "uf": (a.get("local") or {}).get("uf"), "cidade": (a.get("local") or {}).get("cidade")})
+        if len(entrada) >= 260: break
+    (RAIZ / "data-publica/empresas.json").write_text(json.dumps(entrada, ensure_ascii=False), encoding="utf-8")
+else:
+    entrada = json.loads((RAIZ / "data-publica/empresas.json").read_text(encoding="utf-8"))
 API = "https://api.queridodiario.org.br/gazettes"
 _rf = RAIZ / "data-publica/empresas_rf.json"
 if _rf.exists(): entrada += json.loads(_rf.read_text(encoding="utf-8"))

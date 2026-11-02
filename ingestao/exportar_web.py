@@ -6,7 +6,7 @@ RAIZ = pathlib.Path(__file__).parent.parent
 os.chdir(RAIZ)  # as regras usam caminhos relativos (dados/...)
 LIMITE = 150     # alertas por regra no painel (os de maior valor/gravidade)
 con = duckdb.connect(str(RAIZ / "dados" / "radar.duckdb"))
-con.execute("SET memory_limit='6GB'"); con.execute("SET threads=4"); con.execute("SET preserve_insertion_order=false"); con.execute("SET temp_directory='" + (RAIZ / 'dados' / 'tmp_duck').as_posix() + "'")
+con.execute("SET memory_limit='" + os.environ.get("DUCK_MEM", "6GB") + "'"); con.execute("SET threads=4"); con.execute("SET preserve_insertion_order=false"); con.execute("SET temp_directory='" + (RAIZ / 'dados' / 'tmp_duck').as_posix() + "'")
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 ORDEM = {"alta": 0, "media": 1, "baixa": 2}
 NOME_REGRA = {"R01": "Empresa punida recebeu cota parlamentar", "R02": "Contrato com empresa punida",

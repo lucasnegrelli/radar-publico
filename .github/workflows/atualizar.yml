@@ -1,0 +1,97 @@
+name: Atualizar o Radar Público (tudo, online)
+# Roda sozinho todo dia e publica em radar.lucasnegrelli.com. Nada roda na máquina de ninguém.
+on:
+  schedule:
+    - cron: "17 8 * * *"   # 05:17 em Brasília
+  workflow_dispatch:
+    inputs:
+      pular_extras:
+        description: "Pular Wikipédia/manchetes das pessoas (mais rápido)"
+        default: "nao"
+concurrency:
+  group: atualizar
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      PYTHONUNBUFFERED: "1"
+      DUCK_MEM: "4500MB"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Liberar disco
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL || true
+          df -h / | tail -1
+      - run: pip install "duckdb==2.0.0" huggingface_hub
+      - name: Baixar a base e os dados do Hugging Face
+        run: |
+          mkdir -p dados/cnpj dados/pncp dados/compras dados/tse /tmp/hf
+          python ingestao/sync_hf.py baixar base /tmp/hf && mv /tmp/hf/base/radar.duckdb dados/radar.duckdb
+          python ingestao/sync_hf.py baixar cnpj /tmp/hf && find /tmp/hf/cnpj -name '*.parquet' -exec mv {} dados/cnpj/ \;
+          python ingestao/sync_hf.py baixar pncp /tmp/hf && mv /tmp/hf/pncp/*.parquet dados/pncp/
+          python ingestao/sync_hf.py baixar compras /tmp/hf && mv /tmp/hf/compras/*.parquet dados/compras/
+          python ingestao/sync_hf.py baixar tse /tmp/hf && mv /tmp/hf/tse/*.parquet dados/tse/
+          rm -rf /tmp/hf; df -h / | tail -1
+      - name: Restaurar cache das pessoas
+        uses: actions/cache@v4
+        with:
+          path: dados/pessoas_extras_cache.json
+          key: pessoas-extras-${{ github.run_id }}
+          restore-keys: pessoas-extras-
+      - run: mkdir -p web/public/data/pessoas data-publica
+      - name: Fontes que mudam todo dia (CEIS, CNEP, cota da Câmara e do Senado)
+        run: python ingestao/atualizar_fontes.py
+      - name: Banco Central (IF.data)
+        run: python ingestao/bcb_ifdata.py
+        continue-on-error: true
+      - name: TSE 2026 (candidaturas, bens, campanha)
+        run: rm -f dados/tse/*_2026.parquet && python ingestao/tse_historico.py 2026
+        continue-on-error: true
+      - name: Emendas parlamentares (R09)
+        run: python ingestao/emendas.py
+      - name: Exportar alertas
+        run: python ingestao/exportar_web.py
+      - name: Escala, fichas, cota no exterior, risco financeiro
+        run: |
+          python ingestao/escala.py
+          python ingestao/fichas.py
+          python ingestao/viagens_cota.py || true
+          python ingestao/risco_financeiro.py
+          python ingestao/risco_dossie.py || true
+      - name: Judiciário (DataJud) e notícias
+        run: |
+          python ingestao/datajud.py || true
+          python ingestao/noticias.py || true
+          python ingestao/noticias_alertas.py || true
+      - name: Diários oficiais (Querido Diário)
+        run: python ingestao/diarios.py || true
+      - name: Fichas de pessoa
+        run: python ingestao/pessoas.py
+      - name: Pessoas mais conhecidas (Wikipédia e manchetes)
+        if: ${{ inputs.pular_extras != 'sim' }}
+        run: python ingestao/pessoas_extras.py 2500 || true
+      - name: Montar o site
+        run: |
+          cp data-publica/estaticos/*.json web/public/data/
+          for f in diarios noticias_alertas caso_master_diarios; do [ -f data-publica/$f.json ] && cp data-publica/$f.json web/public/data/ || true; done
+          cd web && npm ci && npx vite build
+      - name: Publicar no GitHub Pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cd web && bash publicar-pages.sh
+      - name: Guardar o histórico no repositório
+        run: |
+          git config user.name "radar-publico-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-publica/
+          git diff --cached --quiet || git commit -m "atualização automática $(date +%F)"
+          git pull --rebase -q && git push
