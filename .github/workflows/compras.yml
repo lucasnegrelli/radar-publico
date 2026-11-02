@@ -1,0 +1,46 @@
+name: Licitações (compras) do PNCP
+on:
+  workflow_dispatch:
+    inputs:
+      de:
+        description: "Mês inicial (AAAA-MM)"
+        default: "2025-01"
+      ate:
+        description: "Mês final (AAAA-MM)"
+        default: "2026-10"
+jobs:
+  planejar:
+    runs-on: ubuntu-latest
+    outputs:
+      janelas: ${{ steps.p.outputs.janelas }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install huggingface_hub
+      - id: p
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          PREFIXO: compras
+        run: python ingestao/pncp_pendentes.py "${{ inputs.de }}" "${{ inputs.ate }}" | tee -a "$GITHUB_OUTPUT"
+  baixar:
+    needs: planejar
+    if: needs.planejar.outputs.janelas != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        janela: ${{ fromJSON(needs.planejar.outputs.janelas) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install duckdb huggingface_hub
+      - name: Baixar licitações da janela
+        run: python -I ingestao/pncp_compras_janela.py "${{ matrix.janela }}"
+      - name: Enviar ao Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python -I ingestao/sync_hf.py subir dados/compras compras

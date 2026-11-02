@@ -4,9 +4,10 @@ import sys, os, json, calendar
 from huggingface_hub import HfApi
 
 REPO = os.environ.get("HF_REPO", "propagang/radar-publico-dados")
+PREFIXO = os.environ.get("PREFIXO", "pncp")
 api = HfApi(token=os.environ.get("HF_TOKEN"))
 try:
-    existentes = {f for f in api.list_repo_files(REPO, repo_type="dataset") if f.startswith("pncp/")}
+    existentes = {f for f in api.list_repo_files(REPO, repo_type="dataset") if f.startswith(PREFIXO + "/")}
 except Exception:
     existentes = set()
 
@@ -22,6 +23,6 @@ for a, m in reversed(list(meses(sys.argv[1], sys.argv[2]))):
     u = calendar.monthrange(a, m)[1]
     for de, ate in ((1, 15), (16, u)):
         j = f"{a}-{m:02d}-{de:02d}_{a}-{m:02d}-{ate:02d}"
-        if f"pncp/{j}.parquet" not in existentes:
+        if f"{PREFIXO}/{j}.parquet" not in existentes:
             pendentes.append(j)
 print("janelas=" + json.dumps(pendentes))
