@@ -16,7 +16,7 @@ WITH base AS (
          median(valor_global) OVER (PARTITION BY orgao_cnpj) AS med_orgao,
          (coalesce(objeto,'') ILIKE '%credenciamento%' OR coalesce(objeto,'') ILIKE '%chamamento p_blico%') AS credenciamento,
          (coalesce(objeto,'') ILIKE '%concess%' OR coalesce(objeto,'') ILIKE '%parceria p_blico%' OR trim(coalesce(fornecedor,'')) = '' OR
-          regexp_matches(upper(coalesce(fornecedor,'')), 'CONCESSION|CONSORCIO|CONSÓRCIO|\bSPE\b|S\.?P\.?E\.?\s|PARCERIA|PPP|PROPOSITO ESPECIFICO|PROPÓSITO ESPECÍFICO|FUNDO |COOPERATIVA|ASSOCIACAO|ASSOCIAÇÃO')) AS tipo_especial
+          regexp_matches(upper(coalesce(fornecedor,'')), 'CONCESSION|CONSORCIO|CONSÓRCIO|\bSPE\b|S\.?P\.?E\.?\s|PARCERIA|PPP|PROPOSITO ESPECIFICO|PROPÓSITO ESPECÍFICO|FUNDO |COOPERATIVA|ASSOCIACAO|ASSOCIAÇÃO|FUNDACAO|FUNDAÇÃO|INSTITUTO|ORGANIZA[CÇ][AÃ]O SOCIAL|IRMANDADE|SANTA CASA|HOSPITAL|BENEFICENTE|SOCIEDADE BENEFICENTE')) AS tipo_especial
   FROM read_parquet('dados/pncp/*.parquet')
   WHERE data_assinatura BETWEEN DATE '2020-01-01' AND current_date AND valor_global BETWEEN 0 AND 3000000000
 ), pop AS (SELECT cod_ibge::VARCHAR AS ibge, max(populacao) AS populacao FROM siconfi_entes GROUP BY 1)
@@ -29,6 +29,7 @@ SELECT b.*, p.populacao, ee.natureza,
   (b.valor_global >= 10000000 AND b.valor_global % 1000 = 0 AND b.n_orgao >= 10 AND b.med_orgao > 0
      AND b.valor_global > 100 * b.med_orgao AND b.valor_global / 1000 <= 20 * b.med_orgao)                    AS f_escala_mil,
   (b.valor_inicial > 0 AND b.valor_global > 20 * b.valor_inicial)
+   OR (b.valor_inicial = 0 AND b.valor_global >= 5000000)   -- sem valor inicial e valor global alto: quase sempre digitação ou estimativa de ata
    OR (b.valor_global >= 10000000 AND b.valor_global % 1000 = 0 AND b.n_orgao >= 10 AND b.med_orgao > 0
        AND b.valor_global > 100 * b.med_orgao AND b.valor_global / 1000 <= 20 * b.med_orgao)
    OR (b.esfera = 'M' AND p.populacao > 0 AND b.valor_global > p.populacao * 10000)

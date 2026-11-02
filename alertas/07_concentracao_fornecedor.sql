@@ -1,7 +1,7 @@
 -- R07: um único fornecedor concentra mais da metade do valor contratado por um órgão municipal num ano (órgãos com R$ 2 mi ou mais no ano).
 WITH base AS (
   SELECT *, year(data_assinatura) AS ano FROM pncp
-  WHERE esfera = 'M' AND tipo_pessoa = 'PJ' AND NOT erro_valor AND NOT estatal AND NOT credenciamento AND n_mesmo_valor < 3 AND valor_global >= 20000 AND doc14 <> '00000000000000'
+  WHERE esfera = 'M' AND tipo_pessoa = 'PJ' AND NOT erro_valor AND NOT estatal AND NOT tipo_especial AND NOT credenciamento AND n_mesmo_valor < 3 AND valor_global >= 20000 AND doc14 <> '00000000000000'
 ), tot AS (SELECT orgao_cnpj, ano, sum(valor_global) total_orgao, count(*) n_orgao_ctr FROM base GROUP BY ALL HAVING sum(valor_global) >= 2000000 AND count(*) >= 5),
 f AS (SELECT orgao_cnpj, ano, doc14, sum(valor_global) v, count(*) n FROM base GROUP BY ALL)
 SELECT 'R07' AS regra,

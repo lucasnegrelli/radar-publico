@@ -278,6 +278,7 @@ function abrir(id) {
   const m = a.manchete;
   const blocoEmpresa = (m.tipo === "R03" || m.tipo === "R04") ? `<h4>A empresa</h4><dl class="kv">${m.abertura ? `<dt>Abertura</dt><dd>${data(m.abertura)}</dd>` : ""}<dt>Capital social</dt><dd>${m.capital != null ? brl(m.capital) : "não informado"}</dd><dt>Porte</dt><dd>${esc(PORTE[m.porte] || m.porte || "não informado")}</dd><dt>Contratante</dt><dd>${esc(a.orgao || "")}${a.orgao_municipio ? " · " + esc(a.orgao_municipio) + "/" + esc(a.orgao_uf) : ""}</dd></dl>` : "";
   const blocoVinculo = m.tipo === "R05" ? `<h4>O vínculo</h4><dl class="kv"><dt>Prefeito eleito</dt><dd>${esc(m.prefeito)} (${esc(m.partido)}) · ${esc(m.cidade)}/${esc(m.uf)}</dd><dt>Doador</dt><dd>${esc(m.doador)}, ${esc(QUALIF[m.qualificacao] || "sócio(a)")} da empresa</dd><dt>Doou</dt><dd>${brl(m.doacao)} na campanha de 2024</dd><dt>Fonte</dt><dd><a href="https://divulgacandcontas.tse.jus.br" target="_blank" rel="noopener">TSE · DivulgaCandContas</a></dd></dl>` : "";
+  const blocoImprensa = (_na && _na[a.id]) ? `<h4>Na imprensa</h4>${_na[a.id].map((n) => `<div class="diario"><small>${esc(n.f)} · ${esc(n.d)}</small><a href="${esc(n.u)}" target="_blank" rel="noopener">${esc(n.t)}</a></div>`).join("")}<p class="sub2">Manchetes que citam o nome da empresa. Podem ser homônimos: confira se é a mesma empresa.</p>` : "";
   const meta = META[a.regra] || { conf: "média", fp: [] }, est = triagem()[a.id];
   const blocoCorr = a.correlacao ? `<h4>Sinais combinados</h4><p class="sub2" style="margin-bottom:6px">A mesma empresa aparece em mais de uma regra, o que pesa mais que um alerta isolado.</p><ul class="check">${a.correlacao.map((x) => { const o = alertas.find((z) => z.id === x.id); return `<li><a href="#" data-id="${esc(x.id)}">${esc(nomes[x.regra] || x.regra)}</a>${o ? ` <span class="sub2">· ${brlCurto(o.total)}</span>` : ""}</li>`; }).join("")}</ul>` : "";
   const blocoAcoes = `<h4>Análise</h4><div class="acoes">${[["visto", "Visto", ""], ["analise", "Em análise", "sx"], ["descartado", "Descartar", "sd"]].map(([k, l, cl]) => `<button class="botao ${cl} ${est === k ? "on" : ""}" data-st="${k}">${l}</button>`).join("")}</div>
@@ -298,7 +299,7 @@ function abrir(id) {
     ${a.n > t.linhas.length ? `<p class="sub2" style="margin-top:6px">Mostrando ${t.linhas.length} de ${a.n} registros.</p>` : ""}
     ${blocoSancao}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
     <h4>Checagem</h4><ul class="check">${checagem(a).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
-    ${blocoAcoes}
+    ${blocoImprensa}${blocoAcoes}
     <p class="aviso">Isto é um ponto de atenção feito a partir de dados públicos, não uma conclusão. Pode haver explicação legal.</p>
     <div class="links" style="margin-top:12px;font-size:12.5px">Fontes: <a href="https://www3.bcb.gov.br/ifdata" target="_blank" rel="noopener">Banco Central (IF.data)</a> · <a href="https://dados.cvm.gov.br" target="_blank" rel="noopener">CVM</a> · <a href="https://pncp.gov.br" target="_blank" rel="noopener">PNCP</a> · <a href="https://portaldatransparencia.gov.br/sancoes/consulta" target="_blank" rel="noopener">Portal da Transparência</a> · <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener">Câmara</a> · <a href="https://www12.senado.leg.br/transparencia/dados-abertos-transparencia/dados-abertos-ceaps" target="_blank" rel="noopener">Senado</a> · <a href="https://dadosabertos.rfb.gov.br" target="_blank" rel="noopener">Receita (CNPJ)</a></div>`;
   $("detalhe").querySelector(".fechar").onclick = fechar;
@@ -674,7 +675,7 @@ function atualizarPanorama() {
     <div class="pan-sev"><i style="width:${100 * c.alta / tot}%;background:${COR.alta}"></i><i style="width:${100 * c.media / tot}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / tot}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
     <div class="pan-h">Estados com mais valor em atenção</div>${barras(ufs)}
-    <div class="pan-h">Por tipo de alerta</div>${barras(tipos)}`;
+    <div class="pan-h">Por tipo de alerta</div>${barras(tipos)}${escalaHtml()}`;
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
@@ -770,4 +771,19 @@ function porque(a) {
     <p class="sub2" style="margin:6px 0 0">Prioridade mede quão forte é o sinal e quão pouca dúvida resta. Não mede gravidade de nenhum ato.</p>
     <h5>O que foi descartado antes de te mostrar isto</h5>${lista(descartado)}
     <h5>O que este alerta não prova</h5>${lista(naoProva)}`;
+}
+
+
+// ----- imprensa por alerta e escala -----
+let _na = null, _esc = null;
+fetch("/data/noticias_alertas.json").then((r) => r.json()).then((j) => { _na = j; }).catch(() => {});
+fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualizarPanorama(); }).catch(() => {});
+function escalaHtml() {
+  if (!_esc) return "";
+  const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
+  return `<div class="pan-h">Escala (para não perder a noção)</div>
+    <div class="pan-esc"><div><b>${f(_esc.pib_tri * 1000)}</b><span>PIB do Brasil (ordem de grandeza)</span></div>
+    <div><b>${f(_esc.pncp_bi)}</b><span>contratos válidos no PNCP em 2025-26</span></div>
+    <div><b>${f(_esc.alertas_bi)}</b><span>em alertas de prioridade alta e média (${_esc.pct_pncp}% do PNCP)</span></div></div>
+    <p class="sub2" style="margin:6px 0 0;font-size:11px">Um caso do tamanho do Master (dezenas de bilhões) não aparece em contrato: aparece no balanço dos bancos, nos fundos e nos institutos de previdência.</p>`;
 }
