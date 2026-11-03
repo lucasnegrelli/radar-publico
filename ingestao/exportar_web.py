@@ -10,7 +10,7 @@ con.execute("SET memory_limit='" + os.environ.get("DUCK_MEM", "6GB") + "'"); con
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 ORDEM = {"alta": 0, "media": 1, "baixa": 2}
 NOME_REGRA = {"R01": "Empresa punida recebeu cota parlamentar", "R02": "Contrato com empresa punida",
-              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor", "R06": "Possível fracionamento de compras", "R07": "Fornecedor concentra os contratos da prefeitura", "R08": "Sócio em paraíso fiscal", "R09": "Emenda parlamentar para entidade com ponto de atenção", "R10": "Político eleito é sócio de empresa que vende ao governo", "R11": "Pagamento federal a empresa sancionada"}
+              "R03": "Empresa nova com contrato grande", "R04": "Contrato gigante para empresa pequena", "R05": "Doador do prefeito virou fornecedor", "R06": "Possível fracionamento de compras", "R07": "Fornecedor concentra os contratos da prefeitura", "R08": "Sócio em paraíso fiscal", "R09": "Emenda parlamentar para entidade com ponto de atenção", "R10": "Político eleito é sócio de empresa que vende ao governo", "R11": "Pagamento federal a empresa sancionada", "R12": "Servidor federal é sócio de empresa que vende ao governo"}
 
 def sql(nome): return (RAIZ / "alertas" / nome).read_text(encoding="utf-8").strip().rstrip(";")
 def fmt_cnpj(d): return f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}" if len(d) == 14 and not d.startswith("000") else f"CPF ***{d[-8:-2]}**"
@@ -138,6 +138,8 @@ for a in alertas:
 import runpy
 try: runpy.run_path(str(RAIZ / "ingestao" / "politicos_socios.py"), init_globals={"con": con})
 except Exception as _e: print("R10 falhou:", str(_e)[:200])
+try: runpy.run_path(str(RAIZ / "ingestao" / "servidores.py"), init_globals={"con": con})
+except BaseException as _e: print("R12 não rodou:", str(_e)[:200])
 _ids = {a['id'] for a in alertas}
 for _ex in sorted((RAIZ / "data-publica").glob("alertas_extra*.json")):
     alertas += [a for a in json.loads(_ex.read_text(encoding='utf-8')) if a['id'] not in _ids]
