@@ -66,6 +66,7 @@ jobs:
         run: |
           python ingestao/escala.py
           python ingestao/fichas.py
+          mkdir -p dados/ref && cp data-publica/ref/* dados/ref/
           python ingestao/viagens_cota.py || true
           python ingestao/risco_financeiro.py
           python ingestao/risco_dossie.py || true
@@ -86,7 +87,7 @@ jobs:
         run: python ingestao/casos_auto.py || true
       - name: Montar o site
         run: |
-          cp data-publica/estaticos/*.json web/public/data/
+          cp data-publica/estaticos/* web/public/data/
           for f in diarios noticias_alertas caso_master_diarios; do [ -f data-publica/$f.json ] && cp data-publica/$f.json web/public/data/ || true; done
           cd web && npm ci && npx vite build
       - name: Publicar no GitHub Pages
