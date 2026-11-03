@@ -1,0 +1,58 @@
+{
+ "id": "banestado",
+ "titulo": "Caso Banestado: a evasão de bilhões pelas contas CC5",
+ "tipo": "politico",
+ "ordem": 45,
+ "valor": {
+  "bi": 30,
+  "rotulo": "desviados ao exterior, segundo estimativa da CPI do Banestado"
+ },
+ "resumo": "O caso Banestado (anos 1990 e 2000) investigou o envio ilegal ao exterior de dezenas de bilhões por contas CC5, tendo a agência do Banestado em Nova York como principal canal. A CPI estimou cerca de R$ 30 bi; quase 100 pessoas foram denunciadas. Houve condenações pontuais, e o balanço mais citado diz que quase nada foi punido nem recuperado.",
+ "situacao": [
+  {
+   "rotulo": "Escala",
+   "valor": "CPI estimou cerca de R$ 30 bi; quase 100 denunciados, entre eles o ex-prefeito de São Paulo Celso Pitta."
+  },
+  {
+   "rotulo": "Condenações",
+   "valor": "15 ex-funcionários do banco condenados (evasão de divisas e gestão fraudulenta); em 2006 o TRF-4 absolveu da formação de quadrilha e reduziu penas. Dois doleiros foram condenados a 4 anos e 10 dias."
+  },
+  {
+   "rotulo": "Resultado",
+   "valor": "Estudo da PUCPR e críticos dizem que a punição e a recuperação de ativos foram inexpressivas, e que nenhum político importante foi condenado em definitivo. Houve prescrição para réus."
+  }
+ ],
+ "pessoas": [
+  "Alberto Youssef"
+ ],
+ "marcos": [
+  {
+   "data": "2003-06",
+   "tipo": "decisão",
+   "texto": "O Congresso instala a CPI do caso Banestado.",
+   "fonte": "Senado Notícias",
+   "url": "https://www12.senado.leg.br/noticias/materias/2003/06/18/instalada-cpi-do-caso-banestado"
+  },
+  {
+   "data": "2006",
+   "tipo": "decisão",
+   "texto": "O TRF-4 absolve os acusados de formação de quadrilha e reduz as demais penas.",
+   "fonte": "Consultor Jurídico",
+   "url": "https://www.conjur.com.br/2006-set-26/leia_decisao_livrou_doleiro_tres_condenacoes//?print=1"
+  },
+  {
+   "data": "2012",
+   "tipo": "decisão",
+   "texto": "O governo repatria cerca de US$ 1 milhão dos EUA, de três condenados em primeira instância.",
+   "fonte": "Jornal do Brasil",
+   "url": "https://www.jb.com.br/pais/noticias/2012/08/29/amp/governo-repatria-dos-eua-us-1-milhao-do-caso-banestado.html"
+  }
+ ],
+ "consultas": [
+  "caso Banestado condenações CC5",
+  "Banestado evasão de divisas"
+ ],
+ "lacunas": [
+  "Balanço consolidado e atualizado de condenações e valores recuperados."
+ ]
+}

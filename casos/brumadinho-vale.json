@@ -1,0 +1,47 @@
+{
+ "id": "brumadinho-vale",
+ "titulo": "Brumadinho: o rompimento da barragem da Vale e a ação penal",
+ "tipo": "politico",
+ "ordem": 43,
+ "valor": {
+  "bi": 37.7,
+  "rotulo": "do acordo judicial de reparação com o governo de Minas (2021)"
+ },
+ "resumo": "O rompimento da barragem da Vale em Brumadinho (25/01/2019) matou 270 pessoas. Em fevereiro de 2021 a Vale fechou com Minas um acordo de R$ 37,7 bilhões; o acordo não cobre indenizações individuais nem a ação criminal, que segue separada contra o ex-presidente Fabio Schvartsman, outros executivos e funcionários da Vale e da Tüv Süd.",
+ "situacao": [
+  {
+   "rotulo": "Acordo (2021)",
+   "valor": "R$ 37,7 bi (o governo de Minas pedia ~R$ 55 bi). Segundo a Vale, 68% já haviam sido executados em janeiro de 2024."
+  },
+  {
+   "rotulo": "Ação penal",
+   "valor": "Réus: o ex-presidente da Vale e outras 10 pessoas ligadas à mineradora, mais 5 da Tüv Süd. Em dezembro de 2023, o TRF-6 analisava habeas corpus de Schvartsman, com dois votos pendentes. Sem julgamento de mérito verificado."
+  }
+ ],
+ "pessoas": [
+  "Fabio Schvartsman"
+ ],
+ "marcos": [
+  {
+   "data": "2021-02",
+   "tipo": "decisão",
+   "texto": "O governo de Minas e a Vale fecham acordo de R$ 37,7 bilhões por Brumadinho.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/brasil/governo-de-minas-e-vale-fecham-acordo-de-r-377-bilhoes-por-brumadinho/"
+  },
+  {
+   "data": "2024-01",
+   "tipo": "reportagem",
+   "texto": "Cinco anos depois, ato lembra as vítimas e critica o acordo; a Vale diz ter executado 68%.",
+   "fonte": "O Povo",
+   "url": "https://mais.opovo.com.br/jornal/farol/2024/01/26/apos-5-anos-ato-em-brumadinho-homenageia-vitimas-e-critica-acordo.html"
+  }
+ ],
+ "consultas": [
+  "Brumadinho ação penal Schvartsman",
+  "Vale Brumadinho acordo execução"
+ ],
+ "lacunas": [
+  "Resultado do habeas corpus e julgamento de mérito da ação penal (fontes até janeiro de 2024)."
+ ]
+}

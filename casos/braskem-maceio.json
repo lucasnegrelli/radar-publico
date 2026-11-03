@@ -1,0 +1,64 @@
+{
+ "id": "braskem-maceio",
+ "titulo": "Braskem e o afundamento de bairros em Maceió",
+ "tipo": "politico",
+ "ordem": 41,
+ "valor": {
+  "bi": 1.7,
+  "rotulo": "acordo com a Prefeitura de Maceió; houve outro de R$ 1,2 bi com o governo de Alagoas"
+ },
+ "resumo": "A exploração de sal-gema da Braskem foi apontada como causa do afundamento de bairros de Maceió. A PF indiciou 20 pessoas em novembro de 2024 por poluição qualificada, usurpação de recursos da União e estudos ambientais falsos; uma CPI aprovou pedido de indiciamento da empresa. A Braskem fechou acordos de indenização com a prefeitura (R$ 1,7 bi) e com o governo de Alagoas (R$ 1,2 bi).",
+ "situacao": [
+  {
+   "rotulo": "PF",
+   "valor": "20 indiciados (1º/11/2024): poluição qualificada, usurpação de recursos da União e apresentação de estudos ambientais falsos ou enganosos. Inquérito enviado à 2ª Vara Federal de Alagoas; o MPF decide sobre denúncia."
+  },
+  {
+   "rotulo": "Acordos",
+   "valor": "R$ 1,7 bi com a Prefeitura de Maceió e R$ 1,2 bi com o governo de Alagoas (novembro de 2025). A Defensoria pediu R$ 4 bi para moradores de bairros vizinhos."
+  },
+  {
+   "rotulo": "Empresa",
+   "valor": "Admitiu responsabilidade pelo afundamento em bairros de Maceió, segundo reportagem."
+  }
+ ],
+ "pessoas": [],
+ "marcos": [
+  {
+   "data": "2023",
+   "tipo": "reportagem",
+   "texto": "A Braskem admite culpa no afundamento do solo de bairros de Maceió, segundo a imprensa.",
+   "fonte": "BandNews FM",
+   "url": "https://www.band.com.br/bandnews-fm/noticias/braskem-admite-culpa-no-afundamento-do-solo-de-bairros-de-maceio-16680947"
+  },
+  {
+   "data": "2024-11-01",
+   "tipo": "investigação",
+   "texto": "A PF indicia 20 pessoas por crimes ligados à exploração de sal-gema da Braskem em Maceió.",
+   "fonte": "Mercado & Consumo",
+   "url": "https://mercadoeconsumo.com.br/01/11/2024/economia/pf-indicia-20-por-afundamento-em-maceio-com-exploracao-de-sal-gema-da-braskem/"
+  },
+  {
+   "data": "2024",
+   "tipo": "decisão",
+   "texto": "A Braskem terá de indenizar Maceió em R$ 1,7 bilhão, em acordo sujeito a homologação (data exata a confirmar).",
+   "fonte": "Monitor Mercantil",
+   "url": "https://monitormercantil.com.br/braskem-tera-de-indenizar-maceio-em-r-17-bi/"
+  },
+  {
+   "data": "2025-11",
+   "tipo": "decisão",
+   "texto": "A Braskem fecha acordo de R$ 1,2 bilhão com o governo de Alagoas.",
+   "fonte": "Folha de Pernambuco",
+   "url": "https://www.folhape.com.br/noticias/braskem-fecha-acordo-de-r-12-bilhao-por-desmoronamentos-em-maceio/449522/"
+  }
+ ],
+ "consultas": [
+  "Braskem Maceió afundamento denúncia",
+  "Braskem acordo indenização Alagoas"
+ ],
+ "lacunas": [
+  "Se o MPF apresentou denúncia contra os 20 indiciados.",
+  "Valor total pago a moradores e situação da homologação dos acordos."
+ ]
+}

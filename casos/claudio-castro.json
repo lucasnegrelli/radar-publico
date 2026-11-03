@@ -1,0 +1,70 @@
+{
+ "id": "claudio-castro",
+ "titulo": "Cláudio Castro: inelegibilidade, Refit e o dinheiro para o grupo de Vorcaro",
+ "tipo": "politico",
+ "ordem": 40,
+ "valor": {
+  "bi": 3,
+  "rotulo": "que a PF diz ter sido transferido ao conglomerado de Vorcaro (alegação em apuração no STF)"
+ },
+ "resumo": "O TSE condenou em março de 2026 o ex-governador do Rio, Cláudio Castro, por abuso de poder político e econômico na campanha de 2022; ele ficou inelegível até 2030 e os recursos foram rejeitados. Em maio de 2026 foi alvo de duas operações da PF: uma sobre o grupo Refit (sonegação de bilhões) e outra sobre suposta transferência de cerca de R$ 3 bilhões ao conglomerado de Vorcaro. Ele desistiu da candidatura ao Senado.",
+ "situacao": [
+  {
+   "rotulo": "TSE",
+   "valor": "Condenado por 5 votos a 2 (24/03/2026): abuso de poder político e econômico em 2022; inelegível por oito anos, até 2030. Recursos rejeitados em 2 de junho."
+  },
+  {
+   "rotulo": "Operações da PF (maio de 2026)",
+   "valor": "15/05: Operação Sem Refino, que mira Castro e o empresário Ricardo Magro (Grupo Refit). 26/05: nova operação, em que a PF aponta transferência de cerca de R$ 3 bi ao conglomerado de Vorcaro, relatada no STF."
+  },
+  {
+   "rotulo": "Político",
+   "valor": "Em 28/05 anunciou a desistência da pré-candidatura ao Senado. Sem denúncia nas fontes consultadas."
+  }
+ ],
+ "pessoas": [
+  "Cláudio Castro",
+  "Ricardo Magro",
+  "Daniel Vorcaro"
+ ],
+ "marcos": [
+  {
+   "data": "2026-03-24",
+   "tipo": "decisão",
+   "texto": "O TSE condena Cláudio Castro por abuso de poder político e econômico na campanha de 2022 e o torna inelegível até 2030.",
+   "fonte": "Diario de Pernambuco",
+   "url": "https://www.diariodepernambuco.com.br/politica/2026/03/11710690-tse-condena-claudio-castro-e-ex-governador-fica-inelegivel-ate-2030.html"
+  },
+  {
+   "data": "2026-05-15",
+   "tipo": "investigação",
+   "texto": "A PF faz a Operação Sem Refino, que mira Castro e Ricardo Magro, controlador do Grupo Refit, acusado de sonegar bilhões em impostos.",
+   "fonte": "Folha de Pernambuco",
+   "url": "https://www.folhape.com.br/politica/aliados-veem-candidatura-de-castro-ao-senado-como-inviavel-apos-nova/489840/"
+  },
+  {
+   "data": "2026-05-28",
+   "tipo": "reportagem",
+   "texto": "Inelegível e na mira da PF, Castro desiste da candidatura ao Senado.",
+   "fonte": "Brasil de Fato",
+   "url": "https://www.brasildefato.com.br/2026/05/28/inelegivel-por-decisao-do-tse-e-na-mira-da-pf-claudio-castro-desiste-da-candidatura-ao-senado/"
+  },
+  {
+   "data": "2026-06-02",
+   "tipo": "decisão",
+   "texto": "O TSE rejeita os recursos e mantém a inelegibilidade.",
+   "fonte": "Itatiaia",
+   "url": "https://www.itatiaia.com.br/politica/tse-rejeita-recursos-e-mantem-claudio-castro-inelegivel/"
+  }
+ ],
+ "consultas": [
+  "Cláudio Castro Refit Operação Sem Refino",
+  "Cláudio Castro Vorcaro PF",
+  "Cláudio Castro inelegível TSE"
+ ],
+ "lacunas": [
+  "Denúncia e andamento no STF da investigação sobre os R$ 3 bi.",
+  "A defesa de Castro e a de Ricardo Magro não foram localizadas em detalhe.",
+  "Um trecho de página cita novo julgamento no TSE em 4 de novembro; não consegui confirmar."
+ ]
+}

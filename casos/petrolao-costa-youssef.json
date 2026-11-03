@@ -1,0 +1,67 @@
+{
+ "id": "petrolao-costa-youssef",
+ "titulo": "Petrolão: a delação de Paulo Roberto Costa e Alberto Youssef",
+ "tipo": "politico",
+ "ordem": 46,
+ "valor": {
+  "bi": 6.2,
+  "rotulo": "de perda que a própria Petrobras reconheceu em propinas (estimativas de desvio variam de R$ 6 bi a R$ 21 bi, segundo a fonte)"
+ },
+ "resumo": "A delação do ex-diretor da Petrobras Paulo Roberto Costa e do doleiro Alberto Youssef, homologadas pelo STF em 2014, abriu o Petrolão: propina de 1% a 3% dos contratos da Petrobras, repassada a políticos e partidos. As estimativas de prejuízo variam muito: a Petrobras contabilizou R$ 6,2 bi só de propinas, e o MPF chegou a falar em R$ 21 bi de desvios.",
+ "situacao": [
+  {
+   "rotulo": "Delações",
+   "valor": "Costa foi o primeiro delator da Lava Jato e morreu aos 68 anos; Youssef teve a delação homologada pelo STF."
+  },
+  {
+   "rotulo": "Valores",
+   "valor": "Perda de R$ 6,2 bi só com propinas (contabilidade da Petrobras); MPF estimou R$ 21 bi de desvios; uma consultoria falou em R$ 88,6 bi, número que o próprio Costa chamou de equivocado."
+  },
+  {
+   "rotulo": "Taxas de propina",
+   "valor": "A denúncia fala em 1% dos contratos; a delação de Costa descreve 3% por contrato. As duas são alegações de peças diferentes."
+  }
+ ],
+ "pessoas": [
+  "Paulo Roberto Costa",
+  "Alberto Youssef"
+ ],
+ "marcos": [
+  {
+   "data": "2014",
+   "tipo": "decisão",
+   "texto": "O STF homologa a delação premiada de Alberto Youssef na Lava Jato.",
+   "fonte": "Exame",
+   "url": "https://exame.com/brasil/stf-homologa-delacao-premiada-de-youssef-na-lava-jato"
+  },
+  {
+   "data": "2015",
+   "tipo": "reportagem",
+   "texto": "O MPF estima em R$ 21 bilhões os desvios da Lava Jato.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticia/48811/lava-jato-mpf-estima-desvios-em-r-21-bilhoes"
+  },
+  {
+   "data": "2015",
+   "tipo": "defesa",
+   "texto": "O delator Paulo Roberto Costa diz que o prejuízo com os desvios na Petrobras está superestimado.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/noticia/48688/prejuizo-com-desvios-na-petrobras-esta-superestimado-diz-delator"
+  },
+  {
+   "data": "2022",
+   "tipo": "reportagem",
+   "texto": "Morre aos 68 anos Paulo Roberto Costa, o primeiro delator da Lava Jato.",
+   "fonte": "InfoMoney",
+   "url": "https://www.infomoney.com.br/?p=1915055"
+  }
+ ],
+ "consultas": [
+  "Petrolão Paulo Roberto Costa delação",
+  "Lava Jato propina Petrobras prejuízo"
+ ],
+ "lacunas": [
+  "Estimativa oficial única do prejuízo: as fontes divergem.",
+  "Lista de políticos e partidos citados e o que cada um virou na Justiça (parte das ações foi anulada: veja o caso das anulações da Lava Jato)."
+ ]
+}

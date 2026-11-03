@@ -1,0 +1,45 @@
+{
+ "id": "carne-fraca",
+ "titulo": "Operação Carne Fraca (JBS, BRF e fiscais do Ministério da Agricultura)",
+ "tipo": "politico",
+ "ordem": 47,
+ "resumo": "Em março de 2017 a PF fez a Carne Fraca contra um esquema em que fiscais do Ministério da Agricultura recebiam propina para emitir certificados sanitários sem fiscalização. A imprensa citou JBS e BRF, que negam práticas irregulares. Em abril de 2017 o MPF no Paraná fez cinco denúncias contra 60 investigados. Não achei sentença final nas fontes.",
+ "situacao": [
+  {
+   "rotulo": "Investigação",
+   "valor": "PF: fiscais recebiam propina para certificados sanitários; frigoríficos teriam adulterado carne vencida."
+  },
+  {
+   "rotulo": "Processo",
+   "valor": "MPF-PR ofereceu 5 denúncias contra 60 investigados (abril de 2017). Desfecho: não verificado."
+  },
+  {
+   "rotulo": "Defesa",
+   "valor": "A JBS repudiou qualquer prática irregular em nota; juristas criticaram a operação e o balanço da PF."
+  }
+ ],
+ "pessoas": [],
+ "marcos": [
+  {
+   "data": "2017-03-17",
+   "tipo": "investigação",
+   "texto": "A PF deflagra a Carne Fraca: empresas maquiavam carne vencida e subornavam fiscais do Ministério da Agricultura.",
+   "fonte": "Agência Brasil",
+   "url": "https://agenciabrasil.ebc.com.br/geral/noticia/2017-03/empresas-maquiavam-carne-vencida-e-subornavam-fiscais-de-ministerio-diz-pf"
+  },
+  {
+   "data": "2017-03",
+   "tipo": "reportagem",
+   "texto": "A PF confirma que BRF e JBS articulavam fraudes fiscais com propina, segundo a reportagem.",
+   "fonte": "Exame",
+   "url": "https://exame.com/brasil/pf-confirma-que-brf-e-jbs-articulavam-fraudes-fiscais-com-propina"
+  }
+ ],
+ "consultas": [
+  "Operação Carne Fraca processo resultado",
+  "Carne Fraca condenação"
+ ],
+ "lacunas": [
+  "Sentenças e situação final dos 60 denunciados."
+ ]
+}

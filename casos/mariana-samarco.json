@@ -1,0 +1,57 @@
+{
+ "id": "mariana-samarco",
+ "titulo": "Mariana: o rompimento da barragem de Fundão e o acordo de R$ 170 bi",
+ "tipo": "politico",
+ "ordem": 42,
+ "valor": {
+  "bi": 170,
+  "rotulo": "do acordo de repactuação (R$ 100 bi novos em 20 anos + R$ 70 bi já gastos ou em obrigações da Samarco)"
+ },
+ "resumo": "O rompimento da barragem de Fundão (Samarco, controlada por Vale e BHP) matou 19 pessoas em 2015. Em 25 de outubro de 2024 o governo federal, ES, MG e municípios assinaram com as mineradoras um acordo de repactuação de R$ 170 bilhões: R$ 100 bi em dinheiro novo ao longo de 20 anos e R$ 70 bi de gastos já feitos e obrigações da Samarco. Em Londres, mais de 620 mil vítimas movem ação de R$ 230 bi contra a BHP.",
+ "situacao": [
+  {
+   "rotulo": "Acordo (25/10/2024)",
+   "valor": "R$ 170 bi: R$ 100 bi novos em 20 anos para União, estados e municípios; R$ 38 bi já desembolsados pela Fundação Renova (extinta); R$ 32 bi em obrigações da Samarco. Samarco é a principal responsável; Vale e BHP respondem subsidiariamente por 50% cada."
+  },
+  {
+   "rotulo": "Londres",
+   "valor": "Ação coletiva de mais de 620 mil vítimas pede R$ 230 bi à BHP, a maior ação ambiental coletiva da Justiça inglesa."
+  },
+  {
+   "rotulo": "Críticas",
+   "valor": "Organizações questionam que valores já pagos entrem na conta sem auditoria externa e que os atingidos não tenham participado."
+  }
+ ],
+ "pessoas": [],
+ "marcos": [
+  {
+   "data": "2024-10-25",
+   "tipo": "decisão",
+   "texto": "O poder público assina o acordo de repactuação de R$ 170 bilhões com Vale, Samarco e BHP.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/poder-infra/acordo-de-mariana-deve-totalizar-r-170-bilhoes-diz-vale/"
+  },
+  {
+   "data": "2024-11",
+   "tipo": "reportagem",
+   "texto": "Explicação ponto a ponto do acordo: quanto é dinheiro novo e como as empresas respondem.",
+   "fonte": "Brasil de Fato",
+   "url": "https://www.brasildefato.com.br/2024/11/05/entenda-o-que-e-o-acordo-de-repactuacao-para-reparar-os-danos-do-crime-da-samarco-em-mariana-mg"
+  },
+  {
+   "data": "2024-10",
+   "tipo": "reportagem",
+   "texto": "Processo paralelo na Inglaterra: mais de 620 mil vítimas pedem R$ 230 bi contra a BHP; o acordo poderia encerrar mais de cem ações no Brasil.",
+   "fonte": "Insurance Journal",
+   "url": "https://www.insurancejournal.com/news/international/2024/10/22/798143.htm"
+  }
+ ],
+ "consultas": [
+  "Mariana Samarco acordo repactuação",
+  "Samarco Vale BHP ação criminal Mariana"
+ ],
+ "lacunas": [
+  "Andamento da ação penal contra pessoas ligadas às empresas: as fontes não trazem.",
+  "Auditoria independente de quanto do acordo já havia sido gasto."
+ ]
+}
