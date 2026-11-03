@@ -1,0 +1,66 @@
+{
+ "id": "greenfield",
+ "titulo": "Operação Greenfield: fundos de pensão (Funcef, Petros, Previ)",
+ "tipo": "politico",
+ "ordem": 37,
+ "valor": {
+  "bi": 5.5,
+  "rotulo": "de prejuízo estimado no FIP Sondas (Sete Brasil), segundo a denúncia; a força-tarefa pediu reparação de cerca de R$ 16 bi"
+ },
+ "resumo": "A PF deflagrou em 2016 a Greenfield sobre gestão temerária e fraudulenta em Funcef, Petros, Previ e Postalis, com perdas que podem passar de R$ 8 bi. A força-tarefa denunciou 29 ex-executivos pelo FIP Sondas (prejuízo estimado em R$ 5,5 bi) e 14 ex-diretores da Funcef (R$ 402 mi). Uma reportagem de balanço de oito anos diz que não houve condenação. É o precedente do risco que o Radar monitora em previdência de servidores.",
+ "situacao": [
+  {
+   "rotulo": "FIP Sondas",
+   "valor": "29 ex-executivos denunciados; ação penal aberta pela 10ª Vara do DF; prejuízo estimado em R$ 5,5 bi; pedido de reparação de ~R$ 16 bi."
+  },
+  {
+   "rotulo": "Funcef",
+   "valor": "Vaccari e outros 13 ex-diretores viraram réus (prejuízo estimado de R$ 402 mi)."
+  },
+  {
+   "rotulo": "Resultado",
+   "valor": "Segundo a Carta Capital, oito anos depois, nenhuma condenação. A defesa nega irregularidade; a Previ diz que seguiu as normas."
+  }
+ ],
+ "pessoas": [
+  "João Vaccari Neto"
+ ],
+ "marcos": [
+  {
+   "data": "2016-09",
+   "tipo": "investigação",
+   "texto": "A PF deflagra a Operação Greenfield sobre fraudes em quatro grandes fundos de pensão.",
+   "fonte": "Legismap",
+   "url": "https://legismap.com.br/conteudos/artigos-e-noticias/pf-investiga-fraudes-nos-quatro-maiores-fundos-de-pensao-do-pais"
+  },
+  {
+   "data": "2017-05",
+   "tipo": "decisão",
+   "texto": "Vaccari e mais 13 ex-diretores da Funcef se tornam réus.",
+   "fonte": "Estado de Minas",
+   "url": "https://www.em.com.br/app/noticia/politica/2017/05/29/interna_politica,872596/amp.html"
+  },
+  {
+   "data": "2017-12-29",
+   "tipo": "investigação",
+   "texto": "A força-tarefa denuncia 29 ex-executivos de Petros, Funcef, Previ e Valia por gestão temerária no FIP Sondas, com prejuízo estimado de R$ 5,5 bi; o juiz abre a ação penal.",
+   "fonte": "Crusoé",
+   "url": "https://crusoe.com.br/?p=54755"
+  },
+  {
+   "data": "2024",
+   "tipo": "reportagem",
+   "texto": "Balanço de oito anos: a investigação redundou em frágeis peças de acusação e em nenhuma condenação, segundo a Carta Capital.",
+   "fonte": "Carta Capital",
+   "url": "https://www.cartacapital.com.br/?p=464302"
+  }
+ ],
+ "consultas": [
+  "Operação Greenfield fundos de pensão",
+  "Funcef Petros Previ fraude investimento"
+ ],
+ "lacunas": [
+  "Estado atual das ações penais.",
+  "A data exata da denúncia do FIP Sondas (a reportagem cita 29 de dezembro)."
+ ]
+}

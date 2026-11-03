@@ -1,0 +1,50 @@
+{
+ "id": "flordelis",
+ "titulo": "Flordelis: condenação pela morte do marido",
+ "tipo": "politico",
+ "ordem": 33,
+ "resumo": "A ex-deputada Flordelis de Souza foi condenada pelo júri de Niterói, em 13 de novembro de 2022, a 50 anos e 28 dias de prisão como mandante do assassinato do marido, o pastor Anderson do Carmo, morto a tiros em 2019. A pena foi reduzida em 28 dias em recurso, sem novo júri.",
+ "situacao": [
+  {
+   "rotulo": "Condenação",
+   "valor": "50 anos e 28 dias por homicídio qualificado (mandante); Simone dos Santos Rodrigues, filha do casal, 31 anos e 4 meses."
+  },
+  {
+   "rotulo": "Recurso",
+   "valor": "O TJ-RJ reduziu a pena em 28 dias e negou novo júri; a defesa alegava nulidades. Situação posterior: não verificada."
+  }
+ ],
+ "pessoas": [
+  "Flordelis"
+ ],
+ "marcos": [
+  {
+   "data": "2019-06-16",
+   "tipo": "investigação",
+   "texto": "O pastor Anderson do Carmo é assassinado com mais de 30 tiros na garagem de casa, em Niterói.",
+   "fonte": "Brasil de Fato",
+   "url": "https://www.brasildefato.com.br/2022/11/13/flordelis-e-condenada-a-50-anos-e-28-dias-de-prisao-pelo-assassinato-do-marido/"
+  },
+  {
+   "data": "2022-11-13",
+   "tipo": "decisão",
+   "texto": "Flordelis é condenada a 50 anos e 28 dias de prisão pelo assassinato do marido.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/justica/flordelis-e-condenada-a-50-anos-de-prisao-por-morte-do-marido/"
+  },
+  {
+   "data": "2023",
+   "tipo": "decisão",
+   "texto": "O TJ-RJ diminui a pena em 28 dias e rejeita novo júri; a defesa afirma que vai recorrer.",
+   "fonte": "Folha de Pernambuco",
+   "url": "https://www.folhape.com.br/politica/justica-do-rio-diminui-pena-de-flordelis-em-28-dias-defesa-vai/327740/"
+  }
+ ],
+ "consultas": [
+  "Flordelis condenada recurso",
+  "Flordelis prisão situação"
+ ],
+ "lacunas": [
+  "Recursos aos tribunais superiores e situação atual de prisão."
+ ]
+}

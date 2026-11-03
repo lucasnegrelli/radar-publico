@@ -1,0 +1,70 @@
+{
+ "id": "valdemar-emendas",
+ "titulo": "Valdemar Costa Neto e as emendas paralelas (Operação Transparência)",
+ "tipo": "politico",
+ "ordem": 30,
+ "valor": {
+  "bi": 0.119,
+  "rotulo": "em bens bloqueados, equivalente às 21 emendas que a PF atribui a ele"
+ },
+ "resumo": "Em 10 de julho de 2026 o ministro Flávio Dino mandou bloquear até R$ 119,2 milhões em bens do presidente do PL, Valdemar Costa Neto, em desdobramento da Operação Transparência (dezembro de 2025). Segundo a PF, ele teria indicado 21 emendas por planilhas enviadas aos ministérios em nome de deputados. Ele nega.",
+ "situacao": [
+  {
+   "rotulo": "Decisão",
+   "valor": "Indisponibilidade de bens de R$ 119.216.703,15 e suspensão da execução das despesas ligadas às emendas apontadas (STF, 10/07/2026). Medida cautelar, para garantir eventual ressarcimento."
+  },
+  {
+   "rotulo": "Segundo a PF",
+   "valor": "21 emendas, somando R$ 119 milhões, registradas com deputados como falsos solicitantes; três servidores da Câmara teriam organizado as planilhas. Valdemar não tem mandato e, por isso, não poderia indicar emendas."
+  },
+  {
+   "rotulo": "Defesa",
+   "valor": "Fala em 'premissas frágeis e inferências subjetivas' e diz que não tem os R$ 119 milhões: seria o valor total das emendas investigadas."
+  }
+ ],
+ "pessoas": [
+  "Valdemar Costa Neto",
+  "Flávio Dino"
+ ],
+ "marcos": [
+  {
+   "data": "2025-12",
+   "tipo": "investigação",
+   "texto": "A PF deflagra a Operação Transparência sobre irregularidades na destinação de emendas parlamentares.",
+   "fonte": "Gazeta SP",
+   "url": "https://www.gazetasp.com.br/politica/dino-bloqueia-119-milhoes-valdemar-costa-neto/"
+  },
+  {
+   "data": "2026-07-10",
+   "tipo": "decisão",
+   "texto": "Dino determina a indisponibilidade de bens de Valdemar até R$ 119,2 milhões e manda o presidente da Câmara apresentar documentos sobre as emendas.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticia/120388/dino-manda-bloquear-r-119-milhoes-de-valdemar-por-suspeita-em-emendas"
+  },
+  {
+   "data": "2026-07-11",
+   "tipo": "defesa",
+   "texto": "Valdemar nega ter R$ 119 milhões bloqueados e diz que o valor corresponde ao total das emendas investigadas.",
+   "fonte": "Metrópoles",
+   "url": "https://www.metropoles.com/brasil/valdemar-nega-ter-r-119-milhoes-bloqueados-por-dino"
+  },
+  {
+   "data": "2026-07",
+   "tipo": "investigação",
+   "texto": "Dino suspeita que Valdemar direcionou emendas de forma irregular, segundo reportagem.",
+   "fonte": "Gazeta do Povo",
+   "url": "https://www.gazetadopovo.com.br/republica/dino-suspeita-valdemar-direcionou-emendas-irregularmente/"
+  }
+ ],
+ "consultas": [
+  "Valdemar Costa Neto emendas Dino bloqueio",
+  "Operação Transparência emendas PF"
+ ],
+ "lacunas": [
+  "Denúncia e andamento da investigação.",
+  "Quais ministérios e quais municípios receberam as 21 emendas (o Radar pode cruzar com a aba Cidade quando houver lista pública)."
+ ],
+ "alertas_regras": [
+  "R09"
+ ]
+}

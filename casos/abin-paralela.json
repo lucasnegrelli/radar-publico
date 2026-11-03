@@ -1,0 +1,59 @@
+{
+ "id": "abin-paralela",
+ "titulo": "Abin paralela: espionagem ilegal",
+ "tipo": "politico",
+ "ordem": 35,
+ "resumo": "Em junho de 2025 a PF indiciou Jair Bolsonaro, Carlos Bolsonaro e o deputado Alexandre Ramagem no inquérito da 'Abin paralela', que apura uso da agência para espionagem ilegal. A PGR sugeriu enviar o caso à primeira instância. Uma reportagem de julho de 2026, de fonte única, diz que Moraes arquivou o inquérito contra Bolsonaro e Ramagem e que Carlos responderá na primeira instância.",
+ "situacao": [
+  {
+   "rotulo": "Indiciamento",
+   "valor": "PF, junho de 2025: Bolsonaro, Carlos Bolsonaro, Ramagem e outros, por espionagem ilegal. Carlos diz que é motivação política ('PF do Lula')."
+  },
+  {
+   "rotulo": "Arquivamento",
+   "valor": "Segundo uma reportagem de julho de 2026 (fonte única, a confirmar), Moraes arquivou o inquérito contra Bolsonaro e Ramagem; Carlos responderia na primeira instância."
+  }
+ ],
+ "pessoas": [
+  "Carlos Bolsonaro",
+  "Alexandre Ramagem",
+  "Jair Messias Bolsonaro"
+ ],
+ "marcos": [
+  {
+   "data": "2025-06-18",
+   "tipo": "investigação",
+   "texto": "A PF conclui o inquérito da Abin paralela e indicia Carlos Bolsonaro e Ramagem; Jair Bolsonaro também é indiciado.",
+   "fonte": "O Povo",
+   "url": "https://mais.opovo.com.br/jornal/politica/2025/06/18/pf-conclui-inquerito-da-abin-paralela-e-indicia-carlos-bolsonaro-e-ramagem.html"
+  },
+  {
+   "data": "2025-06",
+   "tipo": "defesa",
+   "texto": "Carlos Bolsonaro diz que o indiciamento pela 'PF do Lula' visa 2026.",
+   "fonte": "InfoMoney",
+   "url": "https://www.infomoney.com.br/?p=2913065"
+  },
+  {
+   "data": "2025",
+   "tipo": "decisão",
+   "texto": "A PGR pede que Moraes envie o caso da Abin paralela à primeira instância (fatos remanescentes, sem denúncia).",
+   "fonte": "SBT News",
+   "url": "https://sbtnews.sbt.com.br/noticia/politica/pgr-pede-que-moraes-envie-caso-da-abin-paralela-a-1-instancia"
+  },
+  {
+   "data": "2026-07",
+   "tipo": "decisão",
+   "texto": "Reportagem (fonte única) afirma que Moraes arquivou o inquérito contra Bolsonaro e Ramagem.",
+   "fonte": "Sou Brasília",
+   "url": "https://soubrasilia.com/?p=8835"
+  }
+ ],
+ "consultas": [
+  "Abin paralela Carlos Bolsonaro Ramagem",
+  "Abin paralela arquivamento Moraes"
+ ],
+ "lacunas": [
+  "Confirmar o arquivamento em outras fontes e a situação de Carlos Bolsonaro na primeira instância."
+ ]
+}

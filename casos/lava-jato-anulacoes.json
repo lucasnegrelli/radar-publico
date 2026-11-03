@@ -1,0 +1,64 @@
+{
+ "id": "lava-jato-anulacoes",
+ "titulo": "Lava Jato: anulações no STF (Odebrecht, OAS e Palocci)",
+ "tipo": "politico",
+ "ordem": 31,
+ "resumo": "Decisões do STF anularam condenações e provas de executivos e políticos da Lava Jato, em geral por parcialidade do ex-juiz Sergio Moro ou por incompetência da Justiça de Curitiba. Em 2024 Toffoli anulou condenações de Marcelo Odebrecht e Léo Pinheiro (OAS); em 2025 a Segunda Turma anulou as condenações de Antonio Palocci. Os acordos de leniência recuperaram bilhões aos cofres públicos, e o destino desses acordos é disputado.",
+ "situacao": [
+  {
+   "rotulo": "Marcelo Odebrecht e Léo Pinheiro",
+   "valor": "Condenações anuladas por Toffoli em 2024 (parcialidade de Moro e jurisdição incorreta). Reportagens citam também a anulação de multas de R$ 8,5 bilhões da Novonor."
+  },
+  {
+   "rotulo": "Antonio Palocci",
+   "valor": "Segunda Turma (Nunes Marques desempatou) anulou as condenações em 2025; a delação dele segue válida."
+  },
+  {
+   "rotulo": "Dinheiro recuperado",
+   "valor": "Petrobras informou ~R$ 6,17 bi recuperados até 2021 (leniências, repatriações e delações); balanços do Senado falam em compromisso de devolução de R$ 22 bi em 20 anos. Anular acordos pode obrigar a União a devolver cerca de R$ 5 bi, tese ainda sem consenso."
+  }
+ ],
+ "pessoas": [
+  "Marcelo Odebrecht",
+  "Léo Pinheiro",
+  "Antonio Palocci"
+ ],
+ "marcos": [
+  {
+   "data": "2024",
+   "tipo": "decisão",
+   "texto": "Toffoli anula as condenações do ex-presidente da OAS Léo Pinheiro e de Marcelo Odebrecht, acolhendo a tese de ilegalidades processuais e parcialidade de Moro.",
+   "fonte": "Revista Oeste",
+   "url": "https://revistaoeste.com/imprensa/emo-globo-em-chama-decisoes-de-toffoli-de-desmonte-da-lava-jato/"
+  },
+  {
+   "data": "2024-05",
+   "tipo": "reportagem",
+   "texto": "Balanço aponta o total devolvido aos cofres a partir da Lava Jato (R$ 4,3 bi segundo o jornal) e as anulações de multas da Novonor.",
+   "fonte": "Correio Braziliense",
+   "url": "https://edicao.correiobraziliense.com.br/correiobraziliense/2024/05/25/100636/pdf/A02-POL-2505-DIG.pdf"
+  },
+  {
+   "data": "2024-09",
+   "tipo": "reportagem",
+   "texto": "Anulação de acordos da Lava Jato é debatida no Senado.",
+   "fonte": "Senado Notícias",
+   "url": "https://www12.senado.leg.br/noticias/materias/2024/09/18/girao-anulacao-de-acordos-da-lava-jato-revela-calamidade-moral-no-brasil"
+  },
+  {
+   "data": "2025-08",
+   "tipo": "decisão",
+   "texto": "Nunes Marques desempata a Segunda Turma e anula as condenações de Antonio Palocci; a delação dele permanece válida.",
+   "fonte": "Portal de Prefeitura",
+   "url": "https://portaldeprefeitura.com.br/bastidores-da-politica/stf/lava-jato-nunes-marques-desempata-anula-condenacoes-palocci/601400/"
+  }
+ ],
+ "consultas": [
+  "Lava Jato anulações STF Toffoli",
+  "acordos de leniência Lava Jato Odebrecht devolução"
+ ],
+ "lacunas": [
+  "Total consolidado do que foi devolvido e do que pode ter de ser restituído.",
+  "Situação de cada ação penal remetida a outras varas depois das anulações."
+ ]
+}

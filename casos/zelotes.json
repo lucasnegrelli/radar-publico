@@ -1,0 +1,50 @@
+{
+ "id": "zelotes",
+ "titulo": "Operação Zelotes: fraudes no Carf e compra de medidas provisórias",
+ "tipo": "politico",
+ "ordem": 36,
+ "resumo": "A Zelotes começou apurando fraudes em julgamentos do Carf (tribunal da Receita sobre multas fiscais) e passou a investigar um suposto esquema de venda de medidas provisórias. Houve uma condenação em 2016 e absolvições; o MPF denunciou 16 pessoas e cobrou R$ 879 milhões. Procurador do caso disse que a operação não alcançou seu potencial máximo por falta de apoio da PGR.",
+ "situacao": [
+  {
+   "rotulo": "Processos",
+   "valor": "Primeira condenação em março de 2016 (4 anos por extorsão). Em um caso, o lobista Mauro Marcondes, condenado a 11 anos e 8 meses por compra de MPs, foi absolvido em tribunal por prescrição do crime."
+  },
+  {
+   "rotulo": "Valores",
+   "valor": "MPF denunciou 16 e cobrou R$ 879 milhões."
+  }
+ ],
+ "pessoas": [
+  "Mauro Marcondes"
+ ],
+ "marcos": [
+  {
+   "data": "2016-03",
+   "tipo": "decisão",
+   "texto": "O juiz Vallisney de Souza Oliveira condena o primeiro réu da Zelotes a 4 anos de prisão.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticia/42517/juiz-federal-condena-primeiro-reu-da-operacao-zelotes"
+  },
+  {
+   "data": "2017",
+   "tipo": "investigação",
+   "texto": "O MPF denuncia 16 pessoas e cobra R$ 879 milhões na Zelotes.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticia/47080/mpf-denuncia-16-e-cobra-r-879-milhoes-na-zelotes"
+  },
+  {
+   "data": "2017",
+   "tipo": "reportagem",
+   "texto": "Procurador afirma que, sem apoio da PGR, a Zelotes não alcançou o potencial máximo.",
+   "fonte": "Folha Vitória",
+   "url": "https://www.folhavitoria.com.br/politica/sem-apoio-da-pgr-zelotes-nao-alcancou-potencial-maximo-diz-procurador/"
+  }
+ ],
+ "consultas": [
+  "Operação Zelotes desfecho processos",
+  "Zelotes Carf medidas provisórias julgamento"
+ ],
+ "lacunas": [
+  "Desfecho final das ações sobre a venda de MPs; as fontes consultadas são de 2016 e 2017."
+ ]
+}

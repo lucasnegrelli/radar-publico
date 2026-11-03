@@ -1,0 +1,50 @@
+{
+ "id": "witzel",
+ "titulo": "Wilson Witzel: hospitais de campanha e impeachment",
+ "tipo": "politico",
+ "ordem": 34,
+ "resumo": "O governador do Rio, Wilson Witzel, foi afastado pelo STJ em agosto de 2020 por suspeita de fraude na saúde (hospitais de campanha da Covid) e sofreu impeachment em abril de 2021, com perda de direitos políticos por 5 anos. O STJ recebeu denúncia por corrupção passiva e lavagem de dinheiro em fevereiro de 2021.",
+ "situacao": [
+  {
+   "rotulo": "Impeachment",
+   "valor": "Tribunal Misto votou por unanimidade o afastamento definitivo, com suspensão de direitos políticos por 5 anos."
+  },
+  {
+   "rotulo": "Ação penal",
+   "valor": "Réu no STJ (denúncia recebida em 11/02/2021) por corrupção passiva e lavagem. Não encontrei sentença final nas fontes consultadas."
+  }
+ ],
+ "pessoas": [
+  "Wilson Witzel"
+ ],
+ "marcos": [
+  {
+   "data": "2020-08-28",
+   "tipo": "decisão",
+   "texto": "O STJ afasta Witzel do governo do Rio por 180 dias, com a prisão de investigados por irregularidades na saúde.",
+   "fonte": "Bahia Notícias",
+   "url": "https://www.bahianoticias.com.br/noticia/252134-stj-determina-afastamento-imediato-de-witzel-no-rio-e-prisao-de-pastor-everaldo"
+  },
+  {
+   "data": "2021-02-11",
+   "tipo": "decisão",
+   "texto": "A Corte Especial do STJ recebe por unanimidade a denúncia contra Witzel; ele vira réu.",
+   "fonte": "A Gazeta",
+   "url": "https://www.agazeta.com.br/brasil/stj-aceita-por-unanimidade-denuncia-contra-witzel-que-vira-reu-0221"
+  },
+  {
+   "data": "2021-04",
+   "tipo": "decisão",
+   "texto": "O Tribunal Especial Misto aprova o impeachment de Witzel por 10 a 0 e suspende seus direitos políticos por 5 anos.",
+   "fonte": "Folha de Pernambuco",
+   "url": "https://www.folhape.com.br/politica/por-10-votos-a-0-tribunal-aprova-impeachment-de-witzel-do-governo-do/182054/"
+  }
+ ],
+ "consultas": [
+  "Wilson Witzel STJ ação penal",
+  "Witzel Iabas hospitais de campanha"
+ ],
+ "lacunas": [
+  "Desfecho da ação penal e das outras duas denúncias da PGR."
+ ]
+}

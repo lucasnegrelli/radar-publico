@@ -1,0 +1,56 @@
+{
+ "id": "pandora-guedes",
+ "titulo": "Pandora Papers: offshores de Paulo Guedes e Roberto Campos Neto",
+ "tipo": "politico",
+ "ordem": 32,
+ "resumo": "Em outubro de 2021 o Pandora Papers revelou offshores de Paulo Guedes (então ministro da Economia) e Roberto Campos Neto (então presidente do Banco Central). A PGR arquivou as apurações preliminares e Toffoli arquivou os pedidos de investigação no STF. Os dois dizem que as empresas foram informadas à Receita e ao Banco Central.",
+ "situacao": [
+  {
+   "rotulo": "Guedes",
+   "valor": "Mantinha cerca de US$ 9,5 milhões desde 2014 numa offshore nas Ilhas Virgens Britânicas, segundo reportagem."
+  },
+  {
+   "rotulo": "Campos Neto",
+   "valor": "Três offshores, nas Bahamas e nas Ilhas Virgens Britânicas."
+  },
+  {
+   "rotulo": "Decisões",
+   "valor": "PGR arquivou duas apurações preliminares; o ministro Toffoli (STF) arquivou pedido do PDT e do senador Randolfe Rodrigues. A defesa vê reconhecimento de transparência e ausência de conflito de interesse."
+  }
+ ],
+ "pessoas": [
+  "Paulo Guedes",
+  "Roberto Campos Neto"
+ ],
+ "marcos": [
+  {
+   "data": "2021-10",
+   "tipo": "reportagem",
+   "texto": "O Pandora Papers revela offshores de Guedes e Campos Neto.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/pandora-papers/pandora-papers-relembre-o-impacto-da-investigacao-em-2021/"
+  },
+  {
+   "data": "2021-10",
+   "tipo": "decisão",
+   "texto": "Toffoli arquiva pedidos para investigar Guedes e Campos Neto por offshores.",
+   "fonte": "Poder360",
+   "url": "https://poder360.com.br/pandora-papers/toffoli-arquiva-pedidos-para-investigar-guedes-e-campos-neto-por-offshores/"
+  },
+  {
+   "data": "2021",
+   "tipo": "decisão",
+   "texto": "A PGR arquiva as apurações preliminares sobre as offshores dos dois.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/governo/pgr-arquiva-apuracoes-preliminares-sobre-offshores-de-guedes-e-campos-neto/"
+  }
+ ],
+ "consultas": [
+  "Pandora Papers Guedes Campos Neto offshore",
+  "Pandora Papers brasileiros offshore"
+ ],
+ "lacunas": [
+  "Fundamentos jurídicos de cada arquivamento: as fontes não detalham.",
+  "Ter empresa offshore não é ilegal por si só; o debate é sobre conflito de interesse em cargo público."
+ ]
+}
