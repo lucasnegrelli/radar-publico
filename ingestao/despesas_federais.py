@@ -24,6 +24,8 @@ for m in meses:
     ok.append(ym)
     if len(ok) >= 12: break
 print("meses:", ok, flush=True)
+if not ok:
+    print("Portal indisponível agora: mantém os alertas R11 da última rodada (data-publica/alertas_extra_r11.json)"); raise SystemExit(0)
 
 c = duckdb.connect()
 for v, f in (("ceis", "ceis"), ("cnep", "cnep")):
