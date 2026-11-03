@@ -19,7 +19,8 @@ const SIT = (s, seg) => {
 };
 const ORIGEM = (o) => (o || "").replace(/^Recursos de /i, "").replace(/^Recursos /i, "").replace(/^\w/, (c) => c.toUpperCase());
 
-export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir, fechar }) {
+export async function abrirPessoa(id, ctx) {
+  const { $, esc, brlCurto, alertas, nomes, abrir, fechar } = ctx;
   const el = $("detalhe");
   el.hidden = false;
   el.style.setProperty("--c", "#00ffa6");
@@ -94,6 +95,7 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     <div class="dos" style="--c:${c}"><span>FICHA · PESSOA</span><span class="carimbo">DADOS ABERTOS</span></div>
     <div class="cab-p">${cm && cm.foto ? `<img class="foto-p" src="${esc(cm.foto)}" alt="" loading="lazy">` : ""}<h2 style="--c:${c}">${esc(p.n)}</h2></div>
     <div class="sub2 mono">${p.u && p.u !== p.n ? "“" + esc(p.u) + "” · " : ""}${esc(alvoTitulo)}${p.nasc ? " · nasc. " + esc(p.nasc) : ""}${p.ocup ? " · " + esc(p.ocup.toLowerCase()) : ""}</div>
+    <div class="acoes" style="margin:8px 0"><button class="botao" id="b-inv-p">+ Minha investigação</button></div>
     ${ex.w ? `<div class="quem"><b>Quem é</b> ${esc(ex.w.x)} <a href="${esc(ex.w.u)}" target="_blank" rel="noopener">Wikipédia</a> <span class="sub2">(CC BY-SA)</span></div>` : ""}
     ${pontos ? `<h4>Pontos de atenção</h4><ul class="check pessoa-pontos">${pontos}</ul>` : '<div class="manchete" style="--c:' + c + '">Nenhum ponto de atenção apareceu nos cruzamentos feitos. Isso não significa que não exista; significa que estes dados abertos não mostram.</div>'}
     <h4>Candidaturas</h4><table class="tbl"><tbody>${cand || '<tr><td class="sub2">Sem candidatura nos dados de 2018, 2022 e 2024.</td></tr>'}</tbody></table>
@@ -111,5 +113,6 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     <p class="aviso">Ficha montada só com dados abertos, sem avaliação de conduta. Doar, receber doação, ter patrimônio e contratar fornecedores é normal em campanha; o Radar só mostra onde vale olhar. Pessoa física aparece com nome abreviado. Pessoas com o mesmo nome podem ser confundidas: confira a data de nascimento.</p>`;
   el.querySelector(".fechar").onclick = () => { el.hidden = true; history.replaceState(null, "", location.pathname); };
   el.querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
+  const bi = $("b-inv-p"); if (bi) bi.onclick = () => { if (ctx.invAdd) ctx.invAdd({ t: "p", id: p.id, nome: p.n }); bi.textContent = "Adicionada ✓"; };
   el.scrollTop = 0;
 }

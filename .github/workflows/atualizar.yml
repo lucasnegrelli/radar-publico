@@ -85,6 +85,8 @@ jobs:
         run: python ingestao/offshore.py || true
       - name: Fichas de pessoa
         run: python ingestao/pessoas.py
+      - name: Fichas de empresa (bancada de investigação)
+        run: python ingestao/empresas.py
       - name: Pessoas mais conhecidas (Wikipédia e manchetes)
         if: ${{ inputs.pular_extras != 'sim' }}
         run: python ingestao/pessoas_extras.py 2500 || true

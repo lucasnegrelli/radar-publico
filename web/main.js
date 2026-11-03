@@ -3,6 +3,7 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import { abrirPessoa } from "./pessoa.js";
+import { abrirEmpresa, montarInvestigar, importaDoHash, adicionaInv } from "./investigar.js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import { MapboxOverlay } from "@deck.gl/mapbox";
@@ -564,6 +565,7 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
   if (b.dataset.aba === "fichas") carregarFichas();
   if (b.dataset.aba === "cidade") montarCidade();
+  if (b.dataset.aba === "investigar" && !$("aba-investigar").dataset.ok) { $("aba-investigar").dataset.ok = "1"; montarInvestigar(CTX_P); }
   if (b.dataset.aba === "justica") montarJustica();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
@@ -624,7 +626,7 @@ if (map.isStyleLoaded()) iniciarMapa();
 map.on("load", iniciarMapa);
 map.on("styledata", () => { if (map.isStyleLoaded()) iniciarMapa(); });
 
-if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(location.hash.slice(1)); if (h.startsWith("p-")) abrirPessoa(h.slice(2), CTX_P); else abrir(h); }, 1800);
+if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(location.hash.slice(1)); if (h.startsWith("p-")) abrirPessoa(h.slice(2), CTX_P); else if (h.startsWith("e-")) abrirEmpresa(h.slice(2), CTX_P); else if (h.startsWith("inv=")) { if (importaDoHash()) document.querySelector('[data-aba="investigar"]').click(); } else abrir(h); }, 1800);
 
 
 // =====================================================================
@@ -675,7 +677,7 @@ function tabificar() {
 { const _abrir = abrir; abrir = function (id) { _abrir(id); tabificar(); }; }
 
 // ----- busca global (Ctrl+K) -----
-const CTX_P = { $, esc, brlCurto, get alertas() { return alertas; }, nomes, abrir: (id) => abrir(id) };
+const CTX_P = { $, esc, brlCurto, get alertas() { return alertas; }, nomes, abrir: (id) => abrir(id), abrirPessoa: (id) => abrirPessoa(id, CTX_P), invAdd: (i) => { adicionaInv(i); if (CTX_P.onInv) CTX_P.onInv(); } };
 const paleta = document.createElement("div"); paleta.id = "paleta";
 paleta.innerHTML = '<div class="caixa-p"><input id="pal-in" placeholder="Buscar político, empresa, CNPJ, cidade ou caso... (ex.: Lula, Bolsonaro)" autocomplete="off"><div class="res" id="pal-res"></div></div>';
 document.body.appendChild(paleta);
