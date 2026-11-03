@@ -1,4 +1,5 @@
 import "@fontsource-variable/inter";
+import "@fontsource-variable/space-grotesk";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import { abrirPessoa } from "./pessoa.js";
@@ -19,7 +20,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 // ---------- formatação ----------
 const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const dt = (s) => { const [a, m, d] = s.split("-").map(Number); return { a, m, d }; };
-const data = (s) => { const x = dt(s); return `${x.d} ${MES[x.m - 1]} ${x.a}`; };
+const data = (s) => { if (!s) return "data não informada"; const x = dt(s); return `${x.d} ${MES[x.m - 1]} ${x.a}`; };
 function periodo(a, b) {
   const x = dt(a), y = dt(b);
   if (a === b) return `em ${data(a)}`;
@@ -115,13 +116,14 @@ function checagem(a) {
 
 // ---------- mapa ----------
 const MAPA_BOUNDS = [[-75, -34.5], [-33, 5.6]];
-const pad = () => ({ top: 24, bottom: 24, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
+const CEL = () => window.innerWidth <= 820;
+const pad = () => (CEL() ? { top: 14, bottom: 14, left: 10, right: 10 } : { top: 24, bottom: 24, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
 const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
   style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, projection: { type: "globe" },
     sky: { "sky-color": "#020407", "sky-horizon-blend": 0.5, "horizon-color": "#143f55", "horizon-fog-blend": 0.8, "fog-color": "#020407", "fog-ground-blend": 0.15, "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 7.5, 0] },
     layers: [{ id: "fundo", type: "background", paint: { "background-color": "#07111b" } }] },
-  center: [-58, -14], zoom: 3.5, pitch: 28, bearing: 0,
+  center: window.innerWidth <= 820 ? [-53, -15] : [-58, -14], zoom: window.innerWidth <= 820 ? 2.3 : 3.5, pitch: window.innerWidth <= 820 ? 10 : 28, bearing: 0,
   minZoom: 1.5, maxZoom: 10, dragRotate: true, pitchWithRotate: true, maxPitch: 60,
 });
 const vazio = { type: "FeatureCollection", features: [] };
@@ -220,7 +222,7 @@ function mostrarRota(a) {
   if (!o || !d) { rotaSel = null; return; }
   rotaSel = { g: a.gravidade, path: gc([o.lon, o.lat], [d.lon, d.lat], 70) };
   const b = new maplibregl.LngLatBounds([o.lon, o.lat], [o.lon, o.lat]).extend([d.lon, d.lat]);
-  map.fitBounds(b, { padding: { top: 90, bottom: 90, left: 90, right: 560 }, maxZoom: 6, duration: 1100 });
+  try { map.fitBounds(b, { padding: CEL() ? { top: 20, bottom: 20, left: 20, right: 20 } : { top: 90, bottom: 90, left: 90, right: 560 }, maxZoom: 6, duration: 1100 }); } catch (e) {}
 }
 const limparRota = () => { rotaSel = null; };
 
@@ -729,6 +731,7 @@ function atualizarPanorama() {
   const tv = Object.values(porUF).reduce((s, o) => s + o.v, 0) || 1, ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 8), mx = ufs[0] ? ufs[0][1].v : 1;
   const pct = _esc && _esc.pncp_bi ? (100 * total / 1e9 / _esc.pncp_bi) : null;
   const estados = ufs.map(([u, o], i) => `<div class="pan-l ${i === 0 ? "top1" : ""}"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(5, Math.round(100 * o.v / mx))}%" title="${o.n} alertas"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
+  const hm = $("hero-m"); if (hm) hm.innerHTML = `<small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><div class="hm-sev"><i style="flex:${c.alta};background:${COR.alta}"></i><i style="flex:${c.media};background:${COR.media}"></i><i style="flex:${c.baixa};background:${COR.baixa}"></i></div>`;
   pan.innerHTML = `<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
     <div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
