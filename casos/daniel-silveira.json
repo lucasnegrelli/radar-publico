@@ -1,0 +1,55 @@
+{
+ "id": "daniel-silveira",
+ "titulo": "Daniel Silveira: condenação, graça e anulação",
+ "tipo": "politico",
+ "ordem": 22,
+ "resumo": "O STF condenou o então deputado Daniel Silveira a 8 anos e 9 meses por ataques a ministros da Corte. No dia seguinte, Bolsonaro concedeu graça constitucional; em 2023 o STF anulou a graça por 8 votos a 2 e Silveira voltou a cumprir a pena.",
+ "situacao": [
+  {
+   "rotulo": "Condenação",
+   "valor": "8 anos e 9 meses em regime inicialmente fechado (STF, abril de 2022)."
+  },
+  {
+   "rotulo": "Graça",
+   "valor": "Concedida por Bolsonaro em 2022 e anulada pelo STF em 2023, por 8 a 2."
+  },
+  {
+   "rotulo": "Execução",
+   "valor": "O STF decidiu que ele não terá nova liberdade condicional até cumprir a pena. Situação atual: não confirmada."
+  }
+ ],
+ "pessoas": [
+  "Daniel Silveira"
+ ],
+ "marcos": [
+  {
+   "data": "2022-04",
+   "tipo": "decisão",
+   "texto": "O STF condena Daniel Silveira a 8 anos e 9 meses de prisão por ataques a ministros; um dia depois, Bolsonaro decreta a graça.",
+   "fonte": "InfoMoney",
+   "url": "https://www.infomoney.com.br/?p=1841798"
+  },
+  {
+   "data": "2023",
+   "tipo": "decisão",
+   "texto": "O STF derruba a graça de Bolsonaro a Silveira por 8 votos a 2.",
+   "fonte": "SBT News",
+   "url": "https://sbtnews.sbt.com.br/noticia/justica/247123-stf-derruba-perdao-de-bolsonaro-a-pena-contra-daniel-silveira"
+  },
+  {
+   "data": "2024",
+   "tipo": "decisão",
+   "texto": "O STF impede nova liberdade condicional até o cumprimento total da pena.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/noticia/107355/stf-impede-daniel-silveira-de-obter-nova-liberdade-condicional"
+  }
+ ],
+ "consultas": [
+  "Daniel Silveira STF pena",
+  "Daniel Silveira liberdade condicional"
+ ],
+ "lacunas": [
+  "Situação atual (preso, domiciliar ou liberdade) em 2025 e 2026.",
+  "A data exata da decisão sobre a liberdade condicional."
+ ]
+}

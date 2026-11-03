@@ -74,5 +74,9 @@
  ],
  "alertas_regras": [
   "RF01"
- ]
+ ],
+ "valor": {
+  "bi": 50,
+  "rotulo": "CDBs emitidos sem comprovar capacidade de pagamento, segundo a PF"
+ }
 }

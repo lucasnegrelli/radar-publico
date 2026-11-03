@@ -50,5 +50,9 @@
  "lacunas": [
   "Denúncia do Ministério Público e andamento judicial das duas fases.",
   "Lista pública de empresas e CNPJs alvo: parte dos autos é sigilosa; quando houver nomes divulgados, o Radar pode cruzar com sócios, contratos e sanções."
- ]
+ ],
+ "valor": {
+  "bi": 52,
+  "rotulo": "movimentados por postos ligados ao esquema entre 2020 e 2024, estimativa da Receita"
+ }
 }

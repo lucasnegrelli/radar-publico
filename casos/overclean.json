@@ -55,5 +55,9 @@
  ],
  "alertas_regras": [
   "R09"
- ]
+ ],
+ "valor": {
+  "bi": 0.857,
+  "rotulo": "bloqueados pelo STF em fase da operação"
+ }
 }

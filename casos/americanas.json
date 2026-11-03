@@ -52,5 +52,9 @@
  "lacunas": [
   "Conciliar a data em que a denúncia foi aceita (fontes divergem).",
   "Se Lemann e Telles são investigados: nenhuma fonte consultada os cita."
- ]
+ ],
+ "valor": {
+  "bi": 25,
+  "rotulo": "fraude contábil: R$ 25 bi segundo a empresa; laudos da PF falam em cerca de R$ 54 bi"
+ }
 }

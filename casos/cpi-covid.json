@@ -1,0 +1,62 @@
+{
+ "id": "cpi-covid",
+ "titulo": "CPI da Covid: Covaxin e Ricardo Barros",
+ "tipo": "politico",
+ "ordem": 23,
+ "resumo": "O relatório final da CPI da Covid (20/10/2021) indiciou o então líder do governo na Câmara, Ricardo Barros, por quatro crimes ligados à tentativa de compra da vacina Covaxin. A PGR pediu o arquivamento das apurações e, em junho de 2023, o ministro Nunes Marques arquivou o procedimento no STF. A Precisa Medicamentos foi multada pela CGU.",
+ "situacao": [
+  {
+   "rotulo": "Ricardo Barros",
+   "valor": "Indiciado pela CPI (incitação ao crime, advocacia administrativa, organização criminosa e improbidade). PGR pediu arquivamento em 2022; Nunes Marques arquivou em junho de 2023 por falta de indícios além de relatos de 'ouvir dizer'."
+  },
+  {
+   "rotulo": "Precisa Medicamentos",
+   "valor": "Multada pela CGU em R$ 3,8 milhões por intermediar negociação irregular de 20 milhões de doses da Covaxin."
+  },
+  {
+   "rotulo": "PGR",
+   "valor": "A vice-procuradora pediu o arquivamento de 7 das 10 apurações preliminares abertas a partir do relatório."
+  }
+ ],
+ "pessoas": [
+  "Ricardo Barros"
+ ],
+ "marcos": [
+  {
+   "data": "2021-10-20",
+   "tipo": "investigação",
+   "texto": "O relatório final da CPI da Covid indicia Ricardo Barros por quatro crimes.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/noticia/13385/randolfe-rodrigues-sobre-ricardo-barros-um-dos-mais-fortes-indiciamentos"
+  },
+  {
+   "data": "2022-06",
+   "tipo": "decisão",
+   "texto": "A vice-procuradora-geral Lindôra Araújo pede o arquivamento da investigação preliminar sobre Barros por falta de provas.",
+   "fonte": "Tribuna do Sertão",
+   "url": "https://www.tribunadosertao.com.br/politica/2022/06/10/441871-pgr-pede-arquivamento-de-investigacao-sobre-ricardo-barros-com-base-em-cpi"
+  },
+  {
+   "data": "2023-06",
+   "tipo": "decisão",
+   "texto": "O ministro Nunes Marques arquiva o procedimento contra Ricardo Barros na compra da Covaxin.",
+   "fonte": "O Cafezinho",
+   "url": "https://www.ocafezinho.com/2023/06/17/decisao-de-nunes-marques-arquivado-procedimento-contra-ricardo-barros-na-compra-da-covaxin/amp/"
+  },
+  {
+   "data": "2024-12",
+   "tipo": "investigação",
+   "texto": "A Justiça Federal de Brasília envia ao STF uma investigação envolvendo o deputado licenciado; o objeto exato não foi confirmado.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/tag/CPI-da-covid"
+  }
+ ],
+ "consultas": [
+  "Ricardo Barros Covaxin investigação",
+  "Precisa Medicamentos Covaxin CGU"
+ ],
+ "lacunas": [
+  "O objeto e o estágio da investigação enviada ao STF em dezembro de 2024.",
+  "Posição da defesa de Barros."
+ ]
+}

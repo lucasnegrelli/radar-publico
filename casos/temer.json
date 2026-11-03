@@ -1,0 +1,47 @@
+{
+ "id": "temer",
+ "titulo": "Michel Temer: JBS e Decreto dos Portos",
+ "tipo": "politico",
+ "ordem": 25,
+ "resumo": "Em 2017 a PGR denunciou o então presidente Michel Temer por corrupção passiva (mala de R$ 500 mil da JBS); a Câmara suspendeu a denúncia durante o mandato. Em 2019 a Justiça Federal em Brasília aceitou denúncia no caso do Decreto dos Portos, e ele virou réu. A defesa diz que as acusações não têm amparo nas provas.",
+ "situacao": [
+  {
+   "rotulo": "JBS",
+   "valor": "Denúncia por corrupção passiva (2017), suspensa pela Câmara durante o mandato."
+  },
+  {
+   "rotulo": "Decreto dos Portos",
+   "valor": "Réu desde abril de 2019, com outros cinco. A defesa nega e diz que a Rodrimar não foi beneficiada."
+  },
+  {
+   "rotulo": "Desfecho",
+   "valor": "Não verificado nesta rodada."
+  }
+ ],
+ "pessoas": [
+  "Michel Temer"
+ ],
+ "marcos": [
+  {
+   "data": "2017-06",
+   "tipo": "investigação",
+   "texto": "Janot denuncia Temer por corrupção passiva com base na delação da JBS.",
+   "fonte": "TNH1",
+   "url": "https://www.tnh1.com.br/noticia/nid/janot-denuncia-temer-por-corrupcao/"
+  },
+  {
+   "data": "2019-04",
+   "tipo": "decisão",
+   "texto": "A Justiça Federal em Brasília aceita denúncia no caso do Decreto dos Portos: Temer, o coronel Lima e mais quatro viram réus.",
+   "fonte": "TNH1",
+   "url": "https://www.tnh1.com.br/noticia/nid/temer-coronel-e-mais-4-viram-reus-no-caso-do-decreto-dos-portos/"
+  }
+ ],
+ "consultas": [
+  "Temer Decreto dos Portos absolvido",
+  "Michel Temer processo arquivado"
+ ],
+ "lacunas": [
+  "Desfecho dos processos (absolvição, arquivamento ou prescrição): não verificado. A busca por esse resultado não retornou fontes confiáveis."
+ ]
+}

@@ -1,0 +1,62 @@
+{
+ "id": "brb-master",
+ "titulo": "BRB e o Banco Master: a compra que o Banco Central barrou",
+ "tipo": "politico",
+ "ordem": 20,
+ "valor": {
+  "bi": 12.2,
+  "rotulo": "em créditos considerados inexistentes, que o BRB teria comprado do Master entre jan. e jun. de 2025, segundo a investigação"
+ },
+ "resumo": "O BRB, banco do Distrito Federal, negociou comprar o Banco Master e adquiriu carteiras de crédito dele; o Banco Central barrou a compra. Em abril de 2026 a PF prendeu o ex-presidente do BRB, Paulo Henrique Costa, em nova fase da Operação Compliance Zero. Ele diz à PF que o negócio foi acertado em reunião entre Vorcaro e o então governador Ibaneis Rocha, que admitiu ter pedido informações ao BRB, mas isso são alegações, não conclusões.",
+ "situacao": [
+  {
+   "rotulo": "Paulo Henrique Costa",
+   "valor": "Preso em abril de 2026 (fase da Compliance Zero, sob relatoria do ministro André Mendonça). Segundo a PF, teria recebido imóveis de alto padrão avaliados em cerca de R$ 146 milhões. Sem condenação."
+  },
+  {
+   "rotulo": "Ibaneis Rocha",
+   "valor": "Citado por Costa em depoimento; admitiu ter pedido material ao BRB para defender a compra. Pedido de impeachment apresentado por partidos de oposição. Sem denúncia nas fontes consultadas."
+  },
+  {
+   "rotulo": "Valor sob apuração",
+   "valor": "R$ 12,2 bilhões em créditos considerados inexistentes, comprados entre janeiro e junho de 2025."
+  }
+ ],
+ "pessoas": [
+  "Ibaneis Rocha",
+  "Paulo Henrique Costa",
+  "Daniel Vorcaro"
+ ],
+ "marcos": [
+  {
+   "data": "2026-04",
+   "tipo": "investigação",
+   "texto": "A PF prende o ex-presidente do BRB, Paulo Henrique Costa, em nova fase da Operação Compliance Zero, sobre lavagem de dinheiro ligada ao Banco Master. Duas prisões preventivas e sete buscas; o advogado do Master Daniel Monteiro também foi preso.",
+   "fonte": "Money Times",
+   "url": "https://www.moneytimes.com.br/pf-prende-ex-presidente-do-brb-em-investigacao-sobre-banco-master-igdl/"
+  },
+  {
+   "data": "2026-04",
+   "tipo": "reportagem",
+   "texto": "Costa afirma à PF que o negócio com o Master foi ordenado em reunião entre Ibaneis e Vorcaro, segundo reportagens. Ibaneis admitiu ter pedido informações ao BRB. São alegações em apuração.",
+   "fonte": "Gazeta do Povo",
+   "url": "https://www.gazetadopovo.com.br/republica/ibaneis-conhecimento-tudo-o-que-acontecia-brb-diz-ex-presidente/"
+  },
+  {
+   "data": "2026",
+   "tipo": "reportagem",
+   "texto": "PSB e Cidadania pedem o impeachment de Ibaneis Rocha pelo caso Master.",
+   "fonte": "Poder360",
+   "url": "https://www.poder360.com.br/poder-brasil/psb-e-cidadania-pedem-impeachment-de-ibaneis-rocha/"
+  }
+ ],
+ "consultas": [
+  "BRB Banco Master Paulo Henrique Costa",
+  "Ibaneis Banco Master BRB investigação",
+  "BRB Compliance Zero"
+ ],
+ "lacunas": [
+  "Denúncia e andamento das ações; a defesa de Ibaneis e de Costa não foi localizada em detalhe.",
+  "Quanto do R$ 12,2 bi o BRB já provisionou ou perdeu."
+ ]
+}

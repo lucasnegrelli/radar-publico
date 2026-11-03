@@ -141,7 +141,8 @@ function grade() {
   for (let y = -35; y <= 7; y += 5) f.push({ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: [[-76, y], [-28, y]] } });
   return { type: "FeatureCollection", features: f };
 }
-let _esc = null;
+let _esc = null, _casosV = null;
+fetch("/data/casos.json").then((r) => r.json()).then((d) => { _casosV = (d.casos || []).filter((c) => c.valor).map((c) => ({ t: c.titulo, bi: c.valor.bi })); if (typeof atualizarPanorama === "function") atualizarPanorama(); }).catch(() => {});
 const PESO_R = { R11: 30, R10: 40, R09: 25, R01: 30, R02: 25, R08: -5, R05: 15, R03: 0, R04: -25, R06: -20, R07: -30, RF01: 30 };
 function pontuar(a) {
   const m = a.manchete || {};
@@ -484,7 +485,7 @@ let _casos = null;
 async function montarCasos() {
   const d = (_casos ||= await fetch("/data/casos.json").then((r) => r.json()).catch(() => ({ casos: [] })));
   $("aba-casos").innerHTML = `<h3>Investigações e risco</h3><p class="sub2">Dossiês de casos montados só com dados abertos: o que se consegue levantar, o que falta e quais são os próximos passos.</p>` +
-    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.ultimo ? `<span class="chip" style="--c:#8aa0b5">${esc(String(c.ultimo).length >= 7 ? String(c.ultimo).slice(5, 7) + "/" + String(c.ultimo).slice(0, 4) : c.ultimo)}</span>` : ""}${c.tipo === "politico" ? `${(c.marcos || []).length} marcos com fonte · ${c.noticias.length} manchetes` : `${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados`}</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
+    d.casos.map((c, i) => `<div class="card" style="--c:#00ffa6" data-i="${i}"><div class="topo"><div class="nome">${esc(c.titulo)}</div></div><div class="sub">${esc(c.resumo)}</div><div class="meta">${c.valor ? `<span class="chip" style="--c:#ff2d55">R$ ${c.valor.bi.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} bi citados</span>` : ""}${c.ultimo ? `<span class="chip" style="--c:#8aa0b5">${esc(String(c.ultimo).length >= 7 ? String(c.ultimo).slice(5, 7) + "/" + String(c.ultimo).slice(0, 4) : c.ultimo)}</span>` : ""}${c.tipo === "politico" ? `${(c.marcos || []).length} marcos com fonte · ${c.noticias.length} manchetes` : `${c.serie.length} trimestres · ${c.noticias.length} manchetes · ${c.achados.length} achados`}</div></div>`).join("") || '<p class="sub2">Nenhuma investigação cadastrada.</p>';
   $("aba-casos").querySelectorAll(".card").forEach((e) => (e.onclick = () => abrirCaso(d.casos[Number(e.dataset.i)])));
   const rf = alertas.filter((a) => a.regra === "RF01");
   const inc = (dA.incidentes || []).slice(0, 12);
@@ -731,9 +732,10 @@ function atualizarPanorama() {
   const tv = Object.values(porUF).reduce((s, o) => s + o.v, 0) || 1, ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 8), mx = ufs[0] ? ufs[0][1].v : 1;
   const pct = _esc && _esc.pncp_bi ? (100 * total / 1e9 / _esc.pncp_bi) : null;
   const estados = ufs.map(([u, o], i) => `<div class="pan-l ${i === 0 ? "top1" : ""}"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(5, Math.round(100 * o.v / mx))}%" title="${o.n} alertas"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
-  const hm = $("hero-m"); if (hm) hm.innerHTML = `<small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><div class="hm-sev"><i style="flex:${c.alta};background:${COR.alta}"></i><i style="flex:${c.media};background:${COR.media}"></i><i style="flex:${c.baixa};background:${COR.baixa}"></i></div>`;
+  const cv = _casosV && _casosV.length ? `<div class="hero-casos"><b>+ R$ ${_casosV.reduce((s, x) => s + x.bi, 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi</b> citados em ${_casosV.length} casos sob apuração (PF, MPF, Receita). Não é prejuízo confirmado.</div>` : "";
+  const hm = $("hero-m"); if (hm) hm.innerHTML = `<small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><div class="hm-sev"><i style="flex:${c.alta};background:${COR.alta}"></i><i style="flex:${c.media};background:${COR.media}"></i><i style="flex:${c.baixa};background:${COR.baixa}"></i></div>${cv}`;
   pan.innerHTML = `<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
-    <div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
+    ${cv}<div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
     <div class="pan-h">Estados <small>valor em atenção</small></div>${estados}${escalaHtml()}`;
 }

@@ -53,5 +53,9 @@
  ],
  "alertas_regras": [
   "R09"
- ]
+ ],
+ "valor": {
+  "bi": 4.2,
+  "rotulo": "em emendas de comissão suspensas pelo ministro Flávio Dino"
+ }
 }

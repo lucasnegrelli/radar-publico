@@ -1,0 +1,48 @@
+{
+ "id": "aecio-jbs",
+ "titulo": "Aécio Neves e a delação da JBS",
+ "tipo": "politico",
+ "ordem": 24,
+ "resumo": "Em 2017 a PGR denunciou o então senador Aécio Neves por corrupção passiva e obstrução de justiça, com base em gravação em que ele pedia R$ 2 milhões a Joesley Batista. A defesa diz que era um empréstimo pessoal. A Primeira Turma do STF aceitou a denúncia e ele virou réu.",
+ "situacao": [
+  {
+   "rotulo": "Denúncia",
+   "valor": "PGR (Rodrigo Janot), 2017: corrupção passiva e obstrução de justiça, com a irmã Andrea Neves e outros."
+  },
+  {
+   "rotulo": "STF",
+   "valor": "Primeira Turma aceitou a denúncia por corrupção passiva por unanimidade (2018). Desfecho posterior: não verificado nesta rodada."
+  },
+  {
+   "rotulo": "Defesa",
+   "valor": "Diz que o dinheiro foi um empréstimo pessoal."
+  }
+ ],
+ "pessoas": [
+  "Aécio Neves",
+  "Joesley Batista"
+ ],
+ "marcos": [
+  {
+   "data": "2017",
+   "tipo": "investigação",
+   "texto": "Janot denuncia Aécio ao STF por corrupção passiva e obstrução de justiça.",
+   "fonte": "Congresso em Foco",
+   "url": "https://www.congressoemfoco.com.br/noticias/pgr-denuncia-aecio-ao-supremo-por-corrupcao-passiva-e-obstrucao-de-justica/"
+  },
+  {
+   "data": "2018-04",
+   "tipo": "decisão",
+   "texto": "A Primeira Turma do STF aceita a denúncia e Aécio vira réu; ele se diz vítima de réus confessos.",
+   "fonte": "Congresso em Foco",
+   "url": "https://congressoemfoco.com.br/noticias/aecio-se-diz-vitima-de-reus-confessos-instantes-depois-de-virar-reu-no-stf-veja-o-video"
+  }
+ ],
+ "consultas": [
+  "Aécio Neves STF JBS ação penal",
+  "Aécio Neves absolvido"
+ ],
+ "lacunas": [
+  "Desfecho da ação penal (condenação, absolvição ou prescrição): não verificado."
+ ]
+}
