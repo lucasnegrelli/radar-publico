@@ -177,6 +177,14 @@ r10 = {}
 for a in alertas:
     if a["regra"] == "R10": r10.setdefault(SQ(a["manchete"]["politico"]), []).append(a["id"])
 
+# ---------- ICIJ Offshore Leaks: coincidência de nome completo (confirmar) ----------
+_of = RAIZ / "dados" / "offshore_br.json"
+offshore = json.loads(_of.read_text(encoding="utf-8")) if _of.exists() else {}
+for pid, p in pessoas.items():
+    m = offshore.get(SQ(p["n"]))
+    if m and len(m) <= 3 and len([w for w in SQ(p["n"]).split() if w not in ("DA", "DE", "DO", "DAS", "DOS", "E")]) >= 4:
+        p["offshore"] = [{"id": x["id"], "nome": x["nome"], "fonte": x["fonte"], "entidades": x["entidades"][:4]} for x in m]
+
 # ---------- pontos de atenção (neutros) + ordenação ----------
 def brl(v):
     if v < 1e6: return "R$ " + f"{v:,.0f}".replace(",", ".")
@@ -213,6 +221,8 @@ for pid, p in pessoas.items():
         pts.append({"t": "Gasto de cota em 2025 entre os 10% maiores", "d": f"Percentil {m['pct25']} entre os deputados. Gastar muito não é irregular; indica onde olhar."})
     if p.get("emendas") and p["emendas"]["alertas"]:
         pts.append({"t": "Emendas pagaram entidades com ponto de atenção no Radar", "d": f"{len(p['emendas']['alertas'])} entidade(s) favorecida(s) com alerta R09 (sancionada, empresa nova ou capital muito pequeno para o valor).", "alertas": p["emendas"]["alertas"]})
+    if p.get("offshore"):
+        pts.append({"t": "Nome completo coincide com pessoa ligada a empresa offshore (ICIJ Offshore Leaks)", "d": "Coincidência de nome não prova que seja a mesma pessoa, e constar nos vazamentos não indica ilegalidade: ter empresa no exterior pode ser legal e declarado. Confirme nos detalhes abaixo."})
     if r10.get(SQ(p["n"])):
         pts.append({"t": "Consta como sócio de empresa que vende ao governo", "d": f"{len(r10[SQ(p['n'])])} empresa(s) com contratos desde 2025 (nome completo e 6 dígitos do CPF coincidem com o sócio na Receita). A base mostra o quadro societário atual.", "alertas": r10[SQ(p['n'])][:5]})
     if p.get("alertas_pref"):

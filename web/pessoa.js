@@ -77,6 +77,9 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
   const vo = p.voos
     ? `<h4>Voos internacionais pagos com a cota</h4><div class="kp2"><div><b>${vo_n(p.voos)}</b><span>voos desde 2023</span></div><div><b>${brlCurto(p.voos.v)}</b><span>em passagens</span></div></div><p class="sub2">${Object.entries(p.voos.paises).map(([k, v]) => esc(k) + " " + v).join(" · ")}. A data é a de emissão da passagem; voo pago pela cota não é irregular por si só.</p>`
     : "";
+  const off = (p.offshore || []).length
+    ? `<h4>Possível ligação com empresas no exterior</h4><p class="sub2">Base pública do ICIJ (Offshore Leaks). O nome completo coincide, mas pode ser outra pessoa: confirme antes de concluir qualquer coisa.</p>${p.offshore.map((o) => `<div class="bloco-camp"><h5>${esc(o.nome)} · ${esc(o.fonte)}</h5>${(o.entidades || []).map((e) => `<div class="sub2">${esc(e.nome)} · ${esc(e.jurisdicao || "")}${e.inicio ? " · aberta em " + esc(e.inicio) : ""}${e.status ? " · " + esc(e.status) : ""}</div>`).join("") || '<div class="sub2">Sem empresa ligada nos dados.</div>'}<a href="https://offshoreleaks.icij.org/nodes/${esc(o.id)}" target="_blank" rel="noopener">ver no ICIJ</a></div>`).join("")}`
+    : "";
   const ult = (p.cand || [])[0];
   const alvoTitulo = ult ? `${ult.cargo}${ult.ue ? " de " + ult.ue : ""}${ult.uf && ult.uf !== "BR" ? "/" + ult.uf : ""} · ${ult.partido} · ${ult.ano}` : (m ? m.tipo : "");
   el.innerHTML = `
@@ -92,6 +95,7 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     ${mand}
     ${emd}
     ${vo}
+    ${off}
     ${(ex.n || []).length ? `<h4>Na imprensa</h4><ul class="check">${ex.n.map((n) => `<li><a href="${esc(n[3])}" target="_blank" rel="noopener">${esc(n[2])}</a><br><span class="sub2">${esc(n[1])}${n[0] ? " · " + esc(n[0]) : ""}</span></li>`).join("")}</ul><p class="sub2">Manchetes automáticas do Google Notícias que citam o nome. Podem tratar de pessoas homônimas.</p>` : ""}
     <h4>Ver mais</h4>
     <div class="links" style="font-size:12.5px"><a href="https://news.google.com/search?q=${nomeBusca}&hl=pt-BR&gl=BR&ceid=BR:pt-419" target="_blank" rel="noopener">notícias</a> · <a href="https://queridodiario.ok.org.br/pesquisa?term=${nomeBusca}" target="_blank" rel="noopener">diários oficiais</a> · <a href="https://divulgacandcontas.tse.jus.br/divulga/" target="_blank" rel="noopener">DivulgaCand (TSE)</a> · <a href="https://portaldatransparencia.gov.br/pessoa-fisica/busca/lista?termo=${encodeURIComponent(p.n)}" target="_blank" rel="noopener">Portal da Transparência</a></div>
