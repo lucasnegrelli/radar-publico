@@ -22,6 +22,31 @@ export function importaDoHash() {
   try { const v = deb64(m[1]); if (Array.isArray(v)) { salvaInv(v); return true; } } catch {}
   return false;
 }
+
+// Rede de ligações: a empresa no centro e, em volta, tudo que a conecta a outras coisas. Nós de empresa e de político são clicáveis (cada clique é um passo da investigação).
+function redeSVG(f, esc) {
+  const grupos = [
+    { k: "pol", cor: "#ff7ad9", rot: "político sócio", itens: (f.politicos || []).slice(0, 4).map((p) => ({ t: p.nome, p: p.id })) },
+    { k: "irm", cor: "#4cc9f0", rot: "outra empresa do político", itens: (f.irmas || []).slice(0, 4).map((e) => ({ t: e.nome, e: e.cnpj })) },
+    { k: "org", cor: "#22d3b6", rot: "contrata", itens: ((f.contratos || {}).orgaos || []).slice(0, 4).map((o) => ({ t: o[0] })) },
+    { k: "aut", cor: "#ffb300", rot: "emenda de", itens: ((f.emendas || {}).autores || []).slice(0, 4).map((a) => ({ t: a[0] })) },
+    { k: "doa", cor: "#b388ff", rot: "doou para", itens: ((f.doacoes || {}).para || []).slice(0, 4).map((d) => ({ t: d[0] })) },
+    { k: "san", cor: "#ff2d55", rot: "sanção", itens: (f.sancoes || []).slice(0, 2).map((s) => ({ t: `${s.lista}: ${(s.tipo || "").slice(0, 28)}` })) },
+  ].filter((g) => g.itens.length);
+  if (!grupos.length) return '<p class="sub2">Nenhuma ligação encontrada nas bases cruzadas.</p>';
+  const W = 440, H = 300, cx = W / 2, cy = H / 2, nos = [];
+  const tot = grupos.reduce((s, g) => s + g.itens.length, 0); let i = 0;
+  grupos.forEach((g) => g.itens.forEach((it) => { const ang = -Math.PI / 2 + (i++ + 0.5) * (2 * Math.PI / tot); nos.push({ ...it, g, x: cx + 168 * Math.cos(ang), y: cy + 104 * Math.sin(ang) }); }));
+  const cut = (s) => (s.length > 19 ? s.slice(0, 18) + "…" : s);
+  return `<svg class="viz rede" viewBox="0 0 ${W} ${H}">
+    ${nos.map((n) => `<line x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}" stroke="${n.g.cor}" stroke-opacity=".45" stroke-width="1.4"/>`).join("")}
+    ${nos.map((n) => { const clic = n.p || n.e; return `<g class="nó ${clic ? "clic" : ""}" ${n.p ? `data-p="${esc(n.p)}"` : ""} ${n.e ? `data-e="${esc(n.e)}"` : ""}><circle cx="${n.x}" cy="${n.y}" r="${clic ? 8 : 6}" fill="${n.g.cor}" fill-opacity="${clic ? 1 : .7}" stroke="#07090d" stroke-width="2"/><text x="${n.x}" y="${n.y + (n.y < cy ? -12 : 19)}" text-anchor="${n.x < cx - 40 ? "end" : n.x > cx + 40 ? "start" : "middle"}" dx="${n.x < cx - 40 ? -9 : n.x > cx + 40 ? 9 : 0}" dy="${n.y < cy ? 12 : -12}" style="font-size:9px">${esc(cut(n.t))}<title>${esc(n.t)}</title></text></g>`; }).join("")}
+    <circle cx="${cx}" cy="${cy}" r="13" fill="#3dff9a"/><circle cx="${cx}" cy="${cy}" r="5" fill="#07090d"/><title>${esc(f.nome)}</title>
+  </svg>
+  <div class="rede-leg">${grupos.map((g) => `<span><i style="background:${g.cor}"></i>${g.rot}</span>`).join("")}</div>`;
+}
+const fontesEmpresa = (c) => `<h4>Conferir nas fontes oficiais</h4><div class="links" style="font-size:12.5px"><a href="https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp?cnpj=${c}" target="_blank" rel="noopener">Receita (cartão CNPJ)</a> · <a href="https://portaldatransparencia.gov.br/busca?termo=${c}" target="_blank" rel="noopener">Portal da Transparência</a> · <a href="https://portaldatransparencia.gov.br/sancoes/consulta?cadastro=1&cpfCnpj=${c}" target="_blank" rel="noopener">Sanções (CEIS/CNEP)</a> · <a href="https://pncp.gov.br/app/contratos?q=${c}" target="_blank" rel="noopener">PNCP</a></div>`;
+
 const SIT = { ativa: "Ativa", baixada: "Baixada", inapta: "Inapta", suspensa: "Suspensa", nula: "Nula" };
 
 export async function abrirEmpresa(cnpj, ctx) {
@@ -49,6 +74,7 @@ export async function abrirEmpresa(cnpj, ctx) {
     <div class="sub2 mono">CNPJ ${fmt(f.cnpj)} · ${esc(SIT[f.situacao] || f.situacao || "")}${ab ? " · aberta em " + ab : ""}${f.uf ? " · " + esc(f.uf) : ""}${f.capital != null ? " · capital " + brlCurto(Number(f.capital)) : ""}</div>
     <div class="acoes" style="margin:10px 0"><button class="botao" id="b-inv">+ Minha investigação</button></div>
     ${sinais.length ? `<h4>Cruzamentos que chamam atenção</h4><ul class="check pessoa-pontos">${sinais.map((s) => `<li><b>${esc(s[0])}</b><br><span class="sub2">${esc(s[1])}</span></li>`).join("")}</ul>` : ""}
+    <h4>Rede de ligações</h4>${redeSVG(f, esc)}
     ${(f.alertas || []).length ? `<h4>Alertas do Radar</h4><div class="chips">${chips(f.alertas)}</div>` : ""}
     ${f.contratos ? `<h4>Contratos com o governo (desde 2025)</h4><div class="kp2"><div><b>${brlCurto(f.contratos.total)}</b><span>${f.contratos.n} contrato(s)</span></div></div><table class="tbl"><tbody>${(f.contratos.orgaos || []).map((o) => `<tr><td>${esc(o[0])}</td><td class="num" style="text-align:right">${brlCurto(o[1])}</td></tr>`).join("")}</tbody></table>` : ""}
     ${f.emendas ? `<h4>Emendas parlamentares recebidas</h4><div class="kp2"><div><b>${brlCurto(f.emendas.total)}</b><span>no total (todos os anos)</span></div></div><table class="tbl"><tbody>${f.emendas.autores.map((a) => `<tr><td>${esc(a[0])}</td><td class="num" style="text-align:right">${brlCurto(a[1] || 0)}</td></tr>`).join("")}</tbody></table>` : ""}
@@ -57,10 +83,12 @@ export async function abrirEmpresa(cnpj, ctx) {
     <h4>Sócios e administradores</h4><p class="sub2">Quadro atual (Receita). Pessoas físicas aparecem com nome abreviado; políticos eleitos aparecem completos, com link.</p>
     <table class="tbl"><tbody>${(f.socios || []).map((s) => `<tr><td>${s.politico ? `<b>${esc(s.nome)}</b> <span class="tag-s" style="background:rgba(255,122,217,.15);color:#ff7ad9">político</span>` : esc(s.nome)}</td><td class="sub2" style="text-align:right">${esc(s.qual || "")}</td></tr>`).join("") || '<tr><td class="sub2">Sem sócios listados.</td></tr>'}</tbody></table>
     ${(f.politicos || []).length ? `<div class="chips">${f.politicos.map((p) => `<a href="#" class="chip-al" data-p="${esc(p.id)}" style="color:#ff9ee5">${esc(p.nome)} · ficha</a>`).join(" ")}</div>` : ""}
+    ${fontesEmpresa(f.cnpj)}
     <p class="aviso">Cruzamento de bases públicas. Ligação entre bases não é prova de irregularidade: confira os documentos de origem antes de concluir qualquer coisa.</p>`;
   el.querySelector(".fechar").onclick = () => { el.hidden = true; history.replaceState(null, "", location.pathname); };
   el.querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
   el.querySelectorAll("a[data-p]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrirPessoa(x.dataset.p); }));
+  el.querySelectorAll("svg.rede g.clic").forEach((g) => (g.onclick = () => (g.dataset.p ? abrirPessoa(g.dataset.p) : abrirEmpresa(g.dataset.e, ctx))));
   $("b-inv").onclick = () => { adicionaInv({ t: "e", id: f.cnpj, nome: f.nome }); $("b-inv").textContent = "Adicionada ✓"; if (onInv) onInv(); };
   el.scrollTop = 0;
 }

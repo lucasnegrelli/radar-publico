@@ -54,6 +54,15 @@ def noticias(nome):
         out.append([d, f, t, it.findtext("link", "")])
     return sorted(out, reverse=True)[:5]
 
+def diarios(nome):
+    q = urllib.parse.urlencode({"querystring": f'"{nome}"', "published_since": "2024-01-01", "size": 4, "excerpt_size": 260, "number_of_excerpts": 1, "sort_by": "descending_date"})
+    raw = get(f"https://api.queridodiario.org.br/gazettes?{q}", 2)
+    if not raw: return None
+    try: g = json.loads(raw)
+    except Exception: return None
+    if not g.get("total_gazettes"): return None
+    return {"n": g["total_gazettes"], "x": [{"cidade": x.get("territory_name"), "uf": x.get("state_code"), "data": x.get("date"), "trecho": " ".join((x.get("excerpts") or [""])[0].split()), "url": x.get("url") or x.get("txt_url")} for x in g.get("gazettes", [])[:3]]}
+
 alvo = [r for r in IDX if r[7] >= 60][:N]
 print(len(alvo), "pessoas alvo", flush=True)
 from concurrent.futures import ThreadPoolExecutor
@@ -62,10 +71,10 @@ def um(r):
     w = wikipedia([nome]) or (wikipedia([urna]) if urna and len(urna.split()) > 1 else None)
     n = noticias(urna if urna and len(urna.split()) > 1 else nome)
     time.sleep(0.3)
-    return pid, {"w": w, "n": n}
+    return pid, {"w": w, "n": n, "d": diarios(nome) if r[7] >= 80 else None}
 def salvar():
     CACHE.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")
-    SAIDA.write_text(json.dumps({k: v for k, v in cache.items() if v["w"] or v["n"]}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    SAIDA.write_text(json.dumps({k: v for k, v in cache.items() if v["w"] or v["n"] or v.get("d")}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 pend = [r for r in alvo if r[0] not in cache]
 with ThreadPoolExecutor(6) as ex:
     for i, (pid, v) in enumerate(ex.map(um, pend), 1):

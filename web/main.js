@@ -677,7 +677,7 @@ function tabificar() {
 { const _abrir = abrir; abrir = function (id) { _abrir(id); tabificar(); }; }
 
 // ----- busca global (Ctrl+K) -----
-const CTX_P = { $, esc, brlCurto, get alertas() { return alertas; }, nomes, abrir: (id) => abrir(id), abrirPessoa: (id) => abrirPessoa(id, CTX_P), invAdd: (i) => { adicionaInv(i); if (CTX_P.onInv) CTX_P.onInv(); } };
+const CTX_P = { $, esc, brlCurto, get alertas() { return alertas; }, nomes, abrir: (id) => abrir(id), abrirPessoa: (id) => abrirPessoa(id, CTX_P), abrirEmpresa: (c) => abrirEmpresa(c, CTX_P), invAdd: (i) => { adicionaInv(i); if (CTX_P.onInv) CTX_P.onInv(); } };
 const paleta = document.createElement("div"); paleta.id = "paleta";
 paleta.innerHTML = '<div class="caixa-p"><input id="pal-in" placeholder="Buscar político, empresa, CNPJ, cidade ou caso... (ex.: Lula, Bolsonaro)" autocomplete="off"><div class="res" id="pal-res"></div></div>';
 document.body.appendChild(paleta);

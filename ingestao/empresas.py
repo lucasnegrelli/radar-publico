@@ -88,6 +88,17 @@ for lista, doc, cat, org, ini, fim in c.execute("""select 'CEIS', lpad(regexp_re
    union all select 'CNEP', lpad(regexp_replace("CPF OU CNPJ DO SANCIONADO",'\\D','','g'),14,'0'), "CATEGORIA DA SANÇÃO", "ÓRGÃO SANCIONADOR", "DATA INÍCIO SANÇÃO", "DATA FINAL SANÇÃO" from cnep""").fetchall():
     if doc in alvo: sanc.setdefault(doc, []).append({"lista": lista, "tipo": cat, "orgao": org, "ini": ini, "fim": fim})
 
+# ---- empresas do mesmo político ----
+irmas = {}
+_por_pid = {}
+for cb, lst in pol.items():
+    for x in lst: _por_pid.setdefault(x["id"], set()).add(cb)
+for pid, cbs in _por_pid.items():
+    cbs = sorted(cbs)
+    for cb in cbs:
+        for outro in cbs:
+            if outro != cb: irmas.setdefault(cb, set()).add(outro)
+
 # ---- monta fichas ----
 fichas = {}
 for doc in alvo:
@@ -101,6 +112,7 @@ for doc in alvo:
         ss.append({"nome": TT(s["nome"]) if eh_pol else abrevia(s["nome"]), "qual": s["qual"], "entrada": s["entrada"], "politico": eh_pol})
     f = {"cnpj": doc, "nome": d["nome"], "capital": d.get("capital"), "porte": d.get("porte"), "situacao": d.get("situacao"), "abertura": d.get("abertura"), "uf": d.get("uf"),
          "socios": ss, "politicos": polit[:5], "alertas": por_cnpj_al.get(doc, [])[:8]}
+    if irmas.get(cb): f["irmas"] = [{"cnpj": cad[o]["cnpj"], "nome": cad[o]["nome"]} for o in sorted(irmas[cb]) if o in cad and cad[o].get("cnpj") and cad[o]["cnpj"] in alvo][:6]
     if doc in contr: f["contratos"] = contr[doc]
     if doc in emen: f["emendas"] = emen[doc]
     if doc in doaram: f["doacoes"] = doaram[doc]
