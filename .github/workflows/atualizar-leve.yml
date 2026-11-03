@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p web/public/data/pessoas
           S=https://radar.lucasnegrelli.com/data
-          for f in alertas fichas risco viagens judiciario meta escala fidc noticias noticias_alertas diarios caso_master_diarios casos; do curl -sf -o web/public/data/$f.json $S/$f.json || echo "sem $f"; done
+          for f in alertas fichas risco viagens judiciario meta escala fidc noticias noticias_alertas diarios caso_master_diarios casos municipios; do curl -sf -o web/public/data/$f.json $S/$f.json || echo "sem $f"; done
           for h in $(seq 0 255); do printf '%02x\n' $h; done | xargs -P 8 -I{} sh -c "curl -sf -o web/public/data/pessoas/s{}.json $S/pessoas/s{}.json || true"
           curl -sf -o web/public/data/pessoas/idx.json $S/pessoas/idx.json || echo "sem idx"
           curl -sf -o web/public/data/pessoas/extras.json $S/pessoas/extras.json || true

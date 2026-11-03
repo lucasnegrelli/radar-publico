@@ -140,7 +140,18 @@ function grade() {
   return { type: "FeatureCollection", features: f };
 }
 let _esc = null;
-let alertas = [], visiveis = [], filtroG = "todas", filtroR = "todas", sel = null, nomes = {};
+const PESO_R = { R11: 30, R10: 40, R09: 25, R01: 30, R02: 25, R08: -5, R05: 15, R03: 0, R04: -25, R06: -20, R07: -30, RF01: 30 };
+function pontuar(a) {
+  const m = a.manchete || {};
+  return (a.gravidade === "alta" ? 100 : a.gravidade === "media" ? 40 : 0) + 14 * Math.log10(Math.max(a.total || 0, 1e4)) + (a.correlacao ? 45 : 0) + (PESO_R[a.regra] || 0)
+    + (a.novo ? 10 : 0) + (m.politico ? 15 : 0) + ((m.autores || []).length ? 10 : 0) + (m.cepim || m.sancao ? 20 : 0);
+}
+function destaques(L, n = 40, porTipo = 8) {
+  const cont = {}, out = [];
+  for (const a of [...L].sort((x, y) => y.score - x.score)) { if ((cont[a.regra] = (cont[a.regra] || 0) + 1) > porTipo) continue; out.push(a); if (out.length >= n) break; }
+  return out;
+}
+let alertas = [], visiveis = [], filtroG = "destaques", filtroR = "todas", sel = null, nomes = {};
 const RCOR = { R01: "#ff6b81", R02: "#ff2d55", R03: "#ffb300", R04: "#ff8a3d", R05: "#f7d046", R06: "#7cf5de", R07: "#22d3b6", R08: "#b388ff", R09: "#4cc9f0", R10: "#ff7ad9", R11: "#6ea8ff", RF01: "#ffcc00" };
 const RNOME = { R01: "Cota × punida", R02: "Contrato × punida", R03: "Empresa nova", R04: "Capital pequeno", R05: "Doador → fornecedor", R06: "Fracionamento", R07: "Concentração", R08: "Sócio no exterior", R09: "Emenda", R10: "Político sócio", R11: "Pgto federal × punida", RF01: "Banco" };
 const RGB = { alta: [255, 45, 85], media: [255, 179, 0], baixa: [0, 184, 255] };
@@ -275,8 +286,11 @@ let _viagens = null;
 const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json").then((r) => r.json()).catch(() => ({ voos: [], deputados: [], paises: [] })));
 
 // ---------- lista e filtros ----------
+let total_filtro = 0;
 function aplicarFiltro() {
-  visiveis = alertas.filter((a) => noJanela(a) && (filtroG === "todas" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
+  visiveis = alertas.filter((a) => noJanela(a) && (filtroG === "todas" || filtroG === "destaques" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
+  total_filtro = visiveis.length;
+  if (filtroG === "destaques") visiveis = destaques(visiveis);
   lista(); atualizarMapa(); atualizarPanorama();
 }
 function lista() {
@@ -287,7 +301,7 @@ function lista() {
       <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span> · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
-  $("cont").textContent = `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
+  $("cont").textContent = filtroG === "destaques" ? `Os ${visiveis.length} mais relevantes de ${total_filtro.toLocaleString("pt-BR")}. Toque em "Todos" para ver tudo.` : `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
 }
 
 // ---------- dossiê ----------
@@ -544,6 +558,7 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
   if (b.dataset.aba === "fichas") carregarFichas();
+  if (b.dataset.aba === "cidade") montarCidade();
   if (b.dataset.aba === "justica") montarJustica();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
@@ -569,8 +584,8 @@ const [dA, dN, ufGeo, dR, mundoGeo, dDiarios] = await Promise.all([
 ufGeo.features.forEach((f) => { f.properties.uf = UF_COD[Number(f.properties.codarea)]; });
 nomes = { ...(dA.regras || {}), RF01: "Risco financeiro: banco em crescimento acelerado" };
 const ord = { alta: 0, media: 1, baixa: 2 };
-alertas = [...dA.alertas, ...(dR.alertas || [])].sort((a, b) => ord[a.gravidade] - ord[b.gravidade] || b.total - a.total);
-visiveis = alertas;
+alertas = [...dA.alertas, ...(dR.alertas || [])].map((a) => ((a.score = pontuar(a)), a)).sort((a, b) => ord[a.gravidade] - ord[b.gravidade] || b.total - a.total);
+visiveis = alertas; total_filtro = alertas.length; if (filtroG === "destaques") visiveis = destaques(alertas);
 
 // filtro por tipo de alerta
 const cont = {}; alertas.forEach((a) => (cont[a.regra] = (cont[a.regra] || 0) + 1));
@@ -707,22 +722,13 @@ document.addEventListener("keydown", (e) => {
 const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appendChild(pan);
 function atualizarPanorama() {
   const L = visiveis; if (!L.length) { pan.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div>'; return; }
-  const sem = L.filter((a) => a.regra !== "RF01");
-  const porUF = {}, porTipo = {};
-  sem.forEach((a) => {
-    if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o[a.gravidade] += a.total || 0; }
-    const t = (porTipo[a.regra] ||= { v: 0, n: 0 }); t.v += a.total || 0; t.n++;
-  });
-  const ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 7), tipos = Object.entries(porTipo).sort((x, y) => y[1].v - x[1].v);
-  const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++); const tot = L.length;
-  const mxU = Math.max(1, ...ufs.map((x) => x[1].v)), mxT = Math.max(1, ...tipos.map((x) => x[1].v));
-  const estados = ufs.map(([u, o]) => `<div class="pan-l"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(6, Math.round(100 * o.v / mxU))}%"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
-  const tiposH = tipos.map(([r, o]) => `<div class="pan-t2" style="--r:${RCOR[r] || "#8aa0b5"}"><i></i><span>${esc(RNOME[r] || r)}</span><em>${o.n}</em><b class="num">${brlCurto(o.v)}</b><div class="trilho2"><u style="width:${Math.max(3, Math.round(100 * o.v / mxT))}%"></u></div></div>`).join("");
-  pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} alertas${filtroPer !== "todos" ? " · período filtrado" : ""}</span></div>
-    <div class="pan-sev"><i style="width:${100 * c.alta / tot}%;background:${COR.alta}"></i><i style="width:${100 * c.media / tot}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / tot}%;background:${COR.baixa}"></i></div>
-    <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
-    <div class="pan-h">Valor por estado <small>por prioridade</small></div>${estados}
-    <div class="pan-h">O que acendeu <small>alertas · valor</small></div>${tiposH}${escalaHtml()}`;
+  const sem = L.filter((a) => a.regra !== "RF01"), porUF = {};
+  sem.forEach((a) => { if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o[a.gravidade] += a.total || 0; } });
+  const tv = Object.values(porUF).reduce((s, o) => s + o.v, 0) || 1, ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 5);
+  const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++);
+  const estados = ufs.map(([u, o]) => `<div class="pan-l"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(4, Math.round(100 * o.v / tv * 1.6))}%" title="${esc(u)}: ${brlCurto(o.v)}"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${Math.round(100 * o.v / tv)}%</b></div>`).join("");
+  pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} em foco</span></div>
+    <div class="pan-h">Onde está o dinheiro em atenção <small>% do valor</small></div>${estados}${escalaHtml()}`;
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
@@ -904,4 +910,35 @@ function abrirCasoPessoa(c) {
   $("detalhe").querySelectorAll("a[data-id]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrir(x.dataset.id); }));
   $("detalhe").querySelectorAll("a[data-p]").forEach((x) => (x.onclick = (e) => { e.preventDefault(); abrirPessoa(x.dataset.p, CTX_P); }));
   $("detalhe").scrollTop = 0;
+}
+
+
+// ---------- Minha cidade: o que chegou de emenda, quem mandou, prefeito e alertas ----------
+let _mun = null;
+async function montarCidade() {
+  const el = $("aba-cidade");
+  if (el.dataset.ok) return;
+  _mun = await fetch("/data/municipios.json").then((r) => r.json()).catch(() => ({}));
+  const ks = Object.keys(_mun).filter((k) => _mun[k].total || _mun[k].n_alertas).sort((a, b) => _mun[a].nome.localeCompare(_mun[b].nome, "pt-BR"));
+  const top = Object.entries(_mun).sort((a, b) => b[1].total - a[1].total).slice(0, 8);
+  el.innerHTML = `<h3>Minha cidade</h3><p class="sub2">Digite o nome da sua cidade e veja quanto dinheiro de emenda parlamentar chegou, quem mandou, quem é o prefeito e se o Radar achou algo por lá.</p>
+    <input id="cid-in" list="cid-l" placeholder="Ex.: Campinas / SP" autocomplete="off"><datalist id="cid-l">${ks.map((k) => `<option value="${esc(_mun[k].nome)} / ${_mun[k].uf}">`).join("")}</datalist>
+    <div id="cid-r"><div class="rot">// cidades que mais receberam desde 2019</div>${top.map(([k, d]) => `<div class="card" style="--c:#4cc9f0" data-k="${esc(k)}"><div class="topo"><div class="nome">${esc(d.nome)}/${d.uf}</div><div class="valor num" style="color:#4cc9f0">${brlCurto(d.total)}</div></div></div>`).join("")}</div>`;
+  el.dataset.ok = "1";
+  const mostra = (k) => { const d = _mun[k]; if (!d) return;
+    const anos = Object.entries(d.anos || {}).sort(), mx = Math.max(1, ...anos.map(([, v]) => v));
+    const url = location.origin + "/";
+    $("cid-r").innerHTML = `<h4>${esc(d.nome)} / ${d.uf}</h4>
+      ${d.prefeito ? `<p class="sub2">Prefeito(a): <b style="color:#fff">${esc(d.prefeito.nome)}</b>${d.prefeito.partido ? " · " + esc(d.prefeito.partido) : ""}</p>` : ""}
+      <div class="cid-n"><div><b>${brlCurto(d.total || 0)}</b><span>de emendas pagas desde 2019</span></div><div><b>${d.n_alertas || 0}</b><span>alerta(s) do Radar na cidade</span></div></div>
+      ${anos.length ? `<div class="sub2" style="margin-top:8px">Por ano</div>${anos.map(([a, v]) => `<div class="cid-b"><span>${a}</span><div><i style="width:${Math.max(3, Math.round(100 * v / mx))}%"></i></div><b class="num">${brlCurto(v)}</b></div>`).join("")}` : ""}
+      ${(d.autores || []).length ? `<div class="sub2" style="margin-top:12px">Quem mais mandou dinheiro de emenda</div><table class="tbl"><tbody>${d.autores.map((x) => `<tr><td>${esc(x[0])}</td><td class="num" style="text-align:right">${brlCurto(x[1])}</td></tr>`).join("")}</tbody></table>` : ""}
+      ${(d.areas || []).length ? `<div class="sub2" style="margin-top:12px">Em quê</div><p class="sub2">${d.areas.map((x) => esc(x[0]) + " " + brlCurto(x[1])).join(" · ")}</p>` : ""}
+      ${(d.alertas || []).length ? `<div class="sub2" style="margin-top:12px">Alertas na cidade</div>${d.alertas.map((a) => `<div class="card" style="--c:${COR[a.g] || "#8aa0b5"}" data-id="${esc(a.id)}"><div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div><div class="sub"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${esc(RNOME[a.regra] || a.regra)}</span></div></div>`).join("")}` : ""}
+      <a class="zap" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(`Em ${d.nome}/${d.uf} chegaram ${brlCurto(d.total || 0)} em emendas parlamentares desde 2019. Veja quem mandou: ${url}`)}">Mandar no WhatsApp</a>
+      <p class="aviso">Emenda parlamentar é dinheiro do orçamento federal indicado por deputados e senadores. Receber emenda é normal; o Radar mostra para onde foi e onde há pontos de atenção.</p>`;
+    $("cid-r").querySelectorAll("[data-id]").forEach((e) => (e.onclick = () => abrir(e.dataset.id)));
+  };
+  $("cid-in").addEventListener("change", () => { const v = $("cid-in").value.trim(), m = v.match(/^(.*)\s*\/\s*([A-Z]{2})$/); if (!m) return; const k = ks.find((x) => _mun[x].uf === m[2] && _mun[x].nome.toLowerCase() === m[1].trim().toLowerCase()); if (k) mostra(k); });
+  $("cid-r").querySelectorAll("[data-k]").forEach((e) => (e.onclick = () => mostra(e.dataset.k)));
 }

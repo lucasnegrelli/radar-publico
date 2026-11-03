@@ -24,6 +24,7 @@
     <nav id="abas" aria-label="Seções">
       <button data-aba="alertas" class="on" title="Alertas"><svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
       <button data-aba="casos" title="Investigações, bancos e empresas com sinais combinados"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
+      <button data-aba="cidade" title="Minha cidade: emendas, prefeito e alertas"><svg viewBox="0 0 24 24"><path d="M3 21V10l9-6 9 6v11M9 21v-6h6v6"/></svg><span>Cidade</span></button>
       <button data-aba="fichas" title="Pessoas: políticos e agentes públicos"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Pessoas</span></button>
       <button data-aba="justica" title="Judiciário"><svg viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z"/></svg><span>Justiça</span></button>
       <button data-aba="noticias" title="Notícias"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span>Notícias</span></button>
@@ -35,7 +36,8 @@
       <section id="aba-alertas" class="aba on">
         <div class="cab"><h2>Alertas</h2><span id="cont-topo" class="sub2"></span></div>
         <div class="filtros" id="filtros">
-          <button data-g="todas" class="on">Todos</button>
+          <button data-g="destaques" class="on">Destaques</button>
+          <button data-g="todas">Todos</button>
           <button data-g="alta">Alta</button>
           <button data-g="media">Média</button>
           <button data-g="baixa">Baixa</button>
@@ -44,6 +46,7 @@
       </section>
       <section id="aba-casos" class="aba"></section>
       
+      <section id="aba-cidade" class="aba"></section>
       <section id="aba-fichas" class="aba"></section>
       
       <section id="aba-justica" class="aba"></section>
@@ -57,13 +60,13 @@
       <div class="varre" id="varre" hidden></div>
       <div id="camadas">
         <div class="cam-t">Camadas</div>
-        <label style="--k:#ff8a3d"><input type="checkbox" id="l-calor" checked><i></i> Calor de valor</label>
-        <label style="--k:#ff2d85"><input type="checkbox" id="l-rotas" checked><i></i> Rotas do dinheiro</label>
-        <label style="--k:#b388ff"><input type="checkbox" id="l-todas"><i></i> Todas as rotas <small>(pesado)</small></label>
-        <label style="--k:#22d3b6"><input type="checkbox" id="l-pontos" checked><i></i> Pontos</label>
-        <label style="--k:#4cc9f0"><input type="checkbox" id="tg-voos"><i></i> Voos internacionais</label>
+        <label title="Calor de valor: brilho onde há mais dinheiro" style="--k:#ff8a3d"><input type="checkbox" id="l-calor" checked><i></i> Calor de valor</label>
+        <label title="Rotas do dinheiro: do órgão à empresa" style="--k:#ff2d85"><input type="checkbox" id="l-rotas" checked><i></i> Rotas do dinheiro</label>
+        <label title="Todas as rotas (pesado)" style="--k:#b388ff"><input type="checkbox" id="l-todas"><i></i> Todas as rotas <small>(pesado)</small></label>
+        <label title="Pontos: um por alerta" style="--k:#22d3b6"><input type="checkbox" id="l-pontos" checked><i></i> Pontos</label>
+        <label title="Voos internacionais pagos com a cota" style="--k:#4cc9f0"><input type="checkbox" id="tg-voos"><i></i> Voos internacionais</label>
       </div>
-      <div id="legenda"><span style="color:#ff2d55"><i style="background:#ff2d55"></i>Alta</span><span style="color:#ffb300"><i style="background:#ffb300"></i>Média</span><span style="color:#00b8ff"><i style="background:#00b8ff"></i>Baixa</span></div>
+      <div id="legenda"><span title="Prioridade alta: sinal forte, pouca dúvida"><i style="background:#ff2d55"></i></span><span title="Prioridade média"><i style="background:#ffb300"></i></span><span title="Prioridade baixa: vale conferir"><i style="background:#00b8ff"></i></span></div>
       <div id="timeline"></div>
       <div id="coords"></div>
       <section id="detalhe" hidden></section>

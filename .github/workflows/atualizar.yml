@@ -71,6 +71,7 @@ jobs:
           python ingestao/risco_financeiro.py
           python ingestao/risco_dossie.py || true
           python ingestao/fidc.py || true
+          python ingestao/municipios.py || true
       - name: Judiciário, notícias e diários oficiais (em paralelo)
         run: |
           python ingestao/datajud.py > /tmp/datajud.log 2>&1 &
