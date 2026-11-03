@@ -1,8 +1,8 @@
 name: Atualizar o Radar Público (tudo, online)
-# Roda sozinho todo dia e publica em radar.lucasnegrelli.com. Nada roda na máquina de ninguém.
+# Rodada COMPLETA, uma vez por semana (e quando você mandar). Todo dia a versão leve (atualizar-leve.yml) renova notícias, diários e casos. Publica em radar.lucasnegrelli.com. Nada roda na máquina de ninguém.
 on:
   schedule:
-    - cron: "17 8 * * *"   # 05:17 em Brasília
+    - cron: "17 14 * * 0"   # domingo, 11:17 em Brasília (depois do PNCP e das licitações da madrugada)
   workflow_dispatch:
     inputs:
       pular_extras:

@@ -1,0 +1,56 @@
+name: Atualização leve diária (notícias, diários, casos)
+# Todo dia, sem baixar os 7 GB de dados: pega os dados já publicados no site, atualiza só o que muda rápido
+# (manchetes, diários oficiais, casos com notícias) e republica. A rodada COMPLETA (alertas, emendas, fichas) é a semanal (atualizar.yml).
+on:
+  schedule:
+    - cron: "17 8 * * 1-6"   # segunda a sábado, 05:17 em Brasília (domingo roda a completa)
+  workflow_dispatch:
+concurrency:
+  group: atualizar
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  leve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Pegar os dados que já estão no ar
+        run: |
+          mkdir -p web/public/data/pessoas
+          S=https://radar.lucasnegrelli.com/data
+          for f in alertas fichas risco viagens judiciario meta escala fidc noticias noticias_alertas diarios caso_master_diarios casos; do curl -sf -o web/public/data/$f.json $S/$f.json || echo "sem $f"; done
+          for h in $(seq 0 255); do printf '%02x\n' $h; done | xargs -P 8 -I{} sh -c "curl -sf -o web/public/data/pessoas/s{}.json $S/pessoas/s{}.json || true"
+          curl -sf -o web/public/data/pessoas/idx.json $S/pessoas/idx.json || echo "sem idx"
+          curl -sf -o web/public/data/pessoas/extras.json $S/pessoas/extras.json || true
+          test -s web/public/data/alertas.json || { echo "dados do site indisponíveis: abortando"; exit 1; }
+          cp data-publica/estaticos/* web/public/data/
+      - name: Notícias, notícias por alerta e diários (em paralelo)
+        run: |
+          python ingestao/noticias.py > /tmp/n1.log 2>&1 &
+          python ingestao/noticias_alertas.py > /tmp/n2.log 2>&1 &
+          python ingestao/diarios.py > /tmp/n3.log 2>&1 &
+          wait
+          tail -n 2 /tmp/n1.log /tmp/n2.log /tmp/n3.log || true
+      - name: Casos (manchetes novas, fichas e alertas ligados)
+        run: python ingestao/casos_auto.py
+      - name: Montar o site
+        run: |
+          for f in diarios noticias_alertas caso_master_diarios; do [ -f data-publica/$f.json ] && cp data-publica/$f.json web/public/data/ || true; done
+          cd web && npm ci && npx vite build
+      - name: Publicar no GitHub Pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cd web && bash publicar-pages.sh
+      - name: Guardar no repositório
+        run: |
+          git config user.name "radar-publico-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-publica/
+          git diff --cached --quiet || git commit -m "atualização leve $(date +%F)"
+          git pull --rebase -q && git push
