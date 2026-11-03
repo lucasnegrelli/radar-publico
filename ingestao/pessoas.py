@@ -185,6 +185,34 @@ for pid, p in pessoas.items():
     if m and len(m) <= 3 and len([w for w in SQ(p["n"]).split() if w not in ("DA", "DE", "DO", "DAS", "DOS", "E")]) >= 4:
         p["offshore"] = [{"id": x["id"], "nome": x["nome"], "fonte": x["fonte"], "entidades": x["entidades"][:4]} for x in m]
 
+# ---------- empresas em que a pessoa é sócia (Receita: nome completo + 6 dígitos centrais do CPF) ----------
+_cp = " union all ".join(f"select '{a}' ano, SQ_CANDIDATO sq, substr(NR_CPF_CANDIDATO, 4, 6) c6 from {T('consulta_cand_' + str(a))}" for a in (2018, 2020, 2022, 2026)) + " union all select '2024', SQ_CANDIDATO, substr(NR_CPF_CANDIDATO, 4, 6) from tse_cand"
+cpf_por = {(a, s): c6 for a, s, c6 in c.execute(_cp).fetchall() if c6 and c6.isdigit() and len(c6) == 6}
+c.execute("create temp table pp(pid varchar, nome varchar, c6 varchar)")
+linhas = []
+for pid, p in pessoas.items():
+    c6 = next((cpf_por[(str(a), s)] for a, s in p["sq"].items() if (str(a), s) in cpf_por), None)
+    if c6: linhas.append((pid, SQ(p["n"]), c6))
+c.executemany("insert into pp values (?,?,?)", linhas)
+c.execute("""create temp table soc as select pp.pid, s.cnpj_basico, s.qualificacao, s.data_entrada
+   from read_parquet('dados/cnpj/socios_[0-9]*.parquet') s join pp on strip_accents(upper(trim(s.nome_socio))) = pp.nome and substr(s.doc_socio, 4, 6) = pp.c6
+   where s.tipo_socio = '2' and s.doc_socio like '***%'""")
+QUALIF = {"05": "Administrador", "10": "Diretor", "16": "Presidente", "22": "Sócio", "49": "Sócio-administrador", "28": "Sócio-gerente", "08": "Conselheiro", "65": "Titular"}
+SIT = {"01": "nula", "02": "ativa", "03": "suspensa", "04": "inapta", "08": "baixada"}
+emp_rows = c.execute("""select soc.pid, soc.cnpj_basico, e.razao_social, e.capital_social, e.porte, soc.qualificacao, soc.data_entrada, m.cnpj, m.situacao, m.data_inicio, m.uf
+   from soc join read_parquet('dados/cnpj/empresas_*.parquet') e using (cnpj_basico)
+   left join (select cnpj, cnpj_basico, situacao, data_inicio, uf from read_parquet('dados/cnpj/estabelecimentos_*.parquet') where matriz = '1' and cnpj_basico in (select cnpj_basico from soc)) m using (cnpj_basico)""").fetchall()
+for pid, cb, rs, cap, porte, qual, entrada, cnpj14, sit, ini, uf in emp_rows:
+    p = pessoas[pid]
+    d = {"cnpj": cnpj14 or (cb + "------"), "nome": TT(rs), "capital": cap, "situacao": SIT.get(sit, sit), "abertura": ini, "uf": uf, "qual": QUALIF.get(qual, "Sócio"), "entrada": entrada}
+    if cnpj14 and cnpj14 in sanc: d["sanc"] = True
+    if cnpj14 and cnpj14 in por_cnpj: d["alertas"] = por_cnpj[cnpj14][:3]
+    p.setdefault("empresas", []).append(d)
+for p in pessoas.values():
+    if p.get("empresas"):
+        p["empresas"] = sorted(p["empresas"], key=lambda d: (-(1 if d.get("sanc") or d.get("alertas") else 0), -(float(d["capital"] or 0))))[:12]
+print(sum(1 for p in pessoas.values() if p.get("empresas")), "pessoas com empresas em nome próprio (nome + CPF parcial)", flush=True)
+
 # ---------- pontos de atenção (neutros) + ordenação ----------
 def brl(v):
     if v < 1e6: return "R$ " + f"{v:,.0f}".replace(",", ".")
@@ -221,6 +249,9 @@ for pid, p in pessoas.items():
         pts.append({"t": "Gasto de cota em 2025 entre os 10% maiores", "d": f"Percentil {m['pct25']} entre os deputados. Gastar muito não é irregular; indica onde olhar."})
     if p.get("emendas") and p["emendas"]["alertas"]:
         pts.append({"t": "Emendas pagaram entidades com ponto de atenção no Radar", "d": f"{len(p['emendas']['alertas'])} entidade(s) favorecida(s) com alerta R09 (sancionada, empresa nova ou capital muito pequeno para o valor).", "alertas": p["emendas"]["alertas"]})
+    for d in (p.get("empresas") or []):
+        if d.get("sanc"): pts.append({"t": "É sócio(a) de empresa que consta como sancionada (CEIS/CNEP)", "d": f"{d['nome']}. A base mostra o quadro societário atual, sem data de saída."})
+        if d.get("alertas"): pts.append({"t": "É sócio(a) de empresa com alerta no Radar Público", "d": d["nome"], "alertas": d["alertas"]})
     if p.get("offshore"):
         pts.append({"t": "Nome completo coincide com pessoa ligada a empresa offshore (ICIJ Offshore Leaks)", "d": "Coincidência de nome não prova que seja a mesma pessoa, e constar nos vazamentos não indica ilegalidade: ter empresa no exterior pode ser legal e declarado. Confirme nos detalhes abaixo."})
     if r10.get(SQ(p["n"])):

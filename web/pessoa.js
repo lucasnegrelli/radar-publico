@@ -77,6 +77,9 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
   const vo = p.voos
     ? `<h4>Voos internacionais pagos com a cota</h4><div class="kp2"><div><b>${vo_n(p.voos)}</b><span>voos desde 2023</span></div><div><b>${brlCurto(p.voos.v)}</b><span>em passagens</span></div></div><p class="sub2">${Object.entries(p.voos.paises).map(([k, v]) => esc(k) + " " + v).join(" · ")}. A data é a de emissão da passagem; voo pago pela cota não é irregular por si só.</p>`
     : "";
+  const emps = (p.empresas || []).length
+    ? `<h4>Empresas em que consta como sócio(a)</h4><p class="sub2">Receita Federal: nome completo e 6 dígitos centrais do CPF coincidem. A base mostra o quadro atual, sem data de saída.</p>${p.empresas.map((e) => `<div class="emp"><div class="emp-t"><b>${esc(e.nome)}</b>${e.sanc ? ' <span class="tag-s">sancionada</span>' : ""}</div><div class="sub2">${esc(e.qual)} · ${esc(e.situacao || "")}${e.abertura ? " · aberta em " + esc(String(e.abertura).slice(0, 4)) : ""}${e.uf ? " · " + esc(e.uf) : ""}${e.capital != null ? " · capital " + brlCurto(Number(e.capital)) : ""}</div>${e.alertas ? `<div class="chips">${ligaAlertas(e.alertas)}</div>` : ""}</div>`).join("")}`
+    : "";
   const off = (p.offshore || []).length
     ? `<h4>Possível ligação com empresas no exterior</h4><p class="sub2">Base pública do ICIJ (Offshore Leaks). O nome completo coincide, mas pode ser outra pessoa: confirme antes de concluir qualquer coisa.</p>${p.offshore.map((o) => `<div class="bloco-camp"><h5>${esc(o.nome)} · ${esc(o.fonte)}</h5>${(o.entidades || []).map((e) => `<div class="sub2">${esc(e.nome)} · ${esc(e.jurisdicao || "")}${e.inicio ? " · aberta em " + esc(e.inicio) : ""}${e.status ? " · " + esc(e.status) : ""}</div>`).join("") || '<div class="sub2">Sem empresa ligada nos dados.</div>'}<a href="https://offshoreleaks.icij.org/nodes/${esc(o.id)}" target="_blank" rel="noopener">ver no ICIJ</a></div>`).join("")}`
     : "";
@@ -90,6 +93,7 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     ${ex.w ? `<div class="quem"><b>Quem é</b> ${esc(ex.w.x)} <a href="${esc(ex.w.u)}" target="_blank" rel="noopener">Wikipédia</a> <span class="sub2">(CC BY-SA)</span></div>` : ""}
     ${pontos ? `<h4>Pontos de atenção</h4><ul class="check pessoa-pontos">${pontos}</ul>` : '<div class="manchete" style="--c:' + c + '">Nenhum ponto de atenção apareceu nos cruzamentos feitos. Isso não significa que não exista; significa que estes dados abertos não mostram.</div>'}
     <h4>Candidaturas</h4><table class="tbl"><tbody>${cand || '<tr><td class="sub2">Sem candidatura nos dados de 2018, 2022 e 2024.</td></tr>'}</tbody></table>
+    ${emps}
     ${bens ? `<h4>Patrimônio declarado à Justiça Eleitoral</h4>${bens}${topB}` : ""}
     ${camp ? `<h4>Campanhas</h4>${camp}` : ""}
     ${mand}
