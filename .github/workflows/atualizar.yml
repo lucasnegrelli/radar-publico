@@ -72,6 +72,7 @@ jobs:
           python ingestao/risco_dossie.py || true
           python ingestao/fidc.py || true
           python ingestao/municipios.py || true
+          python ingestao/remuneracao.py || true
       - name: Judiciário, notícias e diários oficiais (em paralelo)
         run: |
           python ingestao/datajud.py > /tmp/datajud.log 2>&1 &
@@ -81,6 +82,7 @@ jobs:
           python ingestao/camara_atividade.py > /tmp/camara.log 2>&1 &
           python ingestao/senado_atividade.py > /tmp/senado.log 2>&1 &
           python ingestao/ofac.py > /tmp/ofac.log 2>&1 &
+          python ingestao/camara_votos.py > /tmp/votos.log 2>&1 &
           wait
           tail -n 2 /tmp/camara.log /tmp/datajud.log /tmp/noticias.log /tmp/noticias_alertas.log /tmp/diarios.log || true
       - name: Offshore Leaks (ICIJ)

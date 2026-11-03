@@ -188,11 +188,16 @@ for pid, p in pessoas.items():
         p["offshore"] = [{"id": x["id"], "nome": x["nome"], "fonte": x["fonte"], "entidades": x["entidades"][:4]} for x in m]
 
 # ---------- atividade na Câmara (API de dados abertos: ingestao/camara_atividade.py) ----------
+_cv = RAIZ / "dados" / "camara_votos.json"
+VOTOS = json.loads(_cv.read_text(encoding="utf-8")) if _cv.exists() else {}
 _ca = RAIZ / "dados" / "camara_atividade.json"
 if _ca.exists():
     for k, d in json.loads(_ca.read_text(encoding="utf-8")).items():
         pid = por_nome.get((SQ(d["nome"]), d["uf"])) or por_nome.get((SQ(d["nome_civil"]), d["uf"]))
-        if pid: pessoas[pid]["camara"] = {x: d[x] for x in ("foto", "escolaridade", "nascimento", "natural", "projetos", "frentes", "comissoes")}
+        if pid:
+            pessoas[pid]["camara"] = {x: d[x] for x in ("foto", "escolaridade", "nascimento", "natural", "projetos", "frentes", "comissoes")}
+            v = VOTOS.get(k)
+            if v: pessoas[pid]["camara"]["votos"] = {"n": v["n"], "dist": {(a or "Sem registro"): b for a, b in v["votos"].items()}, "gov_n": v.get("gov_n", 0), "gov_com": v.get("gov_com", 0)}
 
 # ---------- atividade no Senado (ingestao/senado_atividade.py) ----------
 _sa = RAIZ / "dados" / "senado_atividade.json"
