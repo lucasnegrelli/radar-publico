@@ -147,8 +147,8 @@ function pontuar(a) {
     + (a.novo ? 10 : 0) + (m.politico ? 15 : 0) + ((m.autores || []).length ? 10 : 0) + (m.cepim || m.sancao ? 20 : 0);
 }
 function destaques(L, n = 40, porTipo = 8) {
-  const cont = {}, out = [];
-  for (const a of [...L].sort((x, y) => y.score - x.score)) { if ((cont[a.regra] = (cont[a.regra] || 0) + 1) > porTipo) continue; out.push(a); if (out.length >= n) break; }
+  const cont = {}, out = [], vistos = new Set();
+  for (const a of [...L].sort((x, y) => y.score - x.score)) { if (a.cnpj && vistos.has(a.cnpj)) continue; vistos.add(a.cnpj); if ((cont[a.regra] = (cont[a.regra] || 0) + 1) > porTipo) continue; out.push(a); if (out.length >= n) break; }
   return out;
 }
 let alertas = [], visiveis = [], filtroG = "destaques", filtroR = "todas", sel = null, nomes = {};
@@ -214,7 +214,7 @@ function camadas(tempo) {
   }
   return L;
 }
-function atualizarMapa() { if (!overlay) return; derivar(); map.setPaintProperty("uf-fill", "fill-color", corUF(visiveis)); if (typeof atualizarPanorama === "function") atualizarPanorama(); }
+function atualizarMapa() { if (!overlay) return; derivar(); map.setPaintProperty("uf-fill", "fill-color", corUF(universo())); if (typeof atualizarPanorama === "function") atualizarPanorama(); }
 function mostrarRota(a) {
   const o = a.origem, d = a.local;
   if (!o || !d) { rotaSel = null; return; }
@@ -232,7 +232,7 @@ function montarMapa() {
   map.addSource("grade", { type: "geojson", data: grade() });
   map.addLayer({ id: "grade", type: "line", source: "grade", paint: { "line-color": "#8aa0b5", "line-width": 0.5, "line-opacity": 0.035 } });
   map.addSource("ufs", { type: "geojson", data: ufGeo });
-  map.addLayer({ id: "uf-fill", type: "fill", source: "ufs", paint: { "fill-color": corUF(visiveis) } });
+  map.addLayer({ id: "uf-fill", type: "fill", source: "ufs", paint: { "fill-color": corUF(universo()) } });
   map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#2c3b4c", "line-width": 0.7, "line-opacity": 0.95 } });
   map.addSource("voos", { type: "geojson", data: vazio });
   map.addLayer({ id: "voos-arco", type: "line", source: "voos", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": "#b388ff", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1, 100, 4], "line-opacity": 0.75 } });
@@ -287,17 +287,19 @@ const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json")
 
 // ---------- lista e filtros ----------
 let total_filtro = 0;
+const universo = () => alertas.filter((a) => noJanela(a) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
 function aplicarFiltro() {
   visiveis = alertas.filter((a) => noJanela(a) && (filtroG === "todas" || filtroG === "destaques" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
   total_filtro = visiveis.length;
   if (filtroG === "destaques") visiveis = destaques(visiveis);
   lista(); atualizarMapa(); atualizarPanorama();
 }
+const curta = (a) => { const s = manchete(a).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').trim(); const p = s.split(/(?<=\.)\s/)[0]; return p.length > 175 ? p.slice(0, 172) + "…" : p; };
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
       <div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div>
-      <div class="sub">${linhaCard(a)}</div>
+      <div class="sub hl">${esc(curta(a))}</div>
       <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span> · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
@@ -320,7 +322,7 @@ function abrir(id) {
   const blocoCorr = a.correlacao ? `<h4>Sinais combinados</h4><p class="sub2" style="margin-bottom:6px">A mesma empresa aparece em mais de uma regra, o que pesa mais que um alerta isolado.</p><ul class="check">${a.correlacao.map((x) => { const o = alertas.find((z) => z.id === x.id); return `<li><a href="#" data-id="${esc(x.id)}">${esc(nomes[x.regra] || x.regra)}</a>${o ? ` <span class="sub2">· ${brlCurto(o.total)}</span>` : ""}</li>`; }).join("")}</ul>` : "";
   const blocoAcoes = `<h4>Análise</h4><div class="acoes">${[["visto", "Visto", ""], ["analise", "Em análise", "sx"], ["descartado", "Descartar", "sd"]].map(([k, l, cl]) => `<button class="botao ${cl} ${est === k ? "on" : ""}" data-st="${k}">${l}</button>`).join("")}</div>
     <p class="sub2">Confiança do dado: <b style="color:#fff">${esc(meta.conf)}</b>. Falsos positivos comuns: ${esc(meta.fp.join("; ") || "nenhum conhecido")}.</p>
-    <div class="acoes" style="margin-top:6px"><a class="botao sx" href="${issueUrl(a)}" target="_blank" rel="noopener">Sinalizar erro nos dados</a><button class="botao" id="b-link">Copiar link</button></div>`;
+    <div class="acoes" style="margin-top:6px"><a class="botao" href="https://wa.me/?text=${encodeURIComponent((typeof curta === "function" ? curta(a) : a.empresa) + " Veja no Radar Público: " + location.origin + "/#" + encodeURIComponent(a.id))}" target="_blank" rel="noopener" style="background:#1fa855;border-color:#1fa855;color:#fff">Compartilhar no WhatsApp</a> <a class="botao sx" href="${issueUrl(a)}" target="_blank" rel="noopener">Sinalizar erro nos dados</a><button class="botao" id="b-link">Copiar link</button></div>`;
   $("detalhe").hidden = false; $("detalhe").style.setProperty("--c", c);
   $("detalhe").innerHTML = `
     <button class="fechar" aria-label="Fechar">×</button>
@@ -721,14 +723,16 @@ document.addEventListener("keydown", (e) => {
 // =====================================================================
 const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appendChild(pan);
 function atualizarPanorama() {
-  const L = visiveis; if (!L.length) { pan.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div>'; return; }
-  const sem = L.filter((a) => a.regra !== "RF01"), porUF = {};
-  sem.forEach((a) => { if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o[a.gravidade] += a.total || 0; } });
-  const tv = Object.values(porUF).reduce((s, o) => s + o.v, 0) || 1, ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 5);
-  const c = { alta: 0, media: 0, baixa: 0 }; L.forEach((a) => c[a.gravidade]++);
-  const estados = ufs.map(([u, o]) => `<div class="pan-l"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(4, Math.round(100 * o.v / tv * 1.6))}%" title="${esc(u)}: ${brlCurto(o.v)}"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${Math.round(100 * o.v / tv)}%</b></div>`).join("");
-  pan.innerHTML = `<div class="pan-t">Panorama <span>${L.length.toLocaleString("pt-BR")} em foco</span></div>
-    <div class="pan-h">Onde está o dinheiro em atenção <small>% do valor</small></div>${estados}${escalaHtml()}`;
+  const L = universo().filter((a) => a.regra !== "RF01"); if (!L.length) { pan.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div>'; return; }
+  const porUF = {}; let total = 0; const c = { alta: 0, media: 0, baixa: 0 };
+  L.forEach((a) => { total += a.total || 0; c[a.gravidade]++; if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, n: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o.n++; o[a.gravidade] += a.total || 0; } });
+  const tv = Object.values(porUF).reduce((s, o) => s + o.v, 0) || 1, ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 8), mx = ufs[0] ? ufs[0][1].v : 1;
+  const pct = _esc && _esc.pncp_bi ? (100 * total / 1e9 / _esc.pncp_bi) : null;
+  const estados = ufs.map(([u, o], i) => `<div class="pan-l ${i === 0 ? "top1" : ""}"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(5, Math.round(100 * o.v / mx))}%" title="${o.n} alertas"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
+  pan.innerHTML = `<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
+    <div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
+    <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
+    <div class="pan-h">Estados <small>valor em atenção</small></div>${estados}${escalaHtml()}`;
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
@@ -861,11 +865,9 @@ fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualiz
 function escalaHtml() {
   if (!_esc) return "";
   const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
-  return `<div class="pan-h">Escala (para não perder a noção)</div>
-    <div class="pan-esc"><div><b>${f(_esc.pib_tri * 1000)}</b><span>PIB do Brasil (ordem de grandeza)</span></div>
-    <div><b>${f(_esc.pncp_bi)}</b><span>contratos válidos no PNCP em 2025-26</span></div>
-    <div><b>${f(_esc.alertas_bi)}</b><span>em alertas de prioridade alta e média (${_esc.pct_pncp}% do PNCP)</span></div></div>
-    <p class="sub2" style="margin:6px 0 0;font-size:11px">Um caso do tamanho do Master (dezenas de bilhões) não aparece em contrato: aparece no balanço dos bancos, nos fundos e nos institutos de previdência.</p>`;
+  const itens = [["PIB do Brasil (um ano)", _esc.pib_tri * 1000, "#5b6b80"], ["Compras públicas registradas (2025-26)", _esc.pncp_bi, "#4cc9f0"], ["Em atenção no Radar", _esc.alertas_bi, "#ff2d55"]];
+  const mx = Math.log10(itens[0][1] * 10);
+  return `<div class="pan-h">Para ter noção <small>escala logarítmica</small></div>` + itens.map(([t, v, cor]) => `<div class="reg"><div class="reg-t"><span>${t}</span><b class="num">${f(v)}</b></div><div class="reg-b"><i style="width:${Math.round(100 * Math.log10(v * 10) / mx)}%;background:${cor}"></i></div></div>`).join("");
 }
 
 
