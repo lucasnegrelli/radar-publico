@@ -31,7 +31,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /opt/hostedtoolcache/CodeQL || true
           df -h / | tail -1
-      - run: pip install "duckdb==2.0.0" huggingface_hub
+      - run: pip install "duckdb==2.0.0" huggingface_hub pillow
       - name: Baixar a base e os dados do Hugging Face
         run: |
           mkdir -p dados/cnpj dados/pncp dados/compras dados/tse /tmp/hf
@@ -90,8 +90,10 @@ jobs:
       - name: Pessoas mais conhecidas (Wikipédia e manchetes)
         if: ${{ inputs.pular_extras != 'sim' }}
         run: python ingestao/pessoas_extras.py 2500 || true
-      - name: Casos (pessoas expostas, com fontes)
-        run: python ingestao/casos_auto.py || true
+      - name: Casos (pessoas expostas, com fontes) e cards para redes sociais
+        run: |
+          python ingestao/casos_auto.py || true
+          python ingestao/cards.py || true
       - name: Montar o site
         run: |
           cp data-publica/estaticos/* web/public/data/

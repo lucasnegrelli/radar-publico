@@ -322,3 +322,5 @@ a{color:var(--acc2)}
 svg.rede{width:100%;height:auto;background:rgba(255,255,255,.02);border:1px solid var(--linha);border-radius:12px}svg.rede text{fill:#c9d4e3;font-size:9.5px;font-family:var(--sans)}
 svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg.rede g.clic text{fill:#fff;font-weight:600}
 .rede-leg{display:flex;flex-wrap:wrap;gap:8px 14px;margin:8px 0 2px;font-size:11px;color:var(--mut)}.rede-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+
+.cards-tira{display:flex;gap:8px;overflow-x:auto;padding:8px 0;scrollbar-width:thin}.cards-tira img{height:160px;width:auto;border-radius:8px;border:1px solid var(--linha);display:block}

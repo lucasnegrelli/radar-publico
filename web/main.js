@@ -878,9 +878,18 @@ function escalaHtml() {
 }
 
 
+// ---------- cards para redes sociais (carrosséis gerados de cada caso) ----------
+async function cardsRedes() {
+  const el = $("cards-redes"); if (!el || el.dataset.ok) return; el.dataset.ok = "1";
+  const ix = await fetch("/cards/index.json").then((r) => r.json()).catch(() => []);
+  if (!ix.length) return;
+  el.innerHTML = `<h3 style="margin-top:18px">Cards para redes sociais</h3><p class="sub2">Carrossel pronto de cada caso (1080×1350), com tipo e fonte em cada fato. Toque numa imagem para abrir e salvar; copie a legenda com as fontes.</p>` +
+    ix.map((c) => `<div class="caixa"><b>${esc(c.titulo)}</b><div class="cards-tira">${Array.from({ length: c.slides }, (_, k) => `<a href="/cards/${esc(c.id)}/${String(k + 1).padStart(2, "0")}.png" target="_blank" rel="noopener"><img loading="lazy" src="/cards/${esc(c.id)}/${String(k + 1).padStart(2, "0")}.png" alt=""></a>`).join("")}</div><button class="botao" data-leg="${esc(c.id)}">Copiar legenda</button></div>`).join("");
+  el.querySelectorAll("[data-leg]").forEach((b) => (b.onclick = async () => { const t = await fetch(`/cards/${b.dataset.leg}/legenda.txt`).then((r) => r.text()); navigator.clipboard && navigator.clipboard.writeText(t); b.textContent = "Legenda copiada ✓"; }));
+}
 // ---------- dados abertos para baixar (o Radar como fonte de dados) ----------
 function dadosAbertos() {
-  if ($("aba-fontes").querySelector("#baixar")) return;
+  if ($("aba-fontes").querySelector("#baixar")) { cardsRedes(); return; }
   const itens = [
     ["alertas.json", "Todos os alertas com critérios, valores, tabelas de contratos e ligações (JSON)."],
     ["pessoas/idx.json", "Índice de 35 mil políticos: nome, partido, UF, cargo, ano. Cada ficha completa fica em /data/pessoas/sXX.json (XX = 2 primeiros caracteres do id)."],
@@ -892,7 +901,9 @@ function dadosAbertos() {
   ];
   $("aba-fontes").insertAdjacentHTML("beforeend", `<div id="baixar"><h3 style="margin-top:18px">Baixar os dados</h3><p class="sub2">Tudo que o Radar calcula é aberto e atualizado todo dia. Use, cruze, publique. Cite a fonte: Radar Público.</p>
     ${itens.map((i) => `<div class="caixa"><b><a href="/data/${i[0]}" download>${i[0]}</a></b><p>${esc(i[1])}</p></div>`).join("")}
+    <div id="cards-redes"></div>
     <p class="sub2">Código aberto (MIT): <a href="https://github.com/lucasnegrelli/radar-publico" target="_blank" rel="noopener">github.com/lucasnegrelli/radar-publico</a></p></div>`);
+  cardsRedes();
 }
 
 
