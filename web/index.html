@@ -45,6 +45,13 @@
           <button data-g="media">Média</button>
           <button data-g="baixa">Baixa</button>
         </div>
+        <details id="filtros-avanc"><summary>Mais filtros</summary>
+          <div class="fa-grid">
+            <label>Esfera<select id="f-esfera"><option value="">Todas</option><option value="F">Federal</option><option value="E">Estadual</option><option value="M">Municipal</option></select></label>
+            <label>Poder<select id="f-poder"><option value="">Todos</option><option value="E">Executivo</option><option value="L">Legislativo</option><option value="J">Judiciário</option></select></label>
+            <label>Estado<select id="f-uf"><option value="">Todos</option></select></label>
+            <label>Valor mínimo<select id="f-valor"><option value="0">Qualquer</option><option value="100000">R$ 100 mil</option><option value="1000000">R$ 1 mi</option><option value="10000000">R$ 10 mi</option><option value="100000000">R$ 100 mi</option></select></label>
+          </div></details>
         <ul id="itens"></ul>
       </section>
       <section id="aba-casos" class="aba"></section>

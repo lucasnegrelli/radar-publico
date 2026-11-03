@@ -50,7 +50,7 @@ for cnpj, nome, lista, cat, orgao, alc, ini, fim, total, n, d1, d2 in emp:
     alc = next((v for k, v in RAW.items() if alc.startswith(k)), "Sem Informação")
     gr = "alta" if alc.startswith(("Todas", "Em todos")) else ("baixa" if alc.startswith("No ") else "media")
     alertas.append({"id": f"R01-{cnpj}", "regra": "R01", "gravidade": gr, "empresa": nome, "cnpj": fmt_cnpj(cnpj), "total": total, "n": n, "inicio": str(d1), "fim": str(d2),
-      "origem": BRASILIA, "local": loc01.get(cnpj),
+      "origem": BRASILIA, "local": loc01.get(cnpj), "esfera": "F", "poder": "L",
       "manchete": {"tipo": "R01", "sancao": cat, "lista": lista}, "tabela": {"titulo": "Rastro do dinheiro", "cols": ["Data", "Parlamentar", "Gasto", "Valor", ""], "linhas": por[cnpj]},
       "sancao": {"lista": lista, "tipo": cat, "orgao": orgao, "alcance": alc, "inicio": str(ini), "fim": str(fim) if fim else None}})
 
@@ -76,6 +76,7 @@ if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
     for regra in ("R02", "R03", "R04", "R05", "R06", "R07", "R08"):
         rows = con.execute(f"select * from t_{regra} order by case gravidade when 'alta' then 0 when 'media' then 1 else 2 end, valor desc").fetchall()
         desc = [d[0] for d in con.description]; ix = {k: i for i, k in enumerate(desc)}
+        PE = {i: (e, p) for i, e, p in con.execute(f"select id, esfera, poder from pncp where id in (select id from t_{regra})").fetchall()}   # esfera (F/E/M) e poder (E/L/J) do órgão contratante
         if regra in ("R02", "R05", "R06", "R07", "R08"):
             grupos = {}
             for r in rows: grupos.setdefault(r[ix["doc"]] if regra == "R02" else (r[ix["grupo"]] if regra in ("R06", "R07", "R08") else (r[ix["doc"]], r[ix["municipio"]], r[ix["uf"]])), []).append(r)
@@ -90,6 +91,7 @@ if glob.glob(str(RAIZ / "dados" / "pncp" / "*.parquet")):
                  "total": tot, "n": len(g), "inicio": str(min(x[ix["data"]] for x in g)), "fim": str(max(x[ix["data"]] for x in g)),
                  "origem": None, "local": loc.get(doc), "orgao": r0[ix["orgao"]], "orgao_uf": r0[ix["uf"]], "orgao_municipio": r0[ix["municipio"]],
                  "tabela": {"titulo": "Contratos", "cols": ["Data", "Órgão contratante", "Objeto", "Valor", ""], "linhas": tab}}
+            a["esfera"], a["poder"] = PE.get(r0[ix["id"]], (None, None))
             if regra == "R02":
                 a["manchete"] = {"tipo": "R02", "sancao": r0[ix["sancao_tipo"]], "lista": r0[ix["lista"]]}
                 a["sancao"] = {"lista": r0[ix["lista"]], "tipo": r0[ix["sancao_tipo"]], "orgao": r0[ix["orgao_sancionador"]], "alcance": r0[ix["alcance"]], "inicio": str(r0[ix["sancao_ini"]]), "fim": str(r0[ix["sancao_fim"]]) if r0[ix["sancao_fim"]] else None}

@@ -295,10 +295,11 @@ let _viagens = null;
 const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json").then((r) => r.json()).catch(() => ({ voos: [], deputados: [], paises: [] })));
 
 // ---------- lista e filtros ----------
-let total_filtro = 0;
-const universo = () => alertas.filter((a) => noJanela(a) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
+let total_filtro = 0, fE = "", fP = "", fUF = "", fV = 0;
+const passa = (a) => (!fE || (a.esfera || (a.regra === "R09" || a.regra === "R10" || a.regra === "R11" || a.regra === "R12" ? "F" : "")) === fE) && (!fP || (a.poder || (a.regra === "R09" ? "E" : "")) === fP) && (!fUF || ((a.local && a.local.uf) === fUF || a.orgao_uf === fUF)) && (a.total || 0) >= fV;
+const universo = () => alertas.filter((a) => noJanela(a) && passa(a) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
 function aplicarFiltro() {
-  visiveis = alertas.filter((a) => noJanela(a) && (filtroG === "todas" || filtroG === "destaques" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
+  visiveis = alertas.filter((a) => noJanela(a) && passa(a) && (filtroG === "todas" || filtroG === "destaques" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
   total_filtro = visiveis.length;
   if (filtroG === "destaques") visiveis = destaques(visiveis);
   lista(); atualizarMapa(); atualizarPanorama();
@@ -983,3 +984,13 @@ async function montarCidade() {
 iniciaGlossario();
 setTimeout(boasVindas, 1600);
 (() => { const el = $("aba-sobre"); if (el) el.insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Glossário</h3><p class="sub2">As palavras sublinhadas nas telas têm explicação: toque nelas. Aqui estão todas.</p>${todosTermos().map(([k, v]) => `<div class="caixa"><b>${k}</b><p>${v}</p></div>`).join("")}<p class="sub2"><a href="#" id="rever-bv">Rever as boas-vindas</a></p>`); const r = $("rever-bv"); if (r) r.onclick = (e) => { e.preventDefault(); localStorage.removeItem("radar.visto"); boasVindas(); }; })();
+
+
+// ---------- filtros avançados: esfera, poder, estado e valor mínimo ----------
+(() => {
+  const UFS = "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" ");
+  const sel = $("f-uf"); if (!sel) return;
+  UFS.forEach((u) => sel.insertAdjacentHTML("beforeend", `<option value="${u}">${u}</option>`));
+  const ler = () => { fE = $("f-esfera").value; fP = $("f-poder").value; fUF = $("f-uf").value; fV = Number($("f-valor").value); aplicarFiltro(); };
+  ["f-esfera", "f-poder", "f-uf", "f-valor"].forEach((id) => ($(id).onchange = ler));
+})();

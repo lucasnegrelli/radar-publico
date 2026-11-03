@@ -24,7 +24,7 @@ SQ = lambda s: re.sub(r"\s+", " ", norm(s)).strip()
 
 # ---------- candidaturas (uma linha por ano+candidato; fica o último turno) ----------
 partes = []
-for ano in (2018, 2020, 2022, 2026):
+for ano in (2014, 2016, 2018, 2020, 2022, 2026):
     partes.append(f"""select '{ano}' ano, SQ_CANDIDATO sq, NM_CANDIDATO nome, NM_URNA_CANDIDATO urna, DS_CARGO cargo, SG_UF uf, NM_UE ue, SG_PARTIDO partido, NR_CANDIDATO numero,
       DS_SIT_TOT_TURNO sit, try_cast(NR_TURNO as int) turno, DT_NASCIMENTO nasc, DS_OCUPACAO ocup from {T('consulta_cand_' + str(ano))}""")
 partes.append("""select ANO_ELEICAO ano, SQ_CANDIDATO sq, NM_CANDIDATO nome, NM_URNA_CANDIDATO urna, DS_CARGO cargo, SG_UF uf, NM_UE ue, SG_PARTIDO partido, NR_CANDIDATO numero,
@@ -62,6 +62,8 @@ c.executemany("insert into m_sq values (?,?,?)", [(str(a), s, pid) for pid, p in
 
 # ---------- patrimônio declarado ----------
 c.execute(f"""create temp table bens as select '2018' ano, SQ_CANDIDATO sq, DS_TIPO_BEM_CANDIDATO tipo, DS_BEM_CANDIDATO descr, {num('VR_BEM_CANDIDATO')} v from {T('bens_2018')}
+  union all select '2014', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2014')}
+  union all select '2016', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2016')}
   union all select '2020', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2020')}
   union all select '2022', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2022')}
   union all select '2024', SQ_CANDIDATO, DS_TIPO_BEM_CANDIDATO, DS_BEM_CANDIDATO, {num('VR_BEM_CANDIDATO')} from {T('bens_2024')}
@@ -192,8 +194,23 @@ if _ca.exists():
         pid = por_nome.get((SQ(d["nome"]), d["uf"])) or por_nome.get((SQ(d["nome_civil"]), d["uf"]))
         if pid: pessoas[pid]["camara"] = {x: d[x] for x in ("foto", "escolaridade", "nascimento", "natural", "projetos", "frentes", "comissoes")}
 
+# ---------- atividade no Senado (ingestao/senado_atividade.py) ----------
+_sa = RAIZ / "dados" / "senado_atividade.json"
+if _sa.exists():
+    for cod, d in json.loads(_sa.read_text(encoding="utf-8")).items():
+        pid = por_nome.get((SQ(d["nome"]), d["uf"])) or por_nome.get((SQ(d["nome_completo"]), d["uf"]))
+        if pid: pessoas[pid]["senado"] = {x: d[x] for x in ("foto", "projetos", "comissoes", "votos", "partido")}
+
+# ---------- sanções internacionais (OFAC): coincidência de nome completo, a confirmar ----------
+_of2 = RAIZ / "dados" / "ofac_br.json"
+ofac = json.loads(_of2.read_text(encoding="utf-8")) if _of2.exists() else {}
+for pid, p in pessoas.items():
+    m = ofac.get(SQ(p["n"]))
+    if m and len([w for w in SQ(p["n"]).split() if w not in ("DA", "DE", "DO", "DAS", "DOS", "E")]) >= 3:
+        p["ofac"] = m[:2]
+
 # ---------- empresas em que a pessoa é sócia (Receita: nome completo + 6 dígitos centrais do CPF) ----------
-_cp = " union all ".join(f"select '{a}' ano, SQ_CANDIDATO sq, substr(NR_CPF_CANDIDATO, 4, 6) c6 from {T('consulta_cand_' + str(a))}" for a in (2018, 2020, 2022, 2026)) + " union all select '2024', SQ_CANDIDATO, substr(NR_CPF_CANDIDATO, 4, 6) from tse_cand"
+_cp = " union all ".join(f"select '{a}' ano, SQ_CANDIDATO sq, substr(NR_CPF_CANDIDATO, 4, 6) c6 from {T('consulta_cand_' + str(a))}" for a in (2014, 2016, 2018, 2020, 2022, 2026)) + " union all select '2024', SQ_CANDIDATO, substr(NR_CPF_CANDIDATO, 4, 6) from tse_cand"
 cpf_por = {(a, s): c6 for a, s, c6 in c.execute(_cp).fetchall() if c6 and c6.isdigit() and len(c6) == 6}
 c.execute("create temp table pp(pid varchar, nome varchar, c6 varchar)")
 linhas = []
@@ -259,6 +276,8 @@ for pid, p in pessoas.items():
     for d in (p.get("empresas") or []):
         if d.get("sanc"): pts.append({"t": "É sócio(a) de empresa que consta como sancionada (CEIS/CNEP)", "d": f"{d['nome']}. A base mostra o quadro societário atual, sem data de saída."})
         if d.get("alertas"): pts.append({"t": "É sócio(a) de empresa com alerta no Radar Público", "d": d["nome"], "alertas": d["alertas"]})
+    if p.get("ofac"):
+        pts.append({"t": "Nome completo coincide com pessoa na lista de sanções da OFAC (Tesouro dos EUA)", "d": "Coincidência de nome pode ser homônimo: confirme nos detalhes. Estar na lista não é decisão da Justiça brasileira."})
     if p.get("offshore"):
         pts.append({"t": "Nome completo coincide com pessoa ligada a empresa offshore (ICIJ Offshore Leaks)", "d": "Coincidência de nome não prova que seja a mesma pessoa, e constar nos vazamentos não indica ilegalidade: ter empresa no exterior pode ser legal e declarado. Confirme nos detalhes abaixo."})
     if r10.get(SQ(p["n"])):

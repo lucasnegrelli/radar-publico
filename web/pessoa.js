@@ -43,6 +43,7 @@ export async function abrirPessoa(id, ctx) {
   const maxB = Math.max(1, ...bensAnos.map(([, v]) => v.total));
   const bens = bensAnos.map(([a, v]) => `<div class="barra-l"><span class="num">${a}</span><div class="trilho"><i style="width:${Math.max(2, Math.round(100 * v.total / maxB))}%"></i></div><b class="num">${brlCurto(v.total)}</b></div>`).join("");
   const ultB = bensAnos.length ? bensAnos[bensAnos.length - 1] : null;
+  const varBens = bensAnos.length >= 2 ? (() => { const a = bensAnos[0], b = bensAnos[bensAnos.length - 1]; if (!a[1].total) return ""; const pc = Math.round(100 * (b[1].total - a[1].total) / a[1].total); return `<p class="sub2">De ${a[0]} a ${b[0]}: ${pc >= 0 ? "+" : ""}${pc}% (${brlCurto(a[1].total)} → ${brlCurto(b[1].total)}). Valor declarado pelo próprio candidato, sem correção de preços.</p>`; })() : "";
   const topB = ultB && ultB[1].top ? `<table class="tbl"><tbody>${ultB[1].top.map((b) => `<tr><td><b>${esc(b[0])}</b><br><span class="sub2">${esc(b[1])}</span></td><td class="num" style="text-align:right">${brlCurto(b[2])}</td></tr>`).join("")}</tbody></table>` : "";
 
   const campAnos = Object.entries(p.camp || {}).sort().reverse();
@@ -88,25 +89,30 @@ export async function abrirPessoa(id, ctx) {
   const cam = cm ? `<h4>Atividade na Câmara</h4><div class="kp2"><div><b>${cm.projetos != null ? cm.projetos : "–"}</b><span>projetos de lei, PLP e PEC apresentados desde fev/2023</span></div><div><b>${cm.frentes != null ? cm.frentes : "–"}</b><span>frentes parlamentares</span></div></div>
       ${(cm.comissoes || []).length ? `<div class="sub2" style="margin:8px 0 2px">Comissões atuais</div><table class="tbl"><tbody>${cm.comissoes.map((o) => `<tr><td>${esc(o.nome)}</td><td class="sub2" style="text-align:right">${esc(o.titulo || "")}</td></tr>`).join("")}</tbody></table>` : ""}
       <p class="sub2">${cm.escolaridade ? "Escolaridade declarada: " + esc(cm.escolaridade) + ". " : ""}${cm.natural ? "Natural de " + esc(cm.natural) + "." : ""}</p>` : "";
+  const se = p.senado;
+  const sen = se ? `<h4>Atividade no Senado</h4><div class="kp2"><div><b>${se.projetos}</b><span>projetos de autoria (PL, PEC e similares)</span></div><div><b>${Object.values(se.votos || {}).reduce((a, b) => a + b, 0)}</b><span>votos nominais em 2025 e 2026</span></div></div><p class="sub2">${Object.entries(se.votos || {}).map(([k, v]) => esc(k) + " " + v).join(" · ")}</p>${(se.comissoes || []).length ? `<div class="sub2" style="margin:8px 0 2px">Comissões atuais</div><table class="tbl"><tbody>${se.comissoes.map((o) => `<tr><td>${esc(o.nome || o.sigla)}</td><td class="sub2" style="text-align:right">${esc(o.titulo || "")}</td></tr>`).join("")}</tbody></table>` : ""}` : "";
+  const of = (p.ofac || []).length ? `<h4>Lista de sanções da OFAC (EUA)</h4><p class="sub2">O nome completo coincide com registro da lista SDN. Pode ser homônimo: confirme antes de concluir.</p>${p.ofac.map((o) => `<div class="bloco-camp"><h5>${esc(o.nome)} · ${esc(o.programa)}</h5><div class="sub2">${esc(o.obs)}</div><a href="https://sanctionssearch.ofac.treas.gov/" target="_blank" rel="noopener">conferir na busca oficial</a></div>`).join("")}` : "";
   const ult = (p.cand || [])[0];
   const alvoTitulo = ult ? `${ult.cargo}${ult.ue ? " de " + ult.ue : ""}${ult.uf && ult.uf !== "BR" ? "/" + ult.uf : ""} · ${ult.partido} · ${ult.ano}` : (m ? m.tipo : "");
   el.innerHTML = `
     <button class="fechar" aria-label="Fechar">×</button>
     <div class="dos" style="--c:${c}"><span>FICHA · PESSOA</span><span class="carimbo">DADOS ABERTOS</span></div>
-    <div class="cab-p">${cm && cm.foto ? `<img class="foto-p" src="${esc(cm.foto)}" alt="" loading="lazy">` : ""}<h2 style="--c:${c}">${esc(p.n)}</h2></div>
+    <div class="cab-p">${(cm && cm.foto) || (se && se.foto) ? `<img class="foto-p" src="${esc((cm && cm.foto) || se.foto)}" alt="" loading="lazy">` : ""}<h2 style="--c:${c}">${esc(p.n)}</h2></div>
     <div class="sub2 mono">${p.u && p.u !== p.n ? "“" + esc(p.u) + "” · " : ""}${esc(alvoTitulo)}${p.nasc ? " · nasc. " + esc(p.nasc) : ""}${p.ocup ? " · " + esc(p.ocup.toLowerCase()) : ""}</div>
     <div class="acoes" style="margin:8px 0"><button class="botao" id="b-inv-p">+ Minha investigação</button></div>
     ${ex.w ? `<div class="quem"><b>Quem é</b> ${esc(ex.w.x)} <a href="${esc(ex.w.u)}" target="_blank" rel="noopener">Wikipédia</a> <span class="sub2">(CC BY-SA)</span></div>` : ""}
     ${pontos ? `<h4>Pontos de atenção</h4><ul class="check pessoa-pontos">${pontos}</ul>` : '<div class="manchete" style="--c:' + c + '">Nenhum ponto de atenção apareceu nos cruzamentos feitos. Isso não significa que não exista; significa que estes dados abertos não mostram.</div>'}
     <h4>Candidaturas</h4><table class="tbl"><tbody>${cand || '<tr><td class="sub2">Sem candidatura nos dados de 2018, 2022 e 2024.</td></tr>'}</tbody></table>
     ${emps}
-    ${bens ? `<h4>Patrimônio declarado à Justiça Eleitoral</h4>${bens}${topB}` : ""}
+    ${bens ? `<h4>Patrimônio declarado à Justiça Eleitoral</h4>${bens}${varBens}${topB}` : ""}
     ${camp ? `<h4>Campanhas</h4>${camp}` : ""}
     ${mand}
     ${cam}
+    ${sen}
     ${emd}
     ${vo}
     ${off}
+    ${of}
     ${(ex.n || []).length ? `<h4>Na imprensa</h4><ul class="check">${ex.n.map((n) => `<li><a href="${esc(n[3])}" target="_blank" rel="noopener">${esc(n[2])}</a><br><span class="sub2">${esc(n[1])}${n[0] ? " · " + esc(n[0]) : ""}</span></li>`).join("")}</ul><p class="sub2">Manchetes automáticas do Google Notícias que citam o nome. Podem tratar de pessoas homônimas.</p>` : ""}
     ${ex.d ? `<h4>Em diários oficiais (desde 2024)</h4><p class="sub2">${ex.d.n} diário(s) municipal(is) citam o nome completo. Pode haver homônimos.</p>${ex.d.x.map((d) => `<div class="diario"><small>${esc(d.cidade || "")}/${esc(d.uf || "")} · ${esc(d.data || "")}</small>${esc(d.trecho)} <a href="${esc(d.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}` : ""}
     <h4>Ver mais</h4>
