@@ -3,6 +3,7 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import { abrirPessoa } from "./pessoa.js";
+import { iniciaGlossario, boasVindas, todosTermos } from "./glossario.js";
 import { abrirEmpresa, montarInvestigar, importaDoHash, adicionaInv } from "./investigar.js";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
@@ -976,3 +977,9 @@ async function montarCidade() {
   $("cid-in").addEventListener("change", () => { const v = $("cid-in").value.trim(), m = v.match(/^(.*)\s*\/\s*([A-Z]{2})$/); if (!m) return; const k = ks.find((x) => _mun[x].uf === m[2] && _mun[x].nome.toLowerCase() === m[1].trim().toLowerCase()); if (k) mostra(k); });
   $("cid-r").querySelectorAll("[data-k]").forEach((e) => (e.onclick = () => mostra(e.dataset.k)));
 }
+
+
+// ---------- glossário e boas-vindas ----------
+iniciaGlossario();
+setTimeout(boasVindas, 1600);
+(() => { const el = $("aba-sobre"); if (el) el.insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Glossário</h3><p class="sub2">As palavras sublinhadas nas telas têm explicação: toque nelas. Aqui estão todas.</p>${todosTermos().map(([k, v]) => `<div class="caixa"><b>${k}</b><p>${v}</p></div>`).join("")}<p class="sub2"><a href="#" id="rever-bv">Rever as boas-vindas</a></p>`); const r = $("rever-bv"); if (r) r.onclick = (e) => { e.preventDefault(); localStorage.removeItem("radar.visto"); boasVindas(); }; })();
