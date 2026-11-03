@@ -80,6 +80,8 @@ jobs:
           python ingestao/diarios.py > /tmp/diarios.log 2>&1 &
           wait
           tail -n 2 /tmp/datajud.log /tmp/noticias.log /tmp/noticias_alertas.log /tmp/diarios.log || true
+      - name: Offshore Leaks (ICIJ)
+        run: python ingestao/offshore.py || true
       - name: Fichas de pessoa
         run: python ingestao/pessoas.py
       - name: Pessoas mais conhecidas (Wikipédia e manchetes)
