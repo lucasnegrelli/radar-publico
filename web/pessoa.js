@@ -83,12 +83,16 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
   const off = (p.offshore || []).length
     ? `<h4>Possível ligação com empresas no exterior</h4><p class="sub2">Base pública do ICIJ (Offshore Leaks). O nome completo coincide, mas pode ser outra pessoa: confirme antes de concluir qualquer coisa.</p>${p.offshore.map((o) => `<div class="bloco-camp"><h5>${esc(o.nome)} · ${esc(o.fonte)}</h5>${(o.entidades || []).map((e) => `<div class="sub2">${esc(e.nome)} · ${esc(e.jurisdicao || "")}${e.inicio ? " · aberta em " + esc(e.inicio) : ""}${e.status ? " · " + esc(e.status) : ""}</div>`).join("") || '<div class="sub2">Sem empresa ligada nos dados.</div>'}<a href="https://offshoreleaks.icij.org/nodes/${esc(o.id)}" target="_blank" rel="noopener">ver no ICIJ</a></div>`).join("")}`
     : "";
+  const cm = p.camara;
+  const cam = cm ? `<h4>Atividade na Câmara</h4><div class="kp2"><div><b>${cm.projetos != null ? cm.projetos : "–"}</b><span>projetos de lei, PLP e PEC apresentados desde fev/2023</span></div><div><b>${cm.frentes != null ? cm.frentes : "–"}</b><span>frentes parlamentares</span></div></div>
+      ${(cm.comissoes || []).length ? `<div class="sub2" style="margin:8px 0 2px">Comissões atuais</div><table class="tbl"><tbody>${cm.comissoes.map((o) => `<tr><td>${esc(o.nome)}</td><td class="sub2" style="text-align:right">${esc(o.titulo || "")}</td></tr>`).join("")}</tbody></table>` : ""}
+      <p class="sub2">${cm.escolaridade ? "Escolaridade declarada: " + esc(cm.escolaridade) + ". " : ""}${cm.natural ? "Natural de " + esc(cm.natural) + "." : ""}</p>` : "";
   const ult = (p.cand || [])[0];
   const alvoTitulo = ult ? `${ult.cargo}${ult.ue ? " de " + ult.ue : ""}${ult.uf && ult.uf !== "BR" ? "/" + ult.uf : ""} · ${ult.partido} · ${ult.ano}` : (m ? m.tipo : "");
   el.innerHTML = `
     <button class="fechar" aria-label="Fechar">×</button>
     <div class="dos" style="--c:${c}"><span>FICHA · PESSOA</span><span class="carimbo">DADOS ABERTOS</span></div>
-    <h2 style="--c:${c}">${esc(p.n)}</h2>
+    <div class="cab-p">${cm && cm.foto ? `<img class="foto-p" src="${esc(cm.foto)}" alt="" loading="lazy">` : ""}<h2 style="--c:${c}">${esc(p.n)}</h2></div>
     <div class="sub2 mono">${p.u && p.u !== p.n ? "“" + esc(p.u) + "” · " : ""}${esc(alvoTitulo)}${p.nasc ? " · nasc. " + esc(p.nasc) : ""}${p.ocup ? " · " + esc(p.ocup.toLowerCase()) : ""}</div>
     ${ex.w ? `<div class="quem"><b>Quem é</b> ${esc(ex.w.x)} <a href="${esc(ex.w.u)}" target="_blank" rel="noopener">Wikipédia</a> <span class="sub2">(CC BY-SA)</span></div>` : ""}
     ${pontos ? `<h4>Pontos de atenção</h4><ul class="check pessoa-pontos">${pontos}</ul>` : '<div class="manchete" style="--c:' + c + '">Nenhum ponto de atenção apareceu nos cruzamentos feitos. Isso não significa que não exista; significa que estes dados abertos não mostram.</div>'}
@@ -97,6 +101,7 @@ export async function abrirPessoa(id, { $, esc, brlCurto, alertas, nomes, abrir,
     ${bens ? `<h4>Patrimônio declarado à Justiça Eleitoral</h4>${bens}${topB}` : ""}
     ${camp ? `<h4>Campanhas</h4>${camp}` : ""}
     ${mand}
+    ${cam}
     ${emd}
     ${vo}
     ${off}

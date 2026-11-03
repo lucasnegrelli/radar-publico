@@ -78,8 +78,9 @@ jobs:
           python ingestao/noticias.py > /tmp/noticias.log 2>&1 &
           python ingestao/noticias_alertas.py > /tmp/noticias_alertas.log 2>&1 &
           python ingestao/diarios.py > /tmp/diarios.log 2>&1 &
+          python ingestao/camara_atividade.py > /tmp/camara.log 2>&1 &
           wait
-          tail -n 2 /tmp/datajud.log /tmp/noticias.log /tmp/noticias_alertas.log /tmp/diarios.log || true
+          tail -n 2 /tmp/camara.log /tmp/datajud.log /tmp/noticias.log /tmp/noticias_alertas.log /tmp/diarios.log || true
       - name: Offshore Leaks (ICIJ)
         run: python ingestao/offshore.py || true
       - name: Fichas de pessoa

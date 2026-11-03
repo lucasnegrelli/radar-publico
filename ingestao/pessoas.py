@@ -185,6 +185,13 @@ for pid, p in pessoas.items():
     if m and len(m) <= 3 and len([w for w in SQ(p["n"]).split() if w not in ("DA", "DE", "DO", "DAS", "DOS", "E")]) >= 4:
         p["offshore"] = [{"id": x["id"], "nome": x["nome"], "fonte": x["fonte"], "entidades": x["entidades"][:4]} for x in m]
 
+# ---------- atividade na Câmara (API de dados abertos: ingestao/camara_atividade.py) ----------
+_ca = RAIZ / "dados" / "camara_atividade.json"
+if _ca.exists():
+    for k, d in json.loads(_ca.read_text(encoding="utf-8")).items():
+        pid = por_nome.get((SQ(d["nome"]), d["uf"])) or por_nome.get((SQ(d["nome_civil"]), d["uf"]))
+        if pid: pessoas[pid]["camara"] = {x: d[x] for x in ("foto", "escolaridade", "nascimento", "natural", "projetos", "frentes", "comissoes")}
+
 # ---------- empresas em que a pessoa é sócia (Receita: nome completo + 6 dígitos centrais do CPF) ----------
 _cp = " union all ".join(f"select '{a}' ano, SQ_CANDIDATO sq, substr(NR_CPF_CANDIDATO, 4, 6) c6 from {T('consulta_cand_' + str(a))}" for a in (2018, 2020, 2022, 2026)) + " union all select '2024', SQ_CANDIDATO, substr(NR_CPF_CANDIDATO, 4, 6) from tse_cand"
 cpf_por = {(a, s): c6 for a, s, c6 in c.execute(_cp).fetchall() if c6 and c6.isdigit() and len(c6) == 6}
