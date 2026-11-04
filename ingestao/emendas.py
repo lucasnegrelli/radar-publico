@@ -61,12 +61,13 @@ c.execute("""create table agg as
   group by p.doc, e.abertura, em.capital_social, em.porte having sum(p.valor) >= 100000""")
 c.execute("""create table flags as
   select a.*, (select list(s.lista || '|' || coalesce(s.categoria,'') || '|' || coalesce(s.abr,'') || '|' || coalesce(s.orgao,'') || '|' || coalesce(s.esf,'')) from sanc s
-                where s.doc = a.doc and s.ini <= a.fim and (s.fim is null or s.fim >= a.ini)) sancoes,
+                where s.doc = a.doc and exists (select 1 from pag q where q.doc = a.doc and q.data >= date_trunc('month', s.ini) and (s.fim is null or q.data <= s.fim))) sancoes,
+         (select coalesce(sum(q.valor), 0) from pag q where q.doc = a.doc and exists (select 1 from sanc s where s.doc = q.doc and q.data >= date_trunc('month', s.ini) and (s.fim is null or q.data <= s.fim))) valor_punicao,
          (select any_value(motivo) from cepim m where m.doc = a.doc) cepim,
          (a.abertura is not null and a.abertura > a.ini - interval 365 day and a.total >= 200000) nova,
          (a.capital_social is not null and a.total >= 500000 and a.capital_social > 0 and a.total > 50 * a.capital_social) capital_pequeno
   from agg a""")
-rows = c.execute("""select doc, nome, natureza, total, n, ini, fim, n_autores, abertura, capital_social, porte, sancoes, nova, capital_pequeno, cepim from flags
+rows = c.execute("""select doc, nome, natureza, total, n, ini, fim, n_autores, abertura, capital_social, porte, sancoes, nova, capital_pequeno, cepim, valor_punicao from flags
    where sancoes is not null or nova or capital_pequeno or cepim is not null order by (cepim is not null) desc, total desc""").fetchall()
 print(len(rows), "empresas com emenda e ponto de atenção", flush=True)
 
@@ -85,9 +86,9 @@ def local(doc):
     return {"lat": r[0], "lon": r[1], "cidade": r[2], "uf": r[3]} if r else None
 BRASILIA = {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}
 alertas = []
-for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, cap_peq, cepim in rows[:220]:
+for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, cap_peq, cepim, v_pun in rows[:220]:
     sc = [s.split("|") for s in (sancoes or [])]
-    forte = any(s[2].startswith(("Todas as Esferas", "Em todos os Poderes")) and "Federal" in s[4] or s[2].startswith("Todas as Esferas") for s in sc)
+    forte = (v_pun or 0) >= 100000 and any(s[2].startswith(("Todas as Esferas", "Em todos os Poderes")) and "Federal" in s[4] or s[2].startswith("Todas as Esferas") for s in sc)
     flags = int(bool(sc)) + int(bool(nova)) + int(bool(cap_peq)) + int(bool(cepim))
     grav = "alta" if forte or cepim or (nova and total >= 1e6) or flags >= 2 else ("media" if total >= 500000 else "baixa")
     linhas = [[{"t": str(r[0])[:7], "s": None, "u": None, "v": False}, {"t": r[1].title()[:48], "s": r[2], "u": None, "v": False}, {"t": r[3].title()[:44], "s": f"{(r[4] or '').title()}/{r[5]}", "u": None, "v": False},
@@ -98,7 +99,7 @@ for doc, nome, nat, total, n, ini, fim, n_aut, ab, cap, porte, sancoes, nova, ca
     a = {"id": f"R09-{doc}", "regra": "R09", "gravidade": grav, "empresa": (nome or "").upper(), "cnpj": fmt_cnpj(doc), "total": total, "n": n, "inicio": str(ini), "fim": str(fim),
          "origem": BRASILIA, "local": local(doc), "orgao": "Emenda parlamentar (União)", "orgao_uf": None, "orgao_municipio": None,
          "manchete": {"tipo": "R09", "autores": [{"nome": t[0].title(), "valor": t[1]} for t in top], "n_autores": n_aut, "natureza": nat, "nova": bool(nova), "abertura": str(ab) if ab else None,
-                      "capital": cap, "capital_peq": bool(cap_peq), "sancao": bool(sc), "cepim": cepim, "porte": porte},
+                      "capital": cap, "capital_peq": bool(cap_peq), "sancao": bool(sc), "cepim": cepim, "porte": porte, "valor_punicao": v_pun if sc else 0},
          "tabela": {"titulo": "Emendas pagas à entidade", "cols": ["Mês", "Autor da emenda", "Local", "Valor", ""], "linhas": linhas}}
     if sc:
         s0 = sc[0]
