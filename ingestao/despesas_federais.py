@@ -50,24 +50,43 @@ c.execute("""create table cruz as
          when s.abr ilike 'Na Esfera e no Poder%' and s.esf ilike 'Federal%' then 'media' end grav
   from pag p join sanc s on s.doc = p.doc
   where p.valor > 0 and p.mes >= date_trunc('month', s.ini) and (s.fim is null or p.mes <= s.fim)
-    and not exists (select 1 from emp e where e.cnpj_basico = left(p.doc, 8) and (e.natureza like '1%' or e.natureza in ('2011','2038')))""")
-rows = c.execute("""select doc, any_value(nome) nome, any_value(uf) uf, any_value(mun) mun, min(mes) ini_p, max(mes) fim_p, sum(valor) total, count(*) n, min(grav) grav_min,
+    and not exists (select 1 from emp e where e.cnpj_basico = left(p.doc, 8) and (e.natureza like '1%' or e.natureza in ('2011','2038','5002')))""")
+rows = c.execute("""select doc, any_value(nome) nome, any_value(uf) uf, any_value(mun) mun, min(mes) ini_p, max(mes) fim_p, sum(valor) total, count(*) n, bool_or(grav = 'alta') tem_alta, min(ini) ini_s, max(coalesce(fim, date '2099-12-31')) fim_s,
      any_value(lista) lista, any_value(categoria) categoria, any_value(orgao_sanc) orgao_sanc, any_value(abr) abr
    from cruz where grav is not null group by doc having sum(valor) >= 50000 order by sum(valor) desc limit 150""").fetchall()
 print(len(rows), "empresas", flush=True)
+# Pagar contrato antigo de empresa punida depois costuma ser legal: a punição impede contratar de novo.
+# Então o que separa alerta de falso alerta é haver contrato NOVO (federal, PNCP) assinado dentro da vigência.
+c.execute("create table alvo(doc varchar, ini date, fim date)")
+c.executemany("insert into alvo values (?,?,?)", [(r[0], r[9], r[10]) for r in rows])
+ctr = {r[0]: r[1:] for r in c.execute("""
+  select a.doc,
+    count(*) filter (where p.d >= a.ini and p.d <= a.fim) novos,
+    coalesce(sum(p.v) filter (where p.d >= a.ini and p.d <= a.fim), 0) valor_novos,
+    max(p.d) filter (where p.d >= a.ini and p.d <= a.fim) ultimo,
+    count(*) filter (where p.d < a.ini) antigos
+  from alvo a left join (select lpad(regexp_replace(coalesce(fornecedor_doc,''),'\\D','','g'),14,'0') doc, data_assinatura d, valor_global v
+                         from read_parquet('dados/pncp/*.parquet') where esfera = 'F' and valor_global > 0) p on p.doc = a.doc
+  group by a.doc""").fetchall()}
 fmt_cnpj = lambda d: f"{d[:2]}.{d[2:5]}.{d[5:8]}/{d[8:12]}-{d[12:]}"
 brl = lambda v: "R$ " + f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 alertas = []
-for doc, nome, uf, mun, ip, fp, total, n, gmin, lista, cat, osanc, abr in rows:
+for doc, nome, uf, mun, ip, fp, total, n, tem_alta, ini_s, fim_s, lista, cat, osanc, abr in rows:
     detalhe = c.execute("select mes, orgao, sum(valor) from cruz where doc = ? and grav is not null group by 1,2 order by 1 desc, 3 desc limit 14", [doc]).fetchall()
     orgaos = [r[0] for r in c.execute("select orgao from cruz where doc = ? and grav is not null group by 1 order by sum(valor) desc limit 3", [doc]).fetchall()]
-    grav = "alta" if gmin == "alta" or total >= 5e6 else "media"
+    nov, vnov, ult, ant = ctr.get(doc, (0, 0, None, 0))
+    if nov:      grav, sinal = ("alta" if tem_alta else "media"), "contrato_novo"
+    elif ant:    grav, sinal = "baixa", "so_contrato_anterior"
+    else:        grav, sinal = ("media" if tem_alta else "baixa"), "sem_contrato_pncp"
+    ct = {"sinal": sinal, "novos": nov, "valor_novos": vnov, "ultimo": str(ult) if ult else None, "anteriores": ant}
     alertas.append({"id": f"R11-{doc}", "regra": "R11", "gravidade": grav, "empresa": (nome or "").strip(" '").upper(), "cnpj": fmt_cnpj(doc), "total": total, "n": n, "inicio": str(ip), "fim": str(fp),
         "origem": {"lat": -15.7997, "lon": -47.8645, "nome": "Brasília"}, "local": None, "orgao": orgaos[0] if orgaos else "Governo federal", "orgao_uf": uf, "orgao_municipio": None,
-        "manchete": {"tipo": "R11", "orgaos": orgaos, "sancao": cat, "lista": lista, "alcance": abr, "uf": uf, "mun": mun},
+        "manchete": {"tipo": "R11", "orgaos": orgaos, "sancao": cat, "lista": lista, "alcance": abr, "uf": uf, "mun": mun, "contratos": ct}, "contratos": ct,
         "tabela": {"titulo": "Pagamentos federais no período da sanção", "cols": ["Mês", "Órgão pagador", "", "Valor", ""],
                    "linhas": [[{"t": str(r[0])[:7], "s": None, "u": None, "v": False}, {"t": r[1][:60], "s": None, "u": None, "v": False}, {"t": "", "s": None, "u": None, "v": False}, {"t": brl(r[2]), "s": None, "u": None, "v": True}, {"t": "–", "s": None, "u": None, "v": False}] for r in detalhe]},
-        "sancao": {"lista": lista, "tipo": cat, "orgao": osanc, "alcance": abr, "inicio": None, "fim": None}})
+        "sancao": {"lista": lista, "tipo": cat, "orgao": osanc, "alcance": abr, "inicio": str(ini_s), "fim": None if str(fim_s).startswith("2099") else str(fim_s)}})
 out = RAIZ / "data-publica"; out.mkdir(exist_ok=True)
 (out / "alertas_extra_r11.json").write_text(json.dumps(alertas, ensure_ascii=False, default=str), encoding="utf-8")
+_k = lambda x: sum(1 for a in alertas if a["contratos"]["sinal"] == x)
+print("sinais:", {k: _k(k) for k in ("contrato_novo", "so_contrato_anterior", "sem_contrato_pncp")})
 print(len(alertas), "alertas R11;", sum(1 for a in alertas if a["gravidade"] == "alta"), "altos; total R$", round(sum(a["total"] for a in alertas) / 1e6, 1), "mi")
