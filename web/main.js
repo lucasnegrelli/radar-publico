@@ -123,7 +123,7 @@ function checagem(a) {
 // ---------- mapa ----------
 const MAPA_BOUNDS = [[-75, -34.5], [-33, 5.6]];
 const CEL = () => window.innerWidth <= 820;
-const pad = () => (CEL() ? { top: 14, bottom: 14, left: 10, right: 10 } : { top: 24, bottom: 24, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
+const pad = () => (CEL() ? { top: 14, bottom: 14, left: 10, right: 10 } : { top: 24, bottom: 150, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
 const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
   style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, projection: { type: "globe" },
@@ -305,12 +305,14 @@ function aplicarFiltro() {
   lista(); atualizarMapa(); atualizarPanorama();
 }
 const curta = (a) => { const s = manchete(a).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').trim(); const p = s.split(/(?<=\.)\s/)[0]; return p.length > 175 ? p.slice(0, 172) + "…" : p; };
+const MIN = new Set(["DE", "DA", "DO", "DAS", "DOS", "E", "EM", "NA", "NO"]), SIGLA = /^(LTDA|EIRELI|ME|EPP|SA|S\/A|CIA|MEI|SPE|ONG|CNPJ|UFRJ|USP|II|III|IV|TI)$/;
+const bonito = (n) => { const t = String(n || ""); if (t !== t.toUpperCase()) return t; return t.toLowerCase().split(/(\s+)/).map((w, i) => { const u = w.toUpperCase(); return /\d/.test(u) || (u.length <= 3 && !/[AEIOU]/.test(u)) ? u : SIGLA.test(u) ? (u === "SA" ? "S.A." : u === "LTDA" ? "Ltda." : u) : MIN.has(u) && i > 0 ? w : w.charAt(0).toUpperCase() + w.slice(1); }).join(""); };
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
-      <div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div>
-      <div class="sub hl">${esc(curta(a))}</div>
-      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span> · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
+      <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
+      <div class="frase">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</div>
+      <div class="rodape"><span class="quem-c">${a.local ? esc(a.local.cidade) + "/" + a.local.uf + " · " : ""}${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}</span><span class="valor num">${brlCurto(a.total)}</span></div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
   $("cont").textContent = filtroG === "destaques" ? `Os ${visiveis.length} mais relevantes de ${total_filtro.toLocaleString("pt-BR")}. Toque em "Todos" para ver tudo.` : `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
@@ -627,6 +629,7 @@ const selPer = document.createElement("select"); selPer.id = "periodo"; selPer.c
 selPer.innerHTML = '<option value="todos">Qualquer período</option><option value="30">Atividade nos últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="365">Últimos 12 meses</option><option value="2026">Em 2026</option><option value="2025">Em 2025</option><option value="antes">Antes de 2025</option>';
 selPer.onchange = () => { filtroPer = selPer.value; aplicarFiltro(); };
 $("filtros").before(selPer);
+{ const g = document.querySelector("#filtros-avanc .fa-grid"); if (g) { selTipo.style.margin = selPer.style.margin = "0"; const L1 = document.createElement("label"), L2 = document.createElement("label"); L1.style.gridColumn = L2.style.gridColumn = "1 / -1"; L1.append("Tipo de alerta", selTipo); L2.append("Período", selPer); g.prepend(L2); g.prepend(L1); } }
 const contEl = document.createElement("div"); contEl.id = "cont"; contEl.className = "sub2"; contEl.style.margin = "0 0 10px"; $("itens").before(contEl);
 const bCsv = document.createElement("button"); bCsv.className = "botao"; bCsv.textContent = "Exportar CSV"; bCsv.style.margin = "0 0 10px"; bCsv.onclick = () => exportarCSV(); $("itens").before(bCsv);
 
@@ -731,6 +734,8 @@ async function buscaPaleta() {
 }
 function abrePaleta() { paleta.classList.add("on"); $("pal-in").value = ""; $("pal-in").focus(); buscaPaleta(); }
 function fechaPaleta() { paleta.classList.remove("on"); }
+{ const ex = ["sua cidade", "um deputado ou senador", "uma empresa ou CNPJ", "um caso (Americanas, Master…)", "um prefeito"]; let k = 0; const sp = $("b-busca").querySelector("span");
+  if (sp) setInterval(() => { sp.style.opacity = 0; setTimeout(() => { k = (k + 1) % ex.length; sp.textContent = "Buscar " + ex[k]; sp.style.opacity = 1; }, 220); }, 3200); }
 $("b-busca").onclick = abrePaleta; paleta.onclick = (e) => { if (e.target === paleta) fechaPaleta(); };
 $("pal-in").oninput = buscaPaleta;
 document.addEventListener("keydown", (e) => {
@@ -761,7 +766,8 @@ function atualizarPanorama() {
   pan.innerHTML = `<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
     ${cv}<div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
-    <div class="pan-h">Estados <small>valor em atenção</small></div>${estados}${escalaHtml()}`;
+    <div class="pan-h">Estados <small>valor em atenção</small></div>${estados}`;
+  escalaBase();
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
@@ -899,6 +905,15 @@ function porque(a) {
 let _na = null;
 fetch("/data/noticias_alertas.json").then((r) => r.json()).then((j) => { _na = j; }).catch(() => {});
 fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualizarPanorama(); }).catch(() => {});
+function escalaBase() {
+  let el = $("escala-base"); if (!el) { el = document.createElement("div"); el.id = "escala-base"; $("centro").appendChild(el); }
+  if (!_esc) return;
+  const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
+  const itens = [["PIB do Brasil em um ano", _esc.pib_tri * 1000, "#5b6b80"], ["Compras públicas registradas", _esc.pncp_bi, "#4cc9f0"], ["Em atenção no Radar", _esc.alertas_bi, "#ff2d55"]];
+  const mx = Math.log10(itens[0][1] * 10);
+  el.title = "Escala logarítmica: cada barra é 10 vezes maior que a anterior, para caberem na mesma régua.";
+  el.innerHTML = itens.map(([t, v, cor]) => `<div><span>${t}</span><b class="num">${f(v)}</b><u><i style="width:${Math.round(100 * Math.log10(v * 10) / mx)}%;background:${cor}"></i></u></div>`).join("");
+}
 function escalaHtml() {
   if (!_esc) return "";
   const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
