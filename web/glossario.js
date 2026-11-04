@@ -68,12 +68,13 @@ export const todosTermos = () => Object.entries(TERMOS).sort((a, b) => a[0].loca
 export function boasVindas() {
   if (localStorage.getItem("radar.visto")) return;
   const d = document.createElement("div"); d.id = "bv";
-  d.innerHTML = `<div class="bv-caixa"><div class="bv-t">Bem-vindo ao Radar Público</div>
-    <p>Este site junta, num lugar só, os dados que o governo é obrigado a publicar, mas espalhados e difíceis de ler: contratos, emendas, doações de campanha, empresas, sanções e investigações.</p>
-    <div class="bv-p"><b>1</b><span>Os pontos no mapa são <u>pontos de atenção</u>, não acusações. Cada um mostra por que apareceu e o que não prova.</span></div>
-    <div class="bv-p"><b>2</b><span>A cor mostra a prioridade: <i style="color:#ff2d55">alta</i>, <i style="color:#ffb300">média</i> ou <i style="color:#00b8ff">baixa</i>. Toque num ponto ou num alerta para ver os detalhes.</span></div>
-    <div class="bv-p"><b>3</b><span>Comece por <u>Cidade</u> (quanto de emenda chegou na sua), <u>Pessoas</u> (políticos) ou <u>Investigar</u> (empresas e ligações). Palavras sublinhadas têm explicação: toque nelas.</span></div>
-    <button id="bv-ok">Entendi, vamos lá</button></div>`;
-  document.body.appendChild(d);
-  document.getElementById("bv-ok").onclick = () => { localStorage.setItem("radar.visto", "1"); d.remove(); };
+  d.innerHTML = `<button class="bv-x" aria-label="Fechar">×</button>
+    <div class="bv-t">Para onde vai o dinheiro público?</div>
+    <p>Cada ponto no mapa é um <u>ponto de atenção</u>, não uma acusação: mostra por que apareceu e o que não prova. Cor = prioridade (<i style="color:#ff2d55">alta</i>, <i style="color:#ffb300">média</i>, <i style="color:#00b8ff">baixa</i>).</p>
+    <div class="bv-go"><button data-aba="cidade">🏠 Minha cidade</button><button data-aba="fichas">👤 Um político</button><button data-aba="investigar">🔎 Uma empresa</button><button data-aba="casos">📂 Casos</button></div>`;
+  document.getElementById("centro").appendChild(d);
+  const fecha = () => { localStorage.setItem("radar.visto", "1"); d.remove(); };
+  d.querySelector(".bv-x").onclick = fecha;
+  d.querySelectorAll("[data-aba]").forEach((b) => (b.onclick = () => { document.querySelector(`#abas [data-aba="${b.dataset.aba}"]`).click(); fecha(); }));
+  setTimeout(() => { if (d.isConnected) d.classList.add("quieto"); }, 12000);
 }

@@ -53,13 +53,27 @@ const listaNome = { CEIS: "CEIS (Cadastro de Empresas Inidôneas e Suspensas)", 
 const QUALIF = { "49": "sócio-administrador", "22": "sócio", "05": "administrador", "10": "diretor", "16": "presidente", "65": "titular (empresário individual)", "28": "sócio-gerente", "08": "conselheiro" };
 const PORTE = { "00": "não informado", "01": "microempresa", "03": "empresa de pequeno porte", "05": "demais (médio/grande porte)" };
 
+// etiqueta de confiança do R11 (contrato novo assinado durante a punição?)
+function chipContrato(a) {
+  const c = a.contratos; if (!c) return "";
+  const t = c.sinal === "contrato_novo" ? ["contrato novo", "#ff2d55", "Há contrato assinado depois do início da punição"]
+    : c.sinal === "so_contrato_anterior" ? ["contrato antigo", "#8aa0b5", "Só há contratos anteriores à punição: provável pagamento de contrato antigo"]
+    : ["origem incerta", "#8aa0b5", "Nenhum contrato dessa empresa no PNCP"];
+  return `<span class="chip" style="--c:${t[1]}" title="${t[2]}">${t[0]}</span>`;
+}
 // ---------- textos por regra ----------
+function fraseContratoR11(m) {
+  const c = m.contratos; if (!c) return "";
+  if (c.sinal === "contrato_novo") return ` Assinou <b>${plural(c.novos, "contrato novo", "contratos novos")}</b> (${brl(c.valor_novos)}) já durante a punição.`;
+  if (c.sinal === "so_contrato_anterior") return " Só achamos contratos <b>anteriores</b> à punição: pode ser pagamento de contrato antigo.";
+  return " Não achamos contrato dessa empresa no PNCP: não dá para saber de onde veio o pagamento.";
+}
 function manchete(a) {
   const m = a.manchete, E = `<b>${esc(a.empresa)}</b>`;
   if (m.tipo === "R01") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} da cota parlamentar ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
   if (m.tipo === "R02") return `${E} assinou ${plural(a.n, "contrato público", "contratos públicos")} somando <b>${brl(a.total)}</b> ${periodo(a.inicio, a.fim)}, num período em que constava como <b>${situacao(m.sancao)}</b> no ${esc(m.lista)}.`;
   if (m.tipo === "R12") return `${E} vendeu <b>${brl(a.total)}</b> ao governo federal ${periodo(a.inicio, a.fim)} (${plural(a.n, "contrato", "contratos")}, ${esc(a.orgao)}). Entre os sócios há <b>${plural(m.n_servidores, "servidor federal ativo", "servidores federais ativos")}</b>${m.administradores ? ", dos quais <b>" + m.administradores + " na administração da empresa</b>" : " (como cotistas)"}.`;
-  if (m.tipo === "R11") return `${E} recebeu <b>${brl(a.total)}</b> do governo federal ${periodo(a.inicio, a.fim)} (${plural(a.n, "pagamento mensal", "pagamentos mensais")}), em meses em que constava como <b>${esc(situacaoCurta(m.sancao))}</b> com punição que alcança a União. Quem mais pagou: ${m.orgaos.map(esc).join(", ")}.`;
+  if (m.tipo === "R11") return `${E} recebeu <b>${brl(a.total)}</b> do governo federal ${periodo(a.inicio, a.fim)} (${plural(a.n, "pagamento mensal", "pagamentos mensais")}), em meses em que constava como <b>${esc(situacaoCurta(m.sancao))}</b> com punição que alcança a União. Quem mais pagou: ${m.orgaos.map(esc).join(", ")}.${fraseContratoR11(m)}`;
   if (m.tipo === "R10") return `${E} vendeu <b>${brl(a.total)}</b> a ${esc(a.orgao)}${m.orgaos.length > 1 ? " e outros órgãos" : ""} ${periodo(a.inicio, a.fim)}. Consta como sócio(a) <b>${esc(m.politico)}</b>, ${esc(m.cargo.toLowerCase())} eleito(a) em ${m.ano} (${esc(m.partido)}/${esc(m.uf)}).${m.mesmo_municipio ? " O contrato é com o próprio município onde exerce o mandato." : ""}${m.apos_posse ? "" : " Os contratos são anteriores à posse."}`;
   if (m.tipo === "R09") return `${E} recebeu <b>${brl(a.total)}</b> em ${plural(a.n, "pagamento", "pagamentos")} de emendas parlamentares ${periodo(a.inicio, a.fim)}. Autor${m.autores.length > 1 ? "es principais" : ""}: <b>${m.autores.map((x) => esc(x.nome)).join(", ")}</b>.${m.sancao ? " A empresa constava em lista de sancionadas no período." : ""}${m.cepim ? " A entidade consta no CEPIM (impedida de receber transferências federais): " + esc(String(m.cepim).toLowerCase()) + "." : ""}${m.nova ? " Foi aberta menos de um ano antes do primeiro pagamento." : ""}${m.capital_peq ? " O valor recebido é muito maior que o capital social." : ""}`;
   if (m.tipo === "R08") return `${E} assinou ${plural(a.n, "contrato", "contratos")} somando <b>${brl(a.total)}</b> com ${esc(a.orgao)}. Tem como sócio <b>${esc(m.socio)}</b> sediado em <b>${esc(m.pais)}</b>, jurisdição de ${m.nivel === 1 ? "sigilo clássico" : "tributação favorecida"} (lista de referência). Ter sócio no exterior é legal; o ponto de atenção é a opacidade de quem recebe dinheiro público.`;
@@ -123,7 +137,7 @@ function checagem(a) {
 // ---------- mapa ----------
 const MAPA_BOUNDS = [[-75, -34.5], [-33, 5.6]];
 const CEL = () => window.innerWidth <= 820;
-const pad = () => (CEL() ? { top: 14, bottom: 14, left: 10, right: 10 } : { top: 24, bottom: 24, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
+const pad = () => (CEL() ? { top: 14, bottom: 14, left: 10, right: 10 } : { top: 24, bottom: 230, left: document.body.classList.contains("sem-painel") ? 24 : 420, right: 24 });
 const map = new maplibregl.Map({
   container: "mapa", attributionControl: { compact: true },
   style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf", sources: {}, projection: { type: "globe" },
@@ -179,6 +193,7 @@ let janela = null;
 const rotasVis = () => (LAY.todas ? trilhas : trilhas.slice(0, 60));
 let filtroPer = "todos";
 const noJanela = (a) => {
+  if (janela) { const mm = (a.fim || a.inicio || "").slice(0, 7); if (mm < janela[0] || mm > janela[1]) return false; }
   if (filtroPer === "todos") return true;
   const f = (a.fim || a.inicio || "").slice(0, 10), hoje = new Date(), d = (n) => new Date(hoje.getTime() - n * 864e5).toISOString().slice(0, 10);
   if (filtroPer === "30") return f >= d(30); if (filtroPer === "90") return f >= d(90); if (filtroPer === "365") return f >= d(365);
@@ -278,11 +293,12 @@ function montarMapa() {
     requestAnimationFrame(quadro);
   })(t0);
 }
+let _vgFonte = "exec";
 async function alternarVoos(on) {
   const v = on ? "visible" : "none";
   ["voos-arco", "voos-ponto", "voos-nome"].forEach((l) => map.setLayoutProperty(l, "visibility", v));
   if (!on) return;
-  const d = await dadosViagens();
+  const d = _vgFonte === "exec" ? await dadosExec() : await dadosViagens();
   const fs = [];
   d.paises.forEach((p) => {
     fs.push({ type: "Feature", properties: { pais: p.pais, n: p.n }, geometry: { type: "LineString", coordinates: curva(BRASILIA, [p.lon, p.lat], 50) } });
@@ -291,6 +307,8 @@ async function alternarVoos(on) {
   map.getSource("voos").setData({ type: "FeatureCollection", features: fs });
   map.fitBounds([[-80, -40], [10, 45]], { padding: 40, duration: 1200 });
 }
+let _exec = null;
+const dadosExec = async () => (_exec ||= await fetch("/data/viagens_exec.json").then((r) => r.json()).catch(() => ({ viagens: [], paises: [], orgaos: [], agora: [] })));
 let _viagens = null;
 const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json").then((r) => r.json()).catch(() => ({ voos: [], deputados: [], paises: [] })));
 
@@ -305,12 +323,14 @@ function aplicarFiltro() {
   lista(); atualizarMapa(); atualizarPanorama();
 }
 const curta = (a) => { const s = manchete(a).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').trim(); const p = s.split(/(?<=\.)\s/)[0]; return p.length > 175 ? p.slice(0, 172) + "…" : p; };
+const MIN = new Set(["DE", "DA", "DO", "DAS", "DOS", "E", "EM", "NA", "NO"]), SIGLA = /^(LTDA|EIRELI|ME|EPP|SA|S\/A|CIA|MEI|SPE|ONG|CNPJ|UFRJ|USP|II|III|IV|TI)$/;
+const bonito = (n) => { const t = String(n || ""); if (t !== t.toUpperCase()) return t; return t.toLowerCase().split(/(\s+)/).map((w, i) => { const u = w.toUpperCase(); return /\d/.test(u) || (u.length <= 3 && !/[AEIOU]/.test(u)) ? u : SIGLA.test(u) ? (u === "SA" ? "S.A." : u === "LTDA" ? "Ltda." : u) : MIN.has(u) && i > 0 ? w : w.charAt(0).toUpperCase() + w.slice(1); }).join(""); };
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
-      <div class="topo"><div class="nome">${esc(a.empresa)}</div><div class="valor num">${brlCurto(a.total)}</div></div>
-      <div class="sub hl">${esc(curta(a))}</div>
-      <div class="meta">${a.novo ? '<span class="chip" style="--c:#00ffa6">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}<span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span> · ${plural(a.n, "registro", "registros")} · ${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}${a.local ? " · " + esc(a.local.cidade) + "/" + a.local.uf : ""}</div>
+      <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${chipContrato(a)}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
+      <div class="frase">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</div>
+      <div class="rodape"><span class="quem-c">${a.local ? esc(a.local.cidade) + "/" + a.local.uf + " · " : ""}${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}</span><span class="valor num">${brlCurto(a.total)}</span></div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
   $("cont").textContent = filtroG === "destaques" ? `Os ${visiveis.length} mais relevantes de ${total_filtro.toLocaleString("pt-BR")}. Toque em "Todos" para ver tudo.` : `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
@@ -417,6 +437,78 @@ async function montarExterior() {
     <p class="aviso">Voo ao exterior pago pela cota não é irregularidade por si só (há regras próprias de uso). Veja o trecho e o passageiro na nota da Câmara.</p>`;
   $("tg-voos").checked = true; alternarVoos(true);
   $("b-globo").onclick = () => { modoGlobo(!globoAtivo); $("b-globo").textContent = globoAtivo ? "Voltar ao mapa do Brasil" : "Ver em globo 3D"; };
+}
+async function montarViagens(fonte = _vgFonte) {
+  _vgFonte = fonte; const el = $("aba-viagens");
+  const [ex, cam] = await Promise.all([dadosExec(), dadosViagens()]);
+  const dd = (s) => { const [a, m, d] = s.split("-"); return `${d}/${m}/${a}`; };
+  const abas = `<div class="filtros"><button data-f="exec" class="${fonte === "exec" ? "on" : ""}">Executivo federal</button><button data-f="cam" class="${fonte === "cam" ? "on" : ""}">Câmara (cota)</button></div>`;
+  let corpo;
+  if (fonte === "exec") {
+    corpo = `<p class="sub2">Viagens a serviço <b>ao exterior</b> de servidores e dirigentes do Executivo federal, no Portal da Transparência. Dados até <b>${ex.ate ? dd(ex.ate) : "–"}</b>: o Portal publica com atraso, então isto <b>não mostra onde alguém está agora</b>. Nome só aparece para cargos de direção; o resto entra por órgão.</p>
+      <div class="caixa"><b>${(ex.total || 0).toLocaleString("pt-BR")}</b> viagens · <b>${brlCurto(ex.valor || 0)}</b> em diárias e passagens${(ex.agora || []).length ? ` · <b>${ex.agora.length}</b> em curso` : ""}</div>
+      <div class="rot">// dirigentes que viajaram (mais recentes)</div>
+      ${ex.viagens.slice(0, 40).map((v, i) => `<div class="caixa vg" data-i="${i}"><b>${esc(v.nome)}</b> <span class="sub2">${esc(v.cargo || v.funcao)}</span><br><span class="sub2">${esc(v.orgsup)}</span><br>${dd(v.i)}${v.f !== v.i ? " a " + dd(v.f) : ""} · <b>${esc(v.pais)}</b>${v.cid.length ? " (" + esc(v.cid.join(", ")) + ")" : ""} · ${brlCurto(v.v)}${v.motivo ? `<br><span class="sub2">${esc(v.motivo)}</span>` : ""}</div>`).join("")}
+      <div class="rot" style="margin-top:14px">// por órgão</div><table class="tbl"><tbody>${ex.orgaos.slice(0, 20).map((o) => `<tr><td>${esc(o.org)}<br><span class="sub2">${Object.entries(o.paises).map(([k, n]) => k + " " + n).join(", ")}</span></td><td class="num" style="text-align:right">${o.n}</td><td class="num" style="text-align:right">${brlCurto(o.v)}</td></tr>`).join("")}</tbody></table>
+      <div class="rot" style="margin-top:14px">// por país</div><table class="tbl"><tbody>${ex.paises.slice(0, 25).map((p) => `<tr><td>${esc(p.pais)}</td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>`;
+  } else {
+    corpo = `<p class="sub2">Voos internacionais pagos com a cota parlamentar da Câmara. A data é a da <b>emissão</b> da passagem, não do voo.</p>
+      <div class="caixa"><b>${cam.voos.length}</b> voos para <b>${cam.paises.length}</b> países.</div>
+      <div class="rot">// quem mais voou ao exterior com a cota</div><table class="tbl"><tbody>${cam.deputados.slice(0, 20).map((p) => `<tr><td><b>${esc(p.p)}</b><br><span class="sub2">${esc(p.pt || "")}${p.uf ? "/" + esc(p.uf) : ""} · ${Object.entries(p.paises).map(([k, n]) => k + " " + n).join(", ")}</span></td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>`;
+  }
+  el.innerHTML = `<h3>Viagens ao exterior</h3>${abas}${corpo}<p class="aviso">Viagem oficial não é irregularidade por si só. São registros públicos de agentes públicos em exercício, com atraso de publicação, e não rastreamento de ninguém.</p>`;
+  el.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => montarViagens(b.dataset.f)));
+  el.querySelectorAll(".vg").forEach((c) => (c.onclick = () => { const v = ex.viagens[Number(c.dataset.i)]; if (v) map.flyTo({ center: [v.lon, v.lat], zoom: 3.2, duration: 1400 }); }));
+  $("tg-voos").checked = true; alternarVoos(true);
+}
+let _ag = null, _agF = { quando: "prox", q: "", n: 40 };
+async function montarAgenda() {
+  const el = $("aba-agenda"); _ag ||= await fetch("/data/agenda.json").then((r) => r.json()).catch(() => null);
+  if (!_ag) { el.innerHTML = '<h3>Agenda</h3><p class="sub2">Agenda ainda não carregada.</p>'; return; }
+  const hoje = new Date().toISOString().slice(0, 10), raiz = new Set(alertas.map((a) => String(a.cnpj || "").replace(/\D/g, "").slice(0, 8)).filter((x) => x.length === 8));
+  const dd = (s) => { const [a, m, d] = s.split("-"); return `${d}/${m}`; };
+  const todos = _ag.autoridades.flatMap((a) => a.compromissos.map((c) => ({ ...c, a })));
+  const lista = todos.filter((c) => (_agF.quando === "hoje" ? (c.d || "") <= hoje && (c.df || c.d || "") >= hoje : _agF.quando === "prox" ? (c.df || c.d || "") >= hoje : (c.d || "") < hoje) && (!_agF.q || norm(c.a.nome + " " + c.a.orgao + " " + c.a.sigla + " " + c.assunto + " " + c.local + " " + c.privados.join(" ")).includes(norm(_agF.q))))
+    .sort((x, y) => (_agF.quando === "rec" ? -1 : 1) * ((x.d + (x.h || "")) < (y.d + (y.h || "")) ? -1 : 1));
+  const card = (c) => { const emp = c.privados.map((p) => { const [n, cnpj] = p.split("|"); const al = cnpj && raiz.has(cnpj.slice(0, 8)); return `<span class="chip" style="--c:${al ? "#ff2d55" : "#8591a5"}" title="${al ? "Esta empresa (mesma raiz de CNPJ) tem alerta no Radar" : "Empresa ou entidade que participou"}">${esc(n.slice(0, 48))}${al ? " · tem alerta" : ""}</span>`; }).join(" ");
+    const ext = c.exterior.map((x) => `<span class="chip" style="--c:#b388ff">${esc(x.slice(0, 50))}</span>`).join(" ");
+    return `<div class="caixa ag"><div class="sub2 mono">${dd(c.d)}${c.df && c.df !== c.d ? "–" + dd(c.df) : ""} ${esc(c.h || "")}${c.hf ? "–" + esc(c.hf) : ""} · ${esc(c.tipo || "")}${c.viagem ? " · viagem" : ""}</div>
+      <div><b>${esc(c.a.nome)}</b> <span class="sub2">${esc(c.a.cargo.replace(/^Ministro\(a\) De Estado/i, "Ministro(a)").slice(0, 60))} · ${esc(c.a.sigla)}</span></div>
+      <div style="margin:3px 0">${esc(c.assunto || "(sem assunto)")}</div>${c.local ? `<div class="sub2">📍 ${esc(c.local.slice(0, 90))}</div>` : ""}${emp || ext ? `<div style="margin-top:5px">${ext}${emp}</div>` : ""}</div>`; };
+  const rotulo = { hoje: "hoje", prox: "de hoje em diante", rec: "dos últimos 30 dias" }[_agF.quando];
+  el.innerHTML = `<h3>Agenda dos ministros</h3><p class="sub2">Compromissos que ministros e secretários-executivos registram no <b>e-Agendas</b> (CGU), com quem se reuniram. Cada autoridade publica o que quiser dentro das regras da lei: nem tudo aparece. Janela: ${esc(_ag.janela[0])} a ${esc(_ag.janela[1])}.</p>
+    <div class="filtros" id="ag-q">${[["hoje", "Hoje"], ["prox", "Próximos"], ["rec", "Recentes"]].map(([k, l]) => `<button data-q="${k}" class="${_agF.quando === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    <input id="ag-s" class="sel" placeholder="Buscar ministro, órgão, assunto ou empresa" value="${esc(_agF.q)}" style="padding:0 12px">
+    <div class="rot">// ${lista.length} compromissos ${rotulo}</div>${lista.slice(0, _agF.n).map(card).join("") || '<p class="sub2">Nada neste filtro.</p>'}${lista.length > _agF.n ? '<button class="botao" id="ag-mais">Ver mais</button>' : ""}
+    <p class="aviso">${esc(_ag.fonte)} · ${_ag.n_autoridades} autoridades · atualizado em ${esc(_ag.gerado)}. Empresas aparecem pelo nome informado; "tem alerta" liga a raiz do CNPJ aos alertas do Radar e não é indício de nada por si só.</p>`;
+  el.querySelectorAll("#ag-q [data-q]").forEach((b) => (b.onclick = () => { _agF.quando = b.dataset.q; _agF.n = 40; montarAgenda(); }));
+  const q = $("ag-s"); q.onchange = () => { _agF.q = q.value; _agF.n = 40; montarAgenda(); }; if (_agF.q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  const mais = $("ag-mais"); if (mais) mais.onclick = () => { _agF.n += 40; montarAgenda(); };
+}
+let _rem = null, _remF = { poder: "", q: "", n: 60 };
+async function montarSalarios() {
+  const el = $("aba-salarios"); _rem ||= await fetch("/data/remuneracoes.json").then((r) => r.json()).catch(() => null);
+  if (!_rem) { el.innerHTML = '<h3>Salários</h3><p class="sub2">Dados ainda não carregados.</p>'; return; }
+  const PODER = { J: "Judiciário", MP: "Ministério Público", E: "Executivo federal" }, T = _rem.teto;
+  const lista = _rem.ranking.filter((p) => (!_remF.poder || (_remF.poder === "MIN" ? ["stf", "stj", "tst", "stm", "tse"].includes(p.oid) : p.poder === _remF.poder)) && (!_remF.q || norm(p.nome + " " + p.orgao + " " + p.cargo).includes(norm(_remF.q))));
+  const ini = (n) => n.split(" ").filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join("");
+  const card = (p, i) => { const ac = Math.max(0, p.bruta - T), w = Math.min(100, Math.round(100 * p.bruta / (_rem.ranking[0].bruta || 1))), ws = Math.round(100 * p.sub / Math.max(p.bruta, 1));
+    return `<div class="caixa sal" data-i="${i}"><div class="sal-h">${p.foto ? `<img class="sal-f" src="${esc(p.foto)}" alt="" loading="lazy">` : `<span class="sal-f sal-i">${esc(ini(p.nome))}</span>`}<div class="sal-n"><b>${esc(p.nome)}</b><span class="sub2">${esc(p.cargo)} · ${esc(p.orgao)}</span></div><div class="sal-v"><b class="num">${brlCurto(p.bruta)}</b><span class="sub2">${esc(p.ref)}</span></div></div>
+      <div class="sal-b" title="Subsídio ${brl(p.sub)} · demais verbas ${brl(p.pend)}"><i style="width:${w * ws / 100}%;background:#4cc9f0"></i><i style="width:${w * (100 - ws) / 100}%;background:#ffb300"></i></div>
+      <div class="sal-d" hidden><div class="sub2" style="margin:6px 0">${ac > 0 ? `<b style="color:#ff6b88">${brlCurto(ac)} acima do teto de ${brl(T)}</b> · ` : ""}subsídio/base ${brl(p.sub)} · demais verbas ${brl(p.pend)} · líquido ${brl(p.liq)}</div>
+      ${p.it.length ? `<table class="tbl"><tbody>${p.it.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num" style="text-align:right">${brl(v)}</td></tr>`).join("")}</tbody></table>` : '<p class="sub2">Sem detalhamento das rubricas.</p>'}${p.u ? `<p style="margin-top:6px"><a href="${esc(p.u)}" target="_blank" rel="noopener">Ver no Portal da Transparência</a></p>` : ""}</div></div>`; };
+  el.innerHTML = `<h3>Maiores remunerações</h3><p class="sub2">Quanto cada agente público recebeu no mês de referência, separando o <span style="color:#4cc9f0">subsídio</span> das <span style="color:#ffb300">demais verbas</span> (os "penduricalhos"). Muitas dessas verbas são legais e ficam fora do teto; o ranking mostra o total e de quê, não diz que algo é irregular. Teto: ${brl(T)}.</p>
+    <div class="filtros" id="sal-p">${[["", "Todos"], ["MIN", "Ministros (STF, STJ…)"], ["J", "Judiciário"], ["MP", "MP"], ["E", "Executivo"]].map(([k, l]) => `<button data-p="${k}" class="${_remF.poder === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    <input id="sal-q" class="sel" style="padding:0 12px" placeholder="Buscar nome, cargo ou órgão" value="${esc(_remF.q)}">
+    <div class="rot">// verbas que mais pagam acima do subsídio (soma do ranking)</div>
+    <table class="tbl"><tbody>${_rem.verbas.slice(0, 8).map((v) => `<tr><td>${esc(v.item)}<br><span class="sub2">${v.n} pessoas do ranking</span></td><td class="num" style="text-align:right">${brlCurto(v.total)}</td></tr>`).join("")}</tbody></table>
+    <div class="rot" style="margin-top:14px">// ranking (${lista.length})</div>${lista.slice(0, _remF.n).map((p) => card(p, _rem.ranking.indexOf(p))).join("")}${lista.length > _remF.n ? '<button class="botao" id="sal-mais">Ver mais</button>' : ""}
+    <p class="aviso">${esc(_rem.fonte)}. Atualizado em ${esc(_rem.gerado)}.</p>`;
+  el.querySelectorAll("#sal-p [data-p]").forEach((b) => (b.onclick = () => { _remF.poder = b.dataset.p; _remF.n = 60; montarSalarios(); }));
+  const q = $("sal-q"); q.onchange = () => { _remF.q = q.value; _remF.n = 60; montarSalarios(); };
+  if (_remF.q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  const mais = $("sal-mais"); if (mais) mais.onclick = () => { _remF.n += 60; montarSalarios(); };
+  el.querySelectorAll(".sal").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a")) return; c.querySelector(".sal-d").hidden = !c.querySelector(".sal-d").hidden; }));
 }
 async function montarJustica() {
   const el = $("aba-justica");
@@ -589,6 +681,9 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   if (b.dataset.aba === "cidade") montarCidade();
   if (b.dataset.aba === "investigar" && !$("aba-investigar").dataset.ok) { $("aba-investigar").dataset.ok = "1"; montarInvestigar(CTX_P); }
   if (b.dataset.aba === "justica") montarJustica();
+  if (b.dataset.aba === "viagens") montarViagens();
+  if (b.dataset.aba === "salarios") montarSalarios();
+  if (b.dataset.aba === "agenda") montarAgenda();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
@@ -627,6 +722,7 @@ const selPer = document.createElement("select"); selPer.id = "periodo"; selPer.c
 selPer.innerHTML = '<option value="todos">Qualquer período</option><option value="30">Atividade nos últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="365">Últimos 12 meses</option><option value="2026">Em 2026</option><option value="2025">Em 2025</option><option value="antes">Antes de 2025</option>';
 selPer.onchange = () => { filtroPer = selPer.value; aplicarFiltro(); };
 $("filtros").before(selPer);
+{ const g = document.querySelector("#filtros-avanc .fa-grid"); if (g) { selTipo.style.margin = selPer.style.margin = "0"; const L1 = document.createElement("label"), L2 = document.createElement("label"); L1.style.gridColumn = L2.style.gridColumn = "1 / -1"; L1.append("Tipo de alerta", selTipo); L2.append("Período", selPer); g.prepend(L2); g.prepend(L1); } }
 const contEl = document.createElement("div"); contEl.id = "cont"; contEl.className = "sub2"; contEl.style.margin = "0 0 10px"; $("itens").before(contEl);
 const bCsv = document.createElement("button"); bCsv.className = "botao"; bCsv.textContent = "Exportar CSV"; bCsv.style.margin = "0 0 10px"; bCsv.onclick = () => exportarCSV(); $("itens").before(bCsv);
 
@@ -671,7 +767,7 @@ function montarTimeline() {
   const n = meses.length, W = 1000, bw = W / n, max = Math.max(1, ...meses.map((k) => { const p = por[k] || {}; return (p.alta || 0) + (p.media || 0) + (p.baixa || 0); }));
   const barras = meses.map((k, i) => { const p = por[k] || { alta: 0, media: 0, baixa: 0 }; let y0 = 50; return ["baixa", "media", "alta"].map((g) => { const h = 46 * (p[g] || 0) / max; y0 -= h; return h > 0 ? `<rect x="${i * bw + 1}" y="${y0}" width="${Math.max(1, bw - 2)}" height="${h}" fill="${COR[g]}" opacity=".85"/>` : ""; }).join(""); }).join("");
   const rotulos = [0, Math.floor(n / 2), n - 1].map((i) => `<text x="${Math.min(W - 30, Math.max(2, i * bw))}" y="49" style="font:10px ui-monospace,monospace;fill:#7a8da3">${meses[i]}</text>`).join("");
-  $("timeline").innerHTML = `<div class="tl-h"><span>Linha do tempo · alertas por mês de atividade</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".18" width="0"/>${barras}</svg>`;
+  $("timeline").innerHTML = `<div class="tl-h"><span>alertas por mês de atividade · arraste para filtrar</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".18" width="0"/>${barras}</svg>`;
   const svg = $("tl-svg"), br = $("tl-brush"); let ini = null;
   const idx = (e) => { const r = svg.getBoundingClientRect(); return Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - r.left) / r.width) * n))); };
   const pinta = (a, b) => { const lo = Math.min(a, b), hi = Math.max(a, b); br.setAttribute("x", lo * bw); br.setAttribute("width", (hi - lo + 1) * bw); };
@@ -679,8 +775,11 @@ function montarTimeline() {
   svg.onpointermove = (e) => { if (ini != null) pinta(ini, idx(e)); };
   svg.onpointerup = (e) => { if (ini == null) return; const f = idx(e), lo = Math.min(ini, f), hi = Math.max(ini, f); ini = null;
     janela = [meses[lo], meses[hi]]; $("tl-sel").textContent = lo === hi ? meses[lo] : `${meses[lo]} a ${meses[hi]}`; $("tl-reset").hidden = false; aplicarFiltro(); };
-  $("tl-reset").onclick = () => { janela = null; br.setAttribute("width", 0); $("tl-sel").textContent = ""; $("tl-reset").hidden = true; aplicarFiltro(); };
+  const parar = () => {};
+  $("tl-reset").onclick = () => { parar(); janela = null; br.setAttribute("width", 0); $("tl-sel").textContent = ""; $("tl-reset").hidden = true; aplicarFiltro(); };
 }
+
+montarTimeline();
 
 // ----- dossiê em abas -----
 function tabificar() {
@@ -731,6 +830,8 @@ async function buscaPaleta() {
 }
 function abrePaleta() { paleta.classList.add("on"); $("pal-in").value = ""; $("pal-in").focus(); buscaPaleta(); }
 function fechaPaleta() { paleta.classList.remove("on"); }
+{ const ex = ["sua cidade", "um deputado ou senador", "uma empresa ou CNPJ", "um caso (Americanas, Master…)", "um prefeito"]; let k = 0; const sp = $("b-busca").querySelector("span");
+  if (sp) setInterval(() => { sp.style.opacity = 0; setTimeout(() => { k = (k + 1) % ex.length; sp.textContent = "Buscar " + ex[k]; sp.style.opacity = 1; }, 220); }, 3200); }
 $("b-busca").onclick = abrePaleta; paleta.onclick = (e) => { if (e.target === paleta) fechaPaleta(); };
 $("pal-in").oninput = buscaPaleta;
 document.addEventListener("keydown", (e) => {
@@ -755,13 +856,15 @@ function atualizarPanorama() {
   L.forEach((a) => { total += a.total || 0; c[a.gravidade]++; if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, n: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o.n++; o[a.gravidade] += a.total || 0; } });
   const tv = Object.values(porUF).reduce((s, o) => s + o.v, 0) || 1, ufs = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v).slice(0, 8), mx = ufs[0] ? ufs[0][1].v : 1;
   const pct = _esc && _esc.pncp_bi ? (100 * total / 1e9 / _esc.pncp_bi) : null;
-  const estados = ufs.map(([u, o], i) => `<div class="pan-l ${i === 0 ? "top1" : ""}"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(5, Math.round(100 * o.v / mx))}%" title="${o.n} alertas"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
+  const estados = ufs.map(([u, o], i) => `<div class="pan-l ${i === 0 ? "top1" : ""} ${fUF === u ? "ativo" : ""}" data-uf="${esc(u)}" title="Clique para filtrar por ${esc(u)}"><span class="uf">${esc(u)}</span><div class="barra pilha" style="width:${Math.max(5, Math.round(100 * o.v / mx))}%" title="${o.n} alertas"><i style="flex:${o.alta};background:${COR.alta}"></i><i style="flex:${o.media};background:${COR.media}"></i><i style="flex:${o.baixa};background:${COR.baixa}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
   const cv = _casosV && _casosV.length ? `<div class="hero-casos"><b>+ R$ ${_casosV.reduce((s, x) => s + x.bi, 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi</b> citados em ${_casosV.length} casos sob apuração (PF, MPF, Receita). Não é prejuízo confirmado.</div>` : "";
   const hm = $("hero-m"); if (hm) hm.innerHTML = `<small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><div class="hm-sev"><i style="flex:${c.alta};background:${COR.alta}"></i><i style="flex:${c.media};background:${COR.media}"></i><i style="flex:${c.baixa};background:${COR.baixa}"></i></div>${cv}`;
   pan.innerHTML = `<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
     ${cv}<div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
     <div class="pan-leg"><span style="color:${COR.alta}">${c.alta} alta</span><span style="color:${COR.media}">${c.media} média</span><span style="color:${COR.baixa}">${c.baixa} baixa</span></div>
-    <div class="pan-h">Estados <small>valor em atenção</small></div>${estados}${escalaHtml()}`;
+    <div class="pan-h">Estados <small>valor em atenção</small></div>${estados}`;
+  pan.querySelectorAll("[data-uf]").forEach((e) => (e.onclick = () => { const u = e.dataset.uf; fUF = fUF === u ? "" : u; const sf = $("f-uf"); if (sf) sf.value = fUF; aplicarFiltro(); }));
+  escalaBase();
 }
 atualizarPanorama();
 const bPainel = document.createElement("button"); bPainel.id = "b-painel"; bPainel.title = "Recolher ou abrir a lista"; bPainel.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M15 6l-6 6 6 6"/></svg>'; $("app").appendChild(bPainel);
@@ -852,7 +955,13 @@ function porque(a) {
     ok("A empresa constava como punida no mês do pagamento", `${a.sancao ? a.sancao.lista + " · " + a.sancao.tipo : ""}`);
     ok("A punição alcança o governo federal", alcance(a.sancao ? a.sancao.alcance : ""));
     ok("Recebeu pelo menos R$ 50 mil da União no período", `${brl(a.total)} em ${plural(a.n, "pagamento mensal", "pagamentos mensais")}, ${per}`);
-    prio = a.gravidade === "alta" ? "Alta: punição de alcance amplo, ou mais de R$ 5 milhões recebidos." : "Média: punição restrita à esfera e ao Poder de quem puniu.";
+    const cc = a.contratos;
+    if (cc) {
+      if (cc.sinal === "contrato_novo") ok("Há contrato novo assinado durante a punição", `${plural(cc.novos, "contrato", "contratos")} federais, ${brl(cc.valor_novos)}, o último em ${data(cc.ultimo)}`);
+      else if (cc.sinal === "so_contrato_anterior") parcial("Não há contrato novo: só contratos anteriores à punição", `${plural(cc.anteriores, "contrato anterior", "contratos anteriores")} no PNCP; o pagamento pode ser de contrato antigo, o que costuma ser permitido`);
+      else parcial("Nenhum contrato dessa empresa no PNCP", "contratos antigos, convênios e atas nem sempre estão no PNCP, então a origem do pagamento fica em aberto");
+    }
+    prio = a.gravidade === "alta" ? "Alta: há contrato novo assinado durante a punição e ela vale para toda a administração." : a.gravidade === "media" ? "Média: ou há contrato novo mas a punição é mais restrita, ou não achamos contrato no PNCP e a origem do pagamento fica em aberto." : "Baixa: só achamos contratos anteriores à punição. Provavelmente é pagamento de contrato antigo, que costuma ser permitido.";
     descartado = ["Multa e publicação extraordinária (não impedem contratar)", "Estatais e empresas públicas", "Meses anteriores ao início da punição"];
     naoProva = ["Que o pagamento foi irregular: pode quitar entrega feita antes da punição.", "Que o órgão errou: nem sempre o órgão pagador consulta o cadastro."];
   } else if (m.tipo === "R10") {
@@ -899,6 +1008,16 @@ function porque(a) {
 let _na = null;
 fetch("/data/noticias_alertas.json").then((r) => r.json()).then((j) => { _na = j; }).catch(() => {});
 fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualizarPanorama(); }).catch(() => {});
+function escalaBase() {
+  let el = $("escala-base"); if (!el) { el = document.createElement("div"); el.id = "escala-base"; $("centro").appendChild(el); }
+  if (!_esc) return;
+  const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
+  const nC = (_esc.pncp_anos || []).reduce((t, x) => t + x.contratos, 0), pct = _esc.pct_pncp != null ? _esc.pct_pncp.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%" : "";
+  const itens = [[`Analisado: ${(nC / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi de contratos (PNCP)`, _esc.pncp_bi, "#4cc9f0"], [`Em atenção${pct ? " · " + pct + " do analisado" : ""}`, _esc.alertas_bi, "#ff2d55"], ["Prioridade alta", _esc.alta_bi, "#ff2d55"]];
+  const mx = Math.log10(_esc.pncp_bi * 10);
+  el.title = "Régua logarítmica, para caberem na mesma linha. O Radar só vê o que está no PNCP (compras federais, estaduais e municipais registradas), não todo o gasto público.";
+  el.innerHTML = itens.map(([t, v, cor]) => `<div><span>${t}</span><b class="num">${f(v)}</b><u><i style="width:${Math.round(100 * Math.log10(v * 10) / mx)}%;background:${cor}"></i></u></div>`).join("");
+}
 function escalaHtml() {
   if (!_esc) return "";
   const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
