@@ -483,3 +483,20 @@ svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg
 #camadas label.sev:has(input:checked) i{background:#ffb300 !important}
 @media(max-width:1280px){#camadas{left:464px !important}}
 .pan-vazio{margin:8px 0;padding:10px 12px;border:1px dashed var(--linha2);border-radius:10px;font-size:12px;color:var(--mut);line-height:1.5}.pan-vazio .pan-mais{display:inline;width:auto;padding:2px 8px;margin:0 0 0 4px}
+
+/* v14: o clique precisa parecer clicável */
+.pan-l[data-uf],.pan-l[data-r]{position:relative;padding:3px 6px !important;margin:2px -6px !important;border-radius:8px;border:1px solid transparent;transition:background .12s,border-color .12s}
+.pan-l[data-uf]:hover,.pan-l[data-r]:hover{background:rgba(255,255,255,.07);border-color:var(--linha2)}
+.pan-l[data-uf]:hover .barra,.pan-l[data-r]:hover .barra{filter:brightness(1.25)}
+.pan-l[data-uf]:hover:after,.pan-l[data-r]:hover:after{content:"filtrar →";position:absolute;right:6px;top:50%;transform:translateY(-50%);font:600 10px var(--mono);color:#fff;background:#0b1118;padding:1px 6px;border-radius:99px;border:1px solid var(--acc);letter-spacing:.04em}
+.pan-l[data-uf]:hover b,.pan-l[data-r]:hover b{opacity:0}
+.pan-l.ativo{background:rgba(61,255,154,.12) !important;border-color:var(--acc) !important;outline:0 !important}
+.pan-l.ativo:after{content:"× tirar";position:absolute;right:6px;top:50%;transform:translateY(-50%);font:600 10px var(--mono);color:#04130b;background:var(--acc);padding:1px 7px;border-radius:99px}
+.pan-l.ativo b{opacity:0}
+.f-uf .pan-l[data-uf]:not(.ativo){opacity:.5}.f-r .pan-l[data-r]:not(.ativo){opacity:.5}
+.f-uf .pan-l[data-uf]:not(.ativo):hover,.f-r .pan-l[data-r]:not(.ativo):hover{opacity:1}
+.pan-ativos{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--linha)}
+.pan-at{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:99px;border:1px solid var(--acc);background:rgba(61,255,154,.12);color:var(--acc2);font-size:11.5px;cursor:pointer}
+.pan-at b{font-weight:700;opacity:.8}.pan-at:hover{background:rgba(61,255,154,.25);color:#fff}
+.pan-at.limpa{border-color:var(--linha2);background:none;color:var(--mut)}.pan-at.limpa:hover{color:#fff;border-color:var(--mut)}
+.pan-h small{opacity:.9}
