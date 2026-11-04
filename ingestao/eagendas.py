@@ -46,11 +46,11 @@ nome_pub = lambda p: (p.get("apo_nome") or "").title()
 n_comp = 0
 for a in alto:
     comp = lista(g("/compromissos", data_inicio=fmt(de), data_termino=fmt(ate), apo_id=a["apo"]), "compromissos")
-    a["compromissos"] = [{"id": c["id"], "tipo": c.get("tipo_compromisso"), "assunto": re.sub(r"\s+", " ", c.get("assunto") or "")[:260], "local": (c.get("local") or "").strip(" ."), "d": iso(c.get("data_inicio")), "df": iso(c.get("data_termino")),
+    a["compromissos"] = [{"id": c["id"], "tipo": c.get("tipo_compromisso"), "assunto": re.sub(r"\s+", " ", c.get("assunto") or "")[:260], "det": re.sub(r"\s+", " ", c.get("detalhamento") or "")[:500], "obj": [o.get("descricao") or o.get("objetivo") or "" for o in c.get("objetivos_compromisso", []) if isinstance(o, dict)][:3], "local": (c.get("local") or "").strip(" ."), "d": iso(c.get("data_inicio")), "df": iso(c.get("data_termino")),
                           "h": c.get("hora_inicio"), "hf": c.get("hora_termino"), "viagem": bool(c.get("viagem_id")),
                           "com": sorted({nome_pub(p) for p in c.get("participantes_publicos", []) if p.get("apo_id") != a["apo"] and p.get("apo_nome")})[:4],
-                          "privados": sorted({(p.get("nome_instituicao") or "").strip() + "|" + re.sub(r"\D", "", p.get("cnpj_instituicao") or "") for p in c.get("participantes_privados", []) if p.get("nome_instituicao")})[:6],
-                          "n_privados": len(c.get("participantes_privados", [])), "exterior": [x for x in ((r.get("representante_orgao") or r.get("representante_nome_organismo_internacional") or "").strip() for r in c.get("representantes", [])) if x][:3]} for c in comp]
+                          "privados": sorted({(p.get("nome_instituicao") or "").strip() + "|" + re.sub(r"\D", "", p.get("cnpj_instituicao") or "") + "|" + (p.get("cargo_instituicao") or "").strip() for p in c.get("participantes_privados", []) if p.get("nome_instituicao")})[:8],
+                          "n_privados": len(c.get("participantes_privados", [])), "exterior": [x for x in (((r.get("representante_cargo") or "") + " · " + (r.get("representante_orgao") or r.get("representante_nome_organismo_internacional") or "")).strip(" ·") for r in c.get("representantes", [])) if x][:4], "n_pub": len(c.get("participantes_publicos", []))} for c in comp]
     a["compromissos"].sort(key=lambda c: (c["d"] or "", c["h"] or ""), reverse=True); n_comp += len(a["compromissos"])
     v = lista(g("/viagens", data_inicio=fmt(hoje - datetime.timedelta(days=90)), data_termino=fmt(ate), apo_id=a["apo"]), "viagens")
     a["viagens"] = [{k: x.get(k) for k in ("id", "data_inicio", "data_termino", "cidade_destino", "uf_destino", "pais_destino", "motivo", "assunto", "descricao") if x.get(k) is not None} for x in v][:20]
