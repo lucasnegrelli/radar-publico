@@ -306,7 +306,7 @@ function montarMapa() {
     requestAnimationFrame(quadro);
   })(t0);
 }
-let _vgFonte = "exec";
+let _vgFonte = "exec", _vgAuto = false;
 async function alternarVoos(on) {
   const v = on ? "visible" : "none";
   ["voos-arco", "voos-ponto", "voos-nome"].forEach((l) => map.setLayoutProperty(l, "visibility", v));
@@ -448,7 +448,7 @@ async function montarExterior() {
     <div class="rot" style="margin-top:14px">// quem mais voou ao exterior com a cota</div>
     <table class="tbl"><tbody>${d.deputados.slice(0, 15).map((p) => `<tr><td><b>${esc(p.p)}</b><br><span class="sub2">${esc(p.pt || "")}${p.uf ? "/" + esc(p.uf) : ""} · ${Object.entries(p.paises).map(([k, v]) => k + " " + v).join(", ")}</span></td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>
     <p class="aviso">Voo ao exterior pago pela cota não é irregularidade por si só (há regras próprias de uso). Veja o trecho e o passageiro na nota da Câmara.</p>`;
-  $("tg-voos").checked = true; alternarVoos(true);
+  if (!$("tg-voos").checked) _vgAuto = true; $("tg-voos").checked = true; alternarVoos(true);
   $("b-globo").onclick = () => { modoGlobo(!globoAtivo); $("b-globo").textContent = globoAtivo ? "Voltar ao mapa do Brasil" : "Ver em globo 3D"; };
 }
 async function montarViagens(fonte = _vgFonte) {
@@ -472,7 +472,7 @@ async function montarViagens(fonte = _vgFonte) {
   el.innerHTML = `<h3>Viagens ao exterior</h3>${abas}${corpo}<p class="aviso">Viagem oficial não é irregularidade por si só. São registros públicos de agentes públicos em exercício, com atraso de publicação, e não rastreamento de ninguém.</p>`;
   el.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => montarViagens(b.dataset.f)));
   el.querySelectorAll(".vg").forEach((c) => (c.onclick = () => { const v = ex.viagens[Number(c.dataset.i)]; if (v) map.flyTo({ center: [v.lon, v.lat], zoom: 3.2, duration: 1400 }); }));
-  $("tg-voos").checked = true; alternarVoos(true);
+  if (!$("tg-voos").checked) _vgAuto = true; $("tg-voos").checked = true; alternarVoos(true);
 }
 let _ag = null, _agF = { quando: "prox", q: "", n: 40 };
 async function montarAgenda() {
@@ -523,17 +523,48 @@ async function montarSalarios() {
   const mais = $("sal-mais"); if (mais) mais.onclick = () => { _remF.n += 60; montarSalarios(); };
   el.querySelectorAll(".sal").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a")) return; c.querySelector(".sal-d").hidden = !c.querySelector(".sal-d").hidden; }));
 }
+let _nt = null;
+async function montarNoticias() {
+  const el = $("aba-noticias");
+  const [cn, ap] = _nt ||= await Promise.all(["casos_noticias", "apuracoes"].map((n) => fetch(`/data/${n}.json`).then((r) => r.json()).catch(() => null)));
+  const dd = (x) => { const [a, m, d] = String(x || "").slice(0, 10).split("-"); return d ? `${d}/${m}` : ""; };
+  const TIPO = { evitado: ["desvio evitado", "#3dff9a"], movimentado: ["valor movimentado", "#b388ff"], bloqueio: ["bloqueio/apreensão", "#4cc9f0"], citado: ["valor citado", "#ffb300"] };
+  let h = `<h3>Notícias</h3><p class="sub2">O que a imprensa e os órgãos de controle estão apurando agora, com o valor citado. O Radar lê as manchetes, junta as que falam do mesmo fato e só mostra o que vem de 2 ou mais veículos, ou de fonte oficial. Tudo com link para a matéria.</p>`;
+  if (cn && cn.casos.length) {
+    h += `<div class="rot">// casos com valor nas notícias (${cn.n}) · R$ ${(cn.total / 1e9).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} bi citados</div>` + cn.casos.slice(0, 18).map((c) => { const [lb, cor] = TIPO[c.tipo] || TIPO.citado;
+      return `<div class="caixa not"><div class="not-h"><b class="num">${brlCurto(c.valor)}</b><span class="chip" style="--c:${cor}">${lb}</span>${c.oficial ? '<span class="chip" style="--c:#4cc9f0">fonte oficial</span>' : ""}<span class="sub2">${c.veiculos} veículo${c.veiculos > 1 ? "s" : ""} · ${dd(c.ultimo)}</span></div><div class="not-t">${esc(c.titulo_ia || c.titulo)}</div>
+      <div class="not-l">${c.links.slice(0, 4).map((l) => `<a href="${esc(l.u)}" target="_blank" rel="noopener" title="${esc(l.t)}">${esc(l.f)}</a>`).join(" · ")}</div></div>`; }).join("") + `<p class="aviso">${esc(cn.aviso)}</p>`;
+  }
+  if (ap && ap.itens.length) {
+    h += `<div class="rot" style="margin-top:14px">// apurações de veículos investigativos (${ap.n})</div>` + ap.itens.slice(0, 20).map((x) => `<div class="caixa not"><div class="not-t"><a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a></div><div class="sub2">${esc(x.f)}${x.a ? " · " + esc(x.a) : ""} · ${dd(x.d)}</div></div>`).join("");
+    if (ap.autores.length) h += `<div class="rot" style="margin-top:14px">// quem mais assina apurações</div><table class="tbl"><tbody>${ap.autores.slice(0, 10).map((a) => `<tr><td><b>${esc(a.nome)}</b><br><span class="sub2">${esc(a.veiculo)}</span></td><td class="num" style="text-align:right">${a.n}</td></tr>`).join("")}</tbody></table><p class="sub2">Veículos acompanhados: ${esc(ap.veiculos.join(", "))}. O Radar mostra a manchete e leva para a matéria original; o mérito da apuração é de quem a fez.</p>`;
+  }
+  h += `<div class="rot" style="margin-top:14px">// manchetes gerais</div><ul class="news">${dN.itens.slice(0, 30).map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.titulo)}</a><small>${esc(n.fonte)}</small></li>`).join("") || "<li class='sub2'>Sem notícias carregadas.</li>"}</ul>`;
+  el.innerHTML = h;
+}
 async function montarJustica() {
   const el = $("aba-justica");
-  const d = await fetch("/data/judiciario.json").then((r) => r.json()).catch(() => null);
-  if (!d || !d.tribunais.length) { el.innerHTML = '<h3>Judiciário</h3><p class="sub2">Dados do DataJud ainda não carregados.</p>'; return; }
-  const max = Math.max(...d.tribunais.map((t) => t.total));
-  el.innerHTML = `<h3>Judiciário</h3><p class="sub2">${esc(d.classe)} por tribunal (DataJud, CNJ). Mostra quanto chega à Justiça, não a conduta de ninguém. Estados maiores têm mais processos.</p>
-    <table class="tbl"><tbody>${d.tribunais.sort((a, b) => b.total - a.total).map((t) => {
+  const [len, cea, dj] = await Promise.all(["leniencia", "ceaf", "judiciario"].map((n) => fetch(`/data/${n}.json`).then((r) => r.json()).catch(() => null)));
+  const dd = (x) => esc(String(x || "").slice(0, 10));
+  let h = `<h3>Justiça e sanções</h3><p class="sub2">Quem a Justiça e os órgãos de controle já alcançaram: acordos de leniência, servidores expulsos e a pressão de ações de improbidade pelos tribunais. É retrato de decisões, não de suspeita.</p>`;
+  if (len && len.acordos.length) {
+    const ativos = len.acordos.filter((a) => /execu|vigor|ativ/i.test(a.situacao || "")).length;
+    h += `<div class="rot">// acordos de leniência (${len.n}${ativos ? `, ${ativos} em execução` : ""})</div>` + len.acordos.slice(0, 14).map((a) => `<div class="caixa vg"><b>${esc((a.empresas.map((e) => e.nome).filter(Boolean)[0] || "Empresa").slice(0, 60))}</b>${a.empresas.length > 1 ? ` <span class="sub2">e mais ${a.empresas.length - 1}</span>` : ""}<br><span class="sub2">${esc(a.orgao || "")} · ${esc(a.situacao || "")} · ${esc(a.inicio || "")} a ${esc(a.fim || "")}</span></div>`).join("") + `<p class="sub2">Acordo de leniência: a empresa admite irregularidades e colabora em troca de redução de sanções. Fonte: ${esc(len.fonte)}.</p>`;
+  }
+  if (cea) {
+    h += `<div class="rot" style="margin-top:14px">// servidores expulsos nos últimos 12 meses (${cea.n})</div><div class="acoes">${cea.por_tipo.slice(0, 4).map((t) => `<span class="chip" style="--c:#ffb300">${esc(t.tipo)} · ${t.n}</span>`).join(" ")}</div>
+      <table class="tbl"><tbody>${cea.por_orgao.slice(0, 6).map((o) => `<tr><td>${esc(o.org)}</td><td class="num" style="text-align:right">${o.n}</td></tr>`).join("")}</tbody></table>
+      <div class="rot" style="margin-top:10px">// mais recentes (Diário Oficial)</div>${cea.recentes.slice(0, 6).map((r) => `<div class="caixa vg"><b>${esc(r.nome)}</b> <span class="sub2">${esc(r.cpf || "")}</span><br><span class="sub2">${esc(r.tipo)} · ${esc(r.org)} · ${dd(r.d)}</span></div>`).join("")}`;
+  }
+  if (dj && dj.tribunais && dj.tribunais.length) {
+    const max = Math.max(...dj.tribunais.map((t) => t.total));
+    h += `<div class="rot" style="margin-top:14px">// ${esc(dj.classe)} por tribunal (DataJud, CNJ)</div><table class="tbl"><tbody>${[...dj.tribunais].sort((a, b) => b.total - a.total).slice(0, 12).map((t) => {
       const anos = Object.entries(t.anos).slice(-8), m = Math.max(1, ...anos.map(([, v]) => v));
       const spark = anos.map(([a, v]) => `<i title="${a}: ${v}" style="display:inline-block;width:5px;margin-right:1px;height:${Math.max(2, Math.round(16 * v / m))}px;background:var(--neon);vertical-align:bottom"></i>`).join("");
       return `<tr><td>${esc(t.sigla)}</td><td style="width:90px"><div class="barra"><i style="width:${Math.round(100 * t.total / max)}%"></i></div></td><td class="num" style="text-align:right">${t.total.toLocaleString("pt-BR")}</td><td>${spark}</td></tr>`; }).join("")}</tbody></table>
-    <p class="aviso">As barras pequenas mostram as ações ajuizadas por ano (últimos 8 anos). O DataJud não informa as partes, então não dá para ligar processo a político.</p>`;
+      <p class="aviso">O DataJud não informa as partes, então não dá para ligar processo a político. Salários de magistrados estão na aba Salários.</p>`;
+  }
+  el.innerHTML = h;
 }
 
 // ---------- ferramentas de análise ----------
@@ -703,12 +734,14 @@ function modoGlobo(on) {
 
 // ---------- abas ----------
 $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
+  if (_vgAuto && b.dataset.aba !== "viagens" && b.dataset.aba !== "exterior") { _vgAuto = false; $("tg-voos").checked = false; alternarVoos(false); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 900 }); }
   [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
   if (b.dataset.aba === "fichas") carregarFichas();
   if (b.dataset.aba === "cidade") montarCidade();
   if (b.dataset.aba === "investigar" && !$("aba-investigar").dataset.ok) { $("aba-investigar").dataset.ok = "1"; montarInvestigar(CTX_P); }
   if (b.dataset.aba === "justica") montarJustica();
+  if (b.dataset.aba === "noticias") montarNoticias();
   if (b.dataset.aba === "viagens") montarViagens();
   if (b.dataset.aba === "salarios") montarSalarios();
   if (b.dataset.aba === "agenda") montarAgenda();
@@ -765,7 +798,7 @@ $("resumo").innerHTML = `<span><b class="num">${alertas.length}</b>alertas</span
   $("ameaca").innerHTML = `<div><small>Nível de ameaça</small><span>${txt}</span></div><b>${n}</b>`;
 }
 lista();
-$("aba-noticias").innerHTML = `<h3>Notícias</h3><p class="sub2">Manchetes recentes sobre gasto público, fraude e fiscalização.</p><ul class="news">${dN.itens.map((n) => `<li><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.titulo)}</a><small>${esc(n.fonte)}</small></li>`).join("") || "<li class='sub2'>Sem notícias carregadas.</li>"}</ul>`;
+montarNoticias();
 let _montado = false;
 const iniciarMapa = () => { if (_montado) return; _montado = true; montarMapa(); };
 if (map.isStyleLoaded()) iniciarMapa();

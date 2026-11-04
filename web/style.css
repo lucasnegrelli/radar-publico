@@ -514,3 +514,9 @@ body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibreg
 #panorama #timeline #tl-svg{cursor:pointer !important}
 #panorama #timeline .tl-h{min-height:16px;font-size:10.5px}
 #panorama #timeline #tl-sel{color:var(--acc2);font:600 10.5px var(--mono);letter-spacing:.02em;text-transform:none}
+
+/* notícias em foco */
+.caixa.not{padding:10px 12px}
+.not-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}.not-h b{font:700 16px var(--display);color:#fff}
+.not-t{font-size:13px;line-height:1.45;color:#eef3fa}.not-t a{color:#eef3fa;text-decoration:none}.not-t a:hover{color:#fff;text-decoration:underline}
+.not-l{margin-top:6px;font-size:11.5px;color:var(--mut)}.not-l a{color:var(--acc2)}

@@ -107,6 +107,8 @@ jobs:
           python ingestao/datajud.py > /tmp/datajud.log 2>&1 &
           python ingestao/noticias.py > /tmp/noticias.log 2>&1 &
           python ingestao/noticias_alertas.py > /tmp/noticias_alertas.log 2>&1 &
+          python ingestao/casos_noticias.py > /tmp/casos_noticias.log 2>&1 &
+          python ingestao/apuracoes.py > /tmp/apuracoes.log 2>&1 &
           python ingestao/diarios.py > /tmp/diarios.log 2>&1 &
           python ingestao/camara_atividade.py > /tmp/camara.log 2>&1 &
           python ingestao/senado_atividade.py > /tmp/senado.log 2>&1 &

@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p web/public/data/pessoas
           S=https://radar.lucasnegrelli.com/data
-          for f in alertas fichas risco viagens judiciario meta escala fidc noticias noticias_alertas diarios caso_master_diarios casos municipios; do curl -sf -o web/public/data/$f.json $S/$f.json || echo "sem $f"; done
+          for f in alertas fichas risco viagens judiciario meta escala fidc noticias noticias_alertas diarios caso_master_diarios casos municipios viagens_exec remuneracoes agenda leniencia ceaf cartoes pgfn bcb_regimes casos_noticias apuracoes justica remuneracao panelinhas; do curl -sf -o web/public/data/$f.json $S/$f.json || echo "sem $f"; done
           seq 0 255 | xargs -P 8 -I{} sh -c 'h=$(printf "%02x" {}); curl -sf -o web/public/data/pessoas/s$h.json '$S'/pessoas/s$h.json || true'
           mkdir -p web/public/data/empresas
           seq -w 0 99 | xargs -P 8 -I{} sh -c 'curl -sf -o web/public/data/empresas/e{}.json '$S'/empresas/e{}.json || true'
@@ -38,6 +38,8 @@ jobs:
           python ingestao/noticias.py > /tmp/n1.log 2>&1 &
           python ingestao/noticias_alertas.py > /tmp/n2.log 2>&1 &
           python ingestao/diarios.py > /tmp/n3.log 2>&1 &
+          python ingestao/casos_noticias.py > /tmp/n4.log 2>&1 &
+          python ingestao/apuracoes.py > /tmp/n5.log 2>&1 &
           wait
           tail -n 2 /tmp/n1.log /tmp/n2.log /tmp/n3.log || true
       - run: pip install pillow
