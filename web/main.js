@@ -272,6 +272,10 @@ function montarMapa() {
   map.addSource("ufs", { type: "geojson", data: ufGeo });
   map.addLayer({ id: "uf-fill", type: "fill", source: "ufs", paint: { "fill-color": corUF(universo()) } });
   map.addLayer({ id: "uf-line", type: "line", source: "ufs", paint: { "line-color": "#2c3b4c", "line-width": 0.7, "line-opacity": 0.95 } });
+  map.addSource("comex", { type: "geojson", data: vazio });
+  map.addLayer({ id: "comex-arco", type: "line", source: "comex", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": ["case", ["get", "sig"], "#ff2d55", ["==", ["get", "fluxo"], "exp"], "#3dff9a", "#4cc9f0"], "line-width": ["interpolate", ["linear"], ["get", "w"], 0, 0.8, 1, 5], "line-opacity": 0.7 } });
+  map.addLayer({ id: "comex-ponto", type: "circle", source: "comex", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none" }, paint: { "circle-color": ["case", ["get", "sig"], "#ff2d55", "#cfe8ff"], "circle-radius": ["interpolate", ["linear"], ["get", "w"], 0, 3, 1, 11], "circle-stroke-color": "#07090d", "circle-stroke-width": 1 } });
+  map.addLayer({ id: "comex-nome", type: "symbol", source: "comex", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none", "text-field": ["get", "pais"], "text-font": ["Open Sans Regular"], "text-size": 11, "text-offset": [0, 1.1], "text-anchor": "top" }, paint: { "text-color": "#d6e6f5", "text-halo-color": "#07090d", "text-halo-width": 1.4 } });
   map.addSource("voos", { type: "geojson", data: vazio });
   map.addLayer({ id: "voos-arco", type: "line", source: "voos", filter: ["==", ["geometry-type"], "LineString"], layout: { visibility: "none" }, paint: { "line-color": "#b388ff", "line-width": ["interpolate", ["linear"], ["get", "n"], 1, 1, 100, 4], "line-opacity": 0.75 } });
   map.addLayer({ id: "voos-ponto", type: "circle", source: "voos", filter: ["==", ["geometry-type"], "Point"], layout: { visibility: "none" }, paint: { "circle-color": "#b388ff", "circle-radius": ["interpolate", ["linear"], ["get", "n"], 1, 4, 100, 12], "circle-stroke-color": "#fff", "circle-stroke-width": 1 } });
@@ -307,7 +311,13 @@ function montarMapa() {
     requestAnimationFrame(quadro);
   })(t0);
 }
-let _vgFonte = "exec", _vgAuto = false;
+let _vgFonte = "exec", _vgAuto = false, _cxAuto = false, _cx = null;
+function alternarComex(on) { ["comex-arco", "comex-ponto", "comex-nome"].forEach((l) => map.getLayer(l) && map.setLayoutProperty(l, "visibility", on ? "visible" : "none")); }
+function pintaComex(modo) {
+  if (!_cx) return; const v = (c) => (modo === "exp" ? c.exp : modo === "imp" ? c.imp : c.total), L = _cx.paises.filter((c) => v(c) > 0), mx = Math.max(...L.map(v), 1), fs = [];
+  L.slice(0, 60).forEach((c) => { const w = Math.sqrt(v(c) / mx); fs.push({ type: "Feature", properties: { w, sig: c.sigilo, fluxo: modo === "imp" ? "imp" : "exp" }, geometry: { type: "LineString", coordinates: curva(BRASILIA, [c.lon, c.lat], 50) } }); fs.push({ type: "Feature", properties: { w, sig: c.sigilo, pais: c.pais }, geometry: { type: "Point", coordinates: [c.lon, c.lat] } }); });
+  map.getSource("comex").setData({ type: "FeatureCollection", features: fs });
+}
 async function alternarVoos(on) {
   const v = on ? "visible" : "none";
   ["voos-arco", "voos-ponto", "voos-nome"].forEach((l) => map.setLayoutProperty(l, "visibility", v));
@@ -454,6 +464,26 @@ async function montarExterior() {
     <p class="aviso">Voo ao exterior pago pela cota não é irregularidade por si só (há regras próprias de uso). Veja o trecho e o passageiro na nota da Câmara.</p>`;
   if (!$("tg-voos").checked) _vgAuto = true; $("tg-voos").checked = true; alternarVoos(true);
   $("b-globo").onclick = () => { modoGlobo(!globoAtivo); $("b-globo").textContent = globoAtivo ? "Voltar ao mapa do Brasil" : "Ver em globo 3D"; };
+}
+let _cxModo = "total";
+async function montarComex() {
+  const el = $("aba-comex"); _cx ||= await fetch("/data/comex.json").then((r) => r.json()).catch(() => null);
+  if (!_cx) { el.innerHTML = '<h3>Comércio exterior</h3><p class="sub2">Dados ainda não carregados.</p>'; return; }
+  const usd = (n) => `US$ ${n >= 1e9 ? (n / 1e9).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " bi" : (n / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " mi"}`;
+  const v = (c) => (_cxModo === "exp" ? c.exp : _cxModo === "imp" ? c.imp : c.total), L = _cx.paises.filter((c) => v(c) > 0).sort((a, b) => v(b) - v(a)), mx = v(L[0]) || 1;
+  const sig = _cx.sigilo, pSig = Math.round(100 * (sig.exp + sig.imp) / (_cx.exp + _cx.imp) * 10) / 10;
+  el.innerHTML = `<h3>Comércio exterior</h3><p class="sub2">Para onde o Brasil vende e de onde compra, nos 12 meses até ${esc(_cx.ate)} (Comex Stat, MDIC). As linhas no mapa ligam o Brasil a cada país; quanto mais grossa, maior o fluxo. <span style="color:#ff2d55">Vermelho</span> = jurisdições de sigilo clássico.</p>
+    <div class="sal-k"><div><b>${usd(_cx.exp)}</b><span>exportado</span></div><div><b>${usd(_cx.imp)}</b><span>importado</span></div><div><b>${pSig}%</b><span>com jurisdições de sigilo</span></div></div>
+    <div class="filtros">${[["total", "Total"], ["exp", "Exportações"], ["imp", "Importações"]].map(([k, l]) => `<button data-m="${k}" class="${_cxModo === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    ${L.slice(0, 20).map((c) => `<div class="pan-l tp" data-pais="${esc(c.pais)}" style="grid-template-columns:1fr 70px !important" title="${esc(c.pais)}: exportou ${usd(c.exp)}, importou ${usd(c.imp)}"><span class="tn" style="--r:${c.sigilo ? "#ff2d55" : _cxModo === "imp" ? "#4cc9f0" : "#3dff9a"}"><span style="overflow:hidden;text-overflow:ellipsis">${esc(c.pais)}</span></span><b class="num">${usd(v(c))}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(3, Math.round(100 * v(c) / mx))}%"><i style="width:100%;background:${c.sigilo ? "#ff2d55" : _cxModo === "imp" ? "#4cc9f0" : "#3dff9a"}"></i></div></div>`).join("")}
+    ${sig.n ? `<div class="rot" style="margin-top:12px">// jurisdições de sigilo no comércio (${sig.n})</div><p class="sub2">${esc(L.filter((c) => c.sigilo).slice(0, 8).map((c) => c.pais).join(", "))}. Comerciar com esses países é legal e muitas vezes tem razão econômica; o marcador só diz onde olhar com mais cuidado (preço, intermediário e dono final).</p>` : ""}
+    <div class="rot" style="margin-top:12px">// o que o Brasil vende</div><div class="sub2">${_cx.produtos.export.slice(0, 5).map((p) => `${esc(p.produto)} (${usd(p.v)})`).join(" · ")}</div>
+    <div class="rot" style="margin-top:8px">// o que o Brasil compra</div><div class="sub2">${_cx.produtos.import.slice(0, 5).map((p) => `${esc(p.produto)} (${usd(p.v)})`).join(" · ")}</div>
+    <p class="aviso">${esc(_cx.fonte)}. Valores em dólares FOB. Dados oficiais agregados por país: ainda não mostram quem exportou ou importou (empresa), então não dá para ligar comércio a alerta.</p>`;
+  el.querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => { _cxModo = b.dataset.m; montarComex(); }));
+  el.querySelectorAll("[data-pais]").forEach((b) => (b.onclick = () => { const c = _cx.paises.find((x) => x.pais === b.dataset.pais); if (c) map.flyTo({ center: [c.lon, c.lat], zoom: 3, duration: 1300 }); }));
+  if (!_cxAuto) { _cxAuto = true; map.fitBounds([[-95, -50], [150, 60]], { padding: pad(), duration: 1200 }); }
+  alternarComex(true); pintaComex(_cxModo);
 }
 async function montarViagens(fonte = _vgFonte) {
   _vgFonte = fonte; const el = $("aba-viagens");
@@ -802,7 +832,7 @@ function modoGlobo(on) {
 }
 
 // ---------- abas ----------
-const GRUPOS = { dinheiro: [["salarios", "Salários"], ["agenda", "Agenda dos ministros"], ["viagens", "Viagens"]], casos: [["casos", "Investigações"], ["noticias", "Notícias"], ["justica", "Justiça"]], ajuda: [["sobre", "Como ler"], ["fontes", "Fontes e dados"]] };
+const GRUPOS = { dinheiro: [["salarios", "Salários"], ["agenda", "Agenda dos ministros"], ["viagens", "Viagens"], ["comex", "Comércio exterior"]], casos: [["casos", "Investigações"], ["noticias", "Notícias"], ["justica", "Justiça"]], ajuda: [["sobre", "Como ler"], ["fontes", "Fontes e dados"]] };
 const ULT = {};
 const grupoDe = (aba) => Object.keys(GRUPOS).find((g) => GRUPOS[g].some(([k]) => k === aba));
 function marcaNav(aba) {
@@ -815,6 +845,7 @@ function marcaNav(aba) {
   sb.querySelectorAll("[data-sub]").forEach((x) => (x.onclick = () => document.querySelector(`#abas [data-aba="${x.dataset.sub}"]`).click()));
 }
 $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
+  if (_cxAuto && b.dataset.aba !== "comex") { _cxAuto = false; alternarComex(false); if (!_vgAuto) map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 900 }); }
   if (_vgAuto && b.dataset.aba !== "viagens" && b.dataset.aba !== "exterior") { _vgAuto = false; $("tg-voos").checked = false; alternarVoos(false); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 900 }); }
   if (b.dataset.grupo) { const g = GRUPOS[b.dataset.grupo]; const alvo = ULT[b.dataset.grupo] || g[0][0]; document.querySelector(`#abas [data-aba="${alvo}"]`).click(); return; }
   marcaNav(b.dataset.aba);
@@ -827,6 +858,7 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   if (b.dataset.aba === "viagens") montarViagens();
   if (b.dataset.aba === "salarios") montarSalarios();
   if (b.dataset.aba === "agenda") montarAgenda();
+  if (b.dataset.aba === "comex") montarComex();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;

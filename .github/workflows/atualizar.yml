@@ -95,6 +95,7 @@ jobs:
       - name: PGFN e Banco Central (regimes especiais)
         run: |
           python ingestao/bcb_regimes.py || true
+          python ingestao/comex.py || true
           if [ -f dados/pgfn/pgfn_full.json ]; then cp dados/pgfn/pgfn_full.json web/public/data/pgfn.json; else python ingestao/pgfn.py || true; fi
       - name: Portal da Transparência (API de dados)
         env:
