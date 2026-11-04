@@ -7,6 +7,7 @@ import csv, io, json, os, pathlib, sys, zipfile, datetime, urllib.request
 
 RAIZ = pathlib.Path(__file__).parent.parent; os.chdir(RAIZ)
 D = RAIZ / "dados/pgfn"; D.mkdir(parents=True, exist_ok=True)
+(RAIZ / "web/public/data").mkdir(parents=True, exist_ok=True)
 UA = {"User-Agent": "RadarPublico/1.0 (projeto civico; github.com/lucasnegrelli/radar-publico)"}
 BASE = "https://dadosabertos.pgfn.gov.br/"
 TUDO = "--tudo" in sys.argv

@@ -13,6 +13,7 @@ N = int(sys.argv[1]) if len(sys.argv) > 1 else 12
 ORC = float(sys.argv[2]) * 60 if len(sys.argv) > 2 else 150 * 60
 T0 = time.time()
 D = RAIZ / "dados/portal"; (D / "cpgf").mkdir(parents=True, exist_ok=True)
+(RAIZ / "web/public/data").mkdir(parents=True, exist_ok=True)
 EST = D / "estado.json"; estado = json.loads(EST.read_text(encoding="utf-8")) if EST.exists() else {}
 hoje = datetime.date.today().replace(day=1)
 meses = []; m = hoje
