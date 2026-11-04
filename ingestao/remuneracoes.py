@@ -67,7 +67,7 @@ def orgao(o):
             its = c.execute("select item, sum(v) v from r where id = ? and tipo = 'R/O' and v > 0 group by 1 order by 2 desc", [i]).fetchall()
             out.append({"nome": nm(nome), "cargo": (fn or "").title()[:70], "orgao": o["nome"], "oid": oid, "poder": "MP" if o["entidade"] in ("Ministério", "Ministério Público") or oid.startswith("mp") else "J",
                         "ref": f"{mes:02d}/{ano}", "bruta": round(sal + ben), "sub": round(sal), "pend": round(sum(v for _, v in its)), "liq": round(liq or 0),
-                        "it": [[rub(k), round(v)] for k, v in its if rub(k)][:8]})
+                        "it": [[rub(k), round(v)] for k, v in its if rub(k)][:40]})
         return out
     return None
 

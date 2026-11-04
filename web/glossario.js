@@ -66,6 +66,7 @@ export function iniciaGlossario() {
 export const todosTermos = () => Object.entries(TERMOS).sort((a, b) => a[0].localeCompare(b[0], "pt-BR"));
 
 export function boasVindas() {
+  return;   // substituído pelo herói da tela inicial (busca + manchete + atalhos)
   if (localStorage.getItem("radar.visto")) return;
   const d = document.createElement("div"); d.id = "bv";
   d.innerHTML = `<button class="bv-x" aria-label="Fechar">×</button>

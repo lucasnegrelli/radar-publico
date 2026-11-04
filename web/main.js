@@ -338,15 +338,18 @@ function aplicarFiltro() {
 const curta = (a) => { const s = manchete(a).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').trim(); const p = s.split(/(?<=\.)\s/)[0]; return p.length > 175 ? p.slice(0, 172) + "…" : p; };
 const MIN = new Set(["DE", "DA", "DO", "DAS", "DOS", "E", "EM", "NA", "NO"]), SIGLA = /^(LTDA|EIRELI|ME|EPP|SA|S\/A|CIA|MEI|SPE|ONG|CNPJ|UFRJ|USP|II|III|IV|TI)$/;
 const bonito = (n) => { const t = String(n || ""); if (t !== t.toUpperCase()) return t; return t.toLowerCase().split(/(\s+)/).map((w, i) => { const u = w.toUpperCase(); return /\d/.test(u) || (u.length <= 3 && !/[AEIOU]/.test(u)) ? u : SIGLA.test(u) ? (u === "SA" ? "S.A." : u === "LTDA" ? "Ltda." : u) : MIN.has(u) && i > 0 ? w : w.charAt(0).toUpperCase() + w.slice(1); }).join(""); };
+let listaTodos = false;
 function lista() {
-  $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
+  const corte = filtroG === "destaques" && !listaTodos ? 8 : 200;
+  $("itens").innerHTML = visiveis.slice(0, corte).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
       <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${lenDe(a).length ? '<span class="chip" style="--c:#4cc9f0" title="A empresa tem acordo de leniência registrado na CGU">leniência</span>' : ""}${pgDe(a) ? `<span class="chip" style="--c:#ffb300" title="Dívida ativa com a União (PGFN, previdenciário e FGTS): ${brl(pgDe(a)[0])}">deve ${brlCurto(pgDe(a)[0])}</span>` : ""}${regDe(a) ? `<span class="chip" style="--c:#ff2d55" title="Banco Central: ${esc(regDe(a).tipo)} desde ${esc(regDe(a).inicio)}">${esc(regDe(a).tipo.toLowerCase())}</span>` : ""}${chipContrato(a)}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
       <div class="frase">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</div>
       <div class="rodape"><span class="quem-c">${a.local ? esc(a.local.cidade) + "/" + a.local.uf + " · " : ""}${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}</span><span class="valor num">${brlCurto(a.total)}</span></div>
-    </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
+    </li>`).join("") + (visiveis.length > corte && corte === 8 ? `<li class="mais-li"><button class="botao" id="lista-mais">Ver os ${visiveis.length} destaques</button></li>` : "") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
+  { const lm = $("lista-mais"); if (lm) lm.onclick = () => { listaTodos = true; lista(); }; }
   $("itens").querySelectorAll(".card").forEach((c) => (c.onclick = () => abrir(c.dataset.id)));
-  $("cont").textContent = filtroG === "destaques" ? `Os ${visiveis.length} mais relevantes de ${total_filtro.toLocaleString("pt-BR")}. Toque em "Todos" para ver tudo.` : `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
+  $("cont").textContent = filtroG === "destaques" ? `O que mais importa hoje, de ${total_filtro.toLocaleString("pt-BR")} alertas. Use "Todos" para ver tudo.` : `${visiveis.length} alertas${visiveis.length > 200 ? " (mostrando 200)" : ""}`;
 }
 
 // ---------- dossiê ----------
@@ -515,51 +518,59 @@ async function montarAgenda() {
   const mais = $("ag-mais"); if (mais) mais.onclick = () => { F.n += 30; montarAgenda(); };
   el.querySelectorAll(".caixa.ag").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a,button")) return; const id = Number(c.dataset.id); F.abertos.has(id) ? F.abertos.delete(id) : F.abertos.add(id); const y = $("painel").scrollTop; montarAgenda().then(() => ($("painel").scrollTop = y)); }));
 }
-let _rem = null, _remF = { poder: "", q: "", ord: "total", faixa: "", verba: "", org: "", n: 40, abertos: new Set() };
-const FAIXAS = [["f0", "até o teto", 0, 46366.19], ["f1", "até R$ 80 mil", 46366.19, 80000], ["f2", "até R$ 120 mil", 80000, 120000], ["f3", "até R$ 200 mil", 120000, 200000], ["f4", "acima de R$ 200 mil", 200000, 1e12]];
-const CVERBA = ["#ffb300", "#ff7a1a", "#ff2d55", "#b388ff", "#4cc9f0", "#3dff9a"];
+let _rem = null, _remF = { poder: "", q: "", cat: "", verba: "", painel: "", n: 30, abertos: new Set() };
+const BASE_RE = /^(vencimento|subs|remuneração básica|abate|eventuais)/i;
+const CATS = [["Auxílios", "#4cc9f0", /aux[ií]lio|ajuda de custo|moradia|alimenta|educa|transporte|creche|pré-escolar|pre-escolar/i], ["Gratificações", "#ff7a1a", /gratifica|cumulativ|acervo|substitui|fun[cç][aã]o/i], ["Férias e 13º", "#b388ff", /f[eé]rias|abono constitucional|natalina|13/i], ["Indenizações", "#3dff9a", /indeniz|compensat|licen[cç]a|valoriza|pvtac/i], ["Retroativos", "#ff2d55", /retroativ|exerc[ií]cio anterior|atrasad|diferen[cç]a|ressarcimento/i]];
+const catVerba = (k) => (CATS.find(([, , re]) => re.test(k)) || ["Outras", "#8591a5"])[0];
+const corCat = (c) => (CATS.find(([n]) => n === c) || [0, "#8591a5"])[1];
 async function montarSalarios() {
   const el = $("aba-salarios"); _rem ||= await fetch("/data/remuneracoes.json").then((r) => r.json()).catch(() => null);
   if (!_rem) { el.innerHTML = '<h3>Salários</h3><p class="sub2">Dados ainda não carregados.</p>'; return; }
-  const F = _remF, T = _rem.teto, PODER = { J: "Judiciário", MP: "Ministério Público", E: "Executivo federal" };
-  const MIN = ["stf", "stj", "tst", "stm", "tse"], pod = (p) => !F.poder || (F.poder === "MIN" ? MIN.includes(p.oid) : p.poder === F.poder);
-  const q = norm(F.q), verbaOk = (p) => !F.verba || p.it.some(([k]) => k === F.verba), faixaOk = (p) => { if (!F.faixa) return true; const f = FAIXAS.find((x) => x[0] === F.faixa); return p.bruta > f[2] && p.bruta <= f[3]; };
-  const basePoder = _rem.ranking.filter(pod);
-  const lista = basePoder.filter((p) => verbaOk(p) && faixaOk(p) && (!F.org || p.orgao === F.org) && (!q || norm(p.nome + " " + p.orgao + " " + p.cargo).includes(q)))
-    .sort((a, b) => F.ord === "excesso" ? (b.bruta - a.bruta) : F.ord === "verbas" ? (b.pend / b.bruta - a.pend / a.bruta) : F.ord === "pend" ? b.pend - a.pend : b.bruta - a.bruta);
+  const F = _remF, T = _rem.teto, MIN = ["stf", "stj", "tst", "stm", "tse"];
+  const pod = (p) => !F.poder || (F.poder === "MIN" ? MIN.includes(p.oid) : p.poder === F.poder);
+  const itens = (p) => p.it.filter(([k]) => !BASE_RE.test(k));
+  const q = norm(F.q), basePoder = _rem.ranking.filter(pod);
+  const catOk = (p) => !F.cat || itens(p).some(([k]) => catVerba(k) === F.cat), verbaOk = (p) => !F.verba || p.it.some(([k]) => k === F.verba);
+  const lista = basePoder.filter((p) => catOk(p) && verbaOk(p) && (!q || norm(p.nome + " " + p.orgao + " " + p.cargo).includes(q))).sort((a, b) => b.bruta - a.bruta);
   const acima = basePoder.filter((p) => p.bruta > T), exc = acima.reduce((t, p) => t + p.bruta - T, 0), pendT = basePoder.reduce((t, p) => t + p.pend, 0), brutT = basePoder.reduce((t, p) => t + p.bruta, 0) || 1;
-  const hist = FAIXAS.map(([k, l, lo, hi]) => [k, l, basePoder.filter((p) => p.bruta > lo && p.bruta <= hi).length]), mh = Math.max(1, ...hist.map((h) => h[2]));
-  const verbas = {}; basePoder.forEach((p) => p.it.forEach(([k, v]) => { if (/^(vencimento|subs|remuneração básica|abate|eventuais)/i.test(k)) return; const x = (verbas[k] ||= { k, v: 0, n: 0 }); x.v += v; x.n++; }));
-  const topV = Object.values(verbas).sort((a, b) => b.v - a.v).slice(0, 5), mv = topV[0] ? topV[0].v : 1;
-  const orgs = {}; basePoder.forEach((p) => (orgs[p.orgao] = (orgs[p.orgao] || 0) + 1)); const topO = Object.entries(orgs).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const cats = {}, verbas = {};
+  basePoder.forEach((p) => itens(p).forEach(([k, v]) => { const c = catVerba(k); (cats[c] ||= { c, v: 0, n: new Set() }).v += v; cats[c].n.add(p.nome + p.orgao); const x = (verbas[k] ||= { k, c, v: 0, n: 0 }); x.v += v; x.n++; }));
+  const catL = Object.values(cats).sort((a, b) => b.v - a.v), mcat = catL[0] ? catL[0].v : 1;
+  const verbaL = Object.values(verbas).filter((x) => !F.cat || x.c === F.cat).sort((a, b) => b.v - a.v).slice(0, 14), mv = verbaL[0] ? verbaL[0].v : 1;
   const ini = (n) => n.split(" ").filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join("");
   const maxB = Math.max(...lista.slice(0, F.n).map((p) => p.bruta), T * 1.1);
-  const card = (p) => { const ab = F.abertos.has(p.nome + p.orgao), ac = Math.max(0, p.bruta - T);
-    const segs = [["#4cc9f0", p.sub, "Subsídio/base"]].concat(p.it.filter(([k]) => !/^(vencimento|subs|remuneração básica|abate|eventuais)/i.test(k)).slice(0, 5).map(([k, v], i) => [CVERBA[i], v, k]));
-    const somaS = segs.reduce((t, x) => t + x[1], 0), resto = Math.max(0, p.bruta - somaS); if (resto > 1) segs.push(["#5b6b80", resto, "Outras verbas"]);
+  const card = (p) => { const k = p.nome + p.orgao, ab = F.abertos.has(k), ac = Math.max(0, p.bruta - T), its = itens(p);
+    const segs = [["#4cc9f0", p.sub, "Subsídio/base"]].concat(its.map(([n, v]) => [corCat(catVerba(n)), v, n]));
+    const soma = segs.reduce((t, x) => t + x[1], 0), resto = Math.max(0, p.bruta - soma); if (resto > 1) segs.push(["#5b6b80", resto, "Outras verbas"]);
     const barra = segs.map(([c, v, n]) => `<i style="width:${100 * v / maxB}%;background:${c}" title="${esc(n)}: ${brl(v)}"></i>`).join("");
-    return `<div class="caixa sal ${ab ? "aberto" : ""}" data-k="${esc(p.nome + p.orgao)}"><div class="sal-h">${p.foto ? `<img class="sal-f" src="${esc(p.foto)}" alt="" loading="lazy">` : `<span class="sal-f sal-i">${esc(ini(p.nome))}</span>`}<div class="sal-n"><b>${esc(p.nome)}</b><span class="sub2">${esc(p.cargo)} · ${esc(p.orgao)}</span></div><div class="sal-v"><b class="num">${brlCurto(p.bruta)}</b><span class="sub2">${ac > 0 ? `<span style="color:#ff6b88">+${brlCurto(ac)} do teto</span>` : "dentro do teto"}</span></div></div>
+    const porCat = {}; its.forEach(([n, v]) => (porCat[catVerba(n)] ||= []).push([n, v]));
+    const det = ab ? `<div class="sal-d"><div class="sub2" style="margin:8px 0 8px">${esc(p.ref)} · subsídio/base <b style="color:#fff">${brl(p.sub)}</b> · penduricalhos <b style="color:#ffb300">${brl(p.pend)}</b> (${Math.round(100 * p.pend / Math.max(p.bruta, 1))}%) · líquido ${brl(p.liq)}</div>
+      ${Object.entries(porCat).sort((a, b) => b[1].reduce((t, x) => t + x[1], 0) - a[1].reduce((t, x) => t + x[1], 0)).map(([c, L]) => `<div class="sal-cat"><div class="sal-ch"><i style="background:${corCat(c)}"></i><b>${esc(c)}</b><span class="num">${brl(L.reduce((t, x) => t + x[1], 0))}</span></div>${L.sort((a, b) => b[1] - a[1]).map(([n, v]) => `<div class="sal-vb" data-verba="${esc(n)}" title="Ver quem mais recebe isto"><span>${esc(n)}</span><b class="num">${brl(v)}</b></div>`).join("")}</div>`).join("") || '<p class="sub2">Sem detalhamento de rubricas para esta pessoa.</p>'}${p.u ? `<p style="margin-top:6px"><a href="${esc(p.u)}" target="_blank" rel="noopener">Ver no Portal da Transparência</a></p>` : ""}</div>` : "";
+    return `<div class="caixa sal ${ab ? "aberto" : ""}" data-k="${esc(k)}"><div class="sal-h">${p.foto ? `<img class="sal-f" src="${esc(p.foto)}" alt="" loading="lazy">` : `<span class="sal-f sal-i">${esc(ini(p.nome))}</span>`}<div class="sal-n"><b>${esc(p.nome)}</b><span class="sub2">${esc(p.cargo)} · ${esc(p.orgao)}</span></div><div class="sal-v"><b class="num">${brlCurto(p.bruta)}</b><span class="sub2">${ac > 0 ? `<span style="color:#ff6b88">+${brlCurto(ac)} do teto</span>` : "dentro do teto"}</span></div></div>
       <div class="sal-b2"><div class="sal-trilho">${barra}<s style="left:${100 * T / maxB}%" title="Teto: ${brl(T)}"></s></div></div>
-      ${ab ? `<div class="sal-d"><div class="sub2" style="margin:8px 0 6px">${p.ref} · subsídio/base <b style="color:#fff">${brl(p.sub)}</b> · demais verbas <b style="color:#ffb300">${brl(p.pend)}</b> (${Math.round(100 * p.pend / Math.max(p.bruta, 1))}% do total) · líquido ${brl(p.liq)}</div>${p.it.length ? `<table class="tbl"><tbody>${p.it.map(([k, v]) => `<tr class="sal-vb" data-verba="${esc(k)}" title="Ver quem mais recebe isto"><td>${esc(k)}</td><td class="num" style="text-align:right">${brl(v)}</td></tr>`).join("")}</tbody></table>` : '<p class="sub2">Sem detalhamento das rubricas.</p>'}${p.u ? `<p style="margin-top:6px"><a href="${esc(p.u)}" target="_blank" rel="noopener">Ver no Portal da Transparência</a></p>` : ""}</div>` : ""}</div>`; };
-  const chips = [F.verba && ["verba", `Verba: ${F.verba.slice(0, 40)}`], F.faixa && ["faixa", `Faixa: ${FAIXAS.find((x) => x[0] === F.faixa)[1]}`], F.org && ["org", `Órgão: ${F.org.slice(0, 36)}`]].filter(Boolean);
-  el.innerHTML = `<h3>Maiores remunerações</h3><p class="sub2">Quanto cada agente público recebeu no mês de referência, separando o <span style="color:#4cc9f0">subsídio</span> das demais verbas (os "penduricalhos"). Muitas dessas verbas são legais e ficam fora do teto: o ranking mostra o total e de quê, não diz que algo é irregular. A linha branca nas barras é o teto (${brl(T)}).</p>
-    <div class="sal-k"><div><b>${acima.length}</b><span>do ranking acima do teto</span></div><div><b>${brlCurto(exc)}</b><span>de excedente por mês</span></div><div><b>${Math.round(100 * pendT / brutT)}%</b><span>do total é fora do subsídio</span></div></div>
-    <div class="filtros" id="sal-p">${[["", "Todos"], ["MIN", "Ministros"], ["J", "Judiciário"], ["MP", "MP"], ["E", "Executivo"]].map(([k, l]) => `<button data-p="${k}" class="${F.poder === k ? "on" : ""}">${l}</button>`).join("")}</div>
-    <div class="rot">// os "penduricalhos" que mais pagam (clique: quem recebe)</div>${topV.map((v) => `<div class="pan-l tp ${F.verba === v.k ? "ativo" : ""}" data-verba="${esc(v.k)}" style="grid-template-columns:1fr 62px !important" title="${v.n} pessoas"><span class="tn" style="--r:#ffb300"><span style="overflow:hidden;text-overflow:ellipsis">${esc(v.k)}</span></span><b class="num">${brlCurto(v.v)}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(4, Math.round(100 * v.v / mv))}%"><i style="width:100%;background:#ffb300"></i></div></div>`).join("")}
-    <div class="sal-bar"><input id="sal-q" placeholder="Buscar nome, cargo ou órgão" value="${esc(F.q)}"></div>
-    ${chips.length ? `<div class="pan-ativos">${chips.map(([k, t]) => `<button class="pan-at" data-x="${k}">${esc(t)} <b>×</b></button>`).join("")}</div>` : ""}
-    <div class="rot">// ${lista.length} pessoas · clique para abrir as rubricas</div>${lista.slice(0, F.n).map(card).join("") || '<p class="sub2">Ninguém neste filtro.</p>'}${lista.length > F.n ? '<button class="botao" id="sal-mais">Ver mais</button>' : ""}
+      <div class="sal-ver">${ab ? "▾ esconder" : `▸ ver os ${its.length} penduricalhos`}</div>${det}</div>`; };
+  const ativos = [F.cat && ["cat", `Tipo: ${F.cat}`], F.verba && ["verba", `Verba: ${F.verba.slice(0, 38)}`], F.poder && ["poder", `Quem: ${{ MIN: "Ministros", J: "Judiciário", MP: "MP", E: "Executivo" }[F.poder]}`], F.q && ["q", `Busca: ${F.q}`]].filter(Boolean);
+  const pn = F.painel;
+  const painel = pn === "quem" ? `<div class="sal-pn">${[["", "Todos"], ["MIN", "Ministros"], ["J", "Judiciário"], ["MP", "Ministério Público"], ["E", "Executivo"]].map(([k, l]) => `<button class="tg ${F.poder === k ? "on" : ""}" data-p="${k}">${l}</button>`).join("")}</div>`
+    : pn === "verba" ? `<div class="sal-pn"><div class="sal-cats">${catL.map((c) => `<button class="sal-c ${F.cat === c.c ? "on" : ""}" data-cat="${esc(c.c)}" style="--k:${corCat(c.c)}"><span>${esc(c.c)}</span><b class="num">${brlCurto(c.v)}</b><em>${c.n.size} pessoas</em><i style="width:${Math.round(100 * c.v / mcat)}%"></i></button>`).join("")}</div>
+      <div class="rot" style="margin-top:10px">// ${F.cat ? "verbas de " + esc(F.cat) : "as verbas que mais pagam"} (clique para ver quem recebe)</div>${verbaL.map((v) => `<div class="pan-l tp ${F.verba === v.k ? "ativo" : ""}" data-verba="${esc(v.k)}" style="grid-template-columns:1fr 62px !important" title="${v.n} pessoas"><span class="tn" style="--r:${corCat(v.c)}"><span style="overflow:hidden;text-overflow:ellipsis">${esc(v.k)}</span></span><b class="num">${brlCurto(v.v)}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(4, Math.round(100 * v.v / mv))}%"><i style="width:100%;background:${corCat(v.c)}"></i></div></div>`).join("")}</div>`
+    : pn === "busca" ? `<div class="sal-pn"><input id="sal-q" placeholder="Nome, cargo ou órgão" value="${esc(F.q)}"></div>` : "";
+  el.innerHTML = `<h3>Maiores remunerações</h3><p class="sub2">Quanto cada agente público recebeu no mês de referência, separando o <span style="color:#4cc9f0">subsídio</span> dos "penduricalhos" (tudo que vem além dele). Muitos são legais e ficam fora do teto: o ranking mostra o total e de quê, não diz que algo é irregular. A linha branca nas barras é o teto (${brl(T)}).</p>
+    <div class="sal-k"><div><b>${acima.length}</b><span>do ranking acima do teto</span></div><div><b>${brlCurto(exc)}</b><span>de excedente por mês</span></div><div><b>${Math.round(100 * pendT / brutT)}%</b><span>do total são penduricalhos</span></div></div>
+    <div class="sal-fl"><span>Filtrar por</span>${[["quem", "Quem"], ["verba", "Penduricalho"], ["busca", "Nome"]].map(([k, l]) => `<button class="${pn === k ? "on" : ""}" data-painel="${k}">${l} <i>${pn === k ? "▴" : "▾"}</i></button>`).join("")}</div>${painel}
+    ${ativos.length ? `<div class="pan-ativos">${ativos.map(([k, t]) => `<button class="pan-at" data-x="${k}">${esc(t)} <b>×</b></button>`).join("")}<button class="pan-at limpa" data-x="*">limpar tudo</button></div>` : ""}
+    <div class="rot">// ${lista.length} pessoas · clique numa pessoa para ver os penduricalhos</div>${lista.slice(0, F.n).map(card).join("") || '<p class="sub2">Ninguém neste filtro.</p>'}${lista.length > F.n ? '<button class="botao" id="sal-mais">Ver mais</button>' : ""}
     <p class="aviso">${esc(_rem.fonte)}. Atualizado em ${esc(_rem.gerado)}.</p>`;
-  const re = () => montarSalarios();
-  el.querySelectorAll("#sal-p [data-p]").forEach((b) => (b.onclick = () => { F.poder = b.dataset.p; F.n = 40; re(); }));
-  el.querySelectorAll("[data-faixa]").forEach((b) => (b.onclick = () => { F.faixa = F.faixa === b.dataset.faixa ? "" : b.dataset.faixa; F.n = 40; re(); }));
-  el.querySelectorAll(".pan-l[data-verba]").forEach((b) => (b.onclick = () => { F.verba = F.verba === b.dataset.verba ? "" : b.dataset.verba; F.n = 40; re(); }));
-  el.querySelectorAll(".sal-vb").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); F.verba = b.dataset.verba; F.n = 40; re(); }));
-  el.querySelectorAll("[data-org]").forEach((b) => (b.onclick = () => { F.org = F.org === b.dataset.org ? "" : b.dataset.org; F.n = 40; re(); }));
-  el.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { F[b.dataset.x] = ""; re(); }));
-  const sq = $("sal-q"); sq.onchange = () => { F.q = sq.value; F.n = 40; re(); }; if (F.q) { sq.focus(); sq.setSelectionRange(sq.value.length, sq.value.length); }
-  const mais = $("sal-mais"); if (mais) mais.onclick = () => { F.n += 40; re(); };
-  el.querySelectorAll(".caixa.sal").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a,tr")) return; const k = c.dataset.k; F.abertos.has(k) ? F.abertos.delete(k) : F.abertos.add(k); const y = $("painel").scrollTop; montarSalarios().then(() => ($("painel").scrollTop = y)); }));
+  const re = (fecha = true) => { if (fecha) F.painel = ""; F.n = 30; montarSalarios(); };
+  el.querySelectorAll("[data-painel]").forEach((b) => (b.onclick = () => { F.painel = F.painel === b.dataset.painel ? "" : b.dataset.painel; montarSalarios(); }));
+  el.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => { F.poder = b.dataset.p; re(); }));
+  el.querySelectorAll("[data-cat]").forEach((b) => (b.onclick = () => { F.cat = F.cat === b.dataset.cat ? "" : b.dataset.cat; F.verba = ""; re(false); }));
+  el.querySelectorAll(".pan-l[data-verba]").forEach((b) => (b.onclick = () => { F.verba = F.verba === b.dataset.verba ? "" : b.dataset.verba; re(); }));
+  el.querySelectorAll(".sal-vb").forEach((b) => (b.onclick = (e) => { e.stopPropagation(); F.verba = b.dataset.verba; F.cat = ""; re(); $("painel").scrollTop = 0; }));
+  el.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { if (b.dataset.x === "*") { F.poder = ""; F.cat = ""; F.verba = ""; F.q = ""; } else F[b.dataset.x] = ""; re(); }));
+  const sq = $("sal-q"); if (sq) { sq.focus(); sq.setSelectionRange(sq.value.length, sq.value.length); sq.onchange = () => { F.q = sq.value; re(); }; sq.onkeydown = (e) => { if (e.key === "Enter") { F.q = sq.value; re(); } }; }
+  const mais = $("sal-mais"); if (mais) mais.onclick = () => { F.n += 30; montarSalarios(); };
+  el.querySelectorAll(".caixa.sal").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a,.sal-vb")) return; const k = c.dataset.k; F.abertos.has(k) ? F.abertos.delete(k) : F.abertos.add(k); const y = $("painel").scrollTop; montarSalarios().then(() => ($("painel").scrollTop = y)); }));
 }
 let _nt = null;
 async function montarNoticias() {
@@ -886,17 +897,19 @@ if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(lo
   $("resumo").innerHTML = `<div class="kpi"><b>${alertas.length.toLocaleString("pt-BR")}</b><span>alertas</span></div><div class="kpi"><b>${brlCurto(emAtencao)}</b><span>em atenção</span></div><div class="kpi n"><b>${alertas.filter((a) => a.novo).length}</b><span>novos (14 dias)</span></div><div class="kpi c"><b>${alertas.filter((a) => a.correlacao).length}</b><span>combinados</span></div>`;
 }
 
-// ----- manchete do dia: um alerta novo por vez, para dar um motivo de clicar -----
+// ----- tela inicial: busca + manchete do dia + "por que isso importa" -----
 {
   const cand = destaques(alertas.filter((a) => a.novo && a.gravidade !== "baixa" && !(a.manchete && a.manchete.ref)), 8, 2).slice(0, 6);
-  if (cand.length) {
-    const el = document.createElement("div"); el.id = "manchete-dia"; $("centro").appendChild(el); let i = 0, pausa = false;
-    const pinta = () => { const a = cand[i]; el.style.setProperty("--c", COR[a.gravidade]);
-      el.innerHTML = `<span class="md-t">NOVO NO RADAR</span><span class="md-x">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</span><b class="md-v num">${brlCurto(a.total)}</b><span class="md-p">${cand.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</span>`;
-      el.onclick = () => abrir(a.id); };
-    pinta(); el.onmouseenter = () => (pausa = true); el.onmouseleave = () => (pausa = false);
-    setInterval(() => { if (pausa || !$("detalhe").hidden) return; el.classList.add("troca"); setTimeout(() => { i = (i + 1) % cand.length; pinta(); el.classList.remove("troca"); }, 250); }, 7000);
-  }
+  const el = document.createElement("div"); el.id = "manchete-dia"; $("centro").appendChild(el); let i = 0, pausa = false;
+  const pinta = () => { const a = cand[i];
+    el.innerHTML = `<button class="md-busca" id="md-busca"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/></svg><span>Busque sua cidade, um político ou uma empresa</span><kbd>Ctrl K</kbd></button>
+      <div class="md-atalhos"><button data-ir="cidade">🏠 Minha cidade</button><button data-ir="fichas">👤 Um político</button><button data-ir="investigar">🔎 Uma empresa</button><button data-ir="casos">📂 Casos</button></div>
+      ${a ? `<div class="md-card" id="md-card" style="--c:${COR[a.gravidade]}"><div class="md-t">NOVO NO RADAR · ${esc(RNOME[a.regra] || "")}</div><div class="md-x">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</div><div class="md-por"><b>Por que importa:</b> ${esc(linhaCard(a))}</div><div class="md-f"><b class="num">${brlCurto(a.total)}</b><span>Ver detalhes →</span><span class="md-p">${cand.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</span></div></div>` : ""}`;
+    $("md-busca").onclick = () => abrePaleta();
+    el.querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => document.querySelector(`#abas [data-aba="${b.dataset.ir}"]`).click()));
+    const cd = $("md-card"); if (cd) cd.onclick = () => abrir(a.id); };
+  pinta(); el.onmouseenter = () => (pausa = true); el.onmouseleave = () => (pausa = false);
+  if (cand.length > 1) setInterval(() => { if (pausa || !$("detalhe").hidden) return; const cd = $("md-card"); if (cd) cd.classList.add("troca"); setTimeout(() => { i = (i + 1) % cand.length; pinta(); }, 250); }, 8000);
 }
 
 // ----- camadas -----
