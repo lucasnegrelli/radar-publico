@@ -56,8 +56,8 @@ const PORTE = { "00": "não informado", "01": "microempresa", "03": "empresa de 
 // etiqueta de confiança do R11 (contrato novo assinado durante a punição?)
 function chipContrato(a) {
   const c = a.contratos; if (!c) return "";
-  const t = c.sinal === "contrato_novo" ? ["contrato novo na punição", "#ff2d55", "Há contrato assinado depois do início da punição"]
-    : c.sinal === "so_contrato_anterior" ? ["só contrato antigo", "#8aa0b5", "Só há contratos anteriores à punição: provável pagamento de contrato antigo"]
+  const t = c.sinal === "contrato_novo" ? ["contrato novo", "#ff2d55", "Há contrato assinado depois do início da punição"]
+    : c.sinal === "so_contrato_anterior" ? ["contrato antigo", "#8aa0b5", "Só há contratos anteriores à punição: provável pagamento de contrato antigo"]
     : ["origem incerta", "#8aa0b5", "Nenhum contrato dessa empresa no PNCP"];
   return `<span class="chip" style="--c:${t[1]}" title="${t[2]}">${t[0]}</span>`;
 }
@@ -940,9 +940,10 @@ function escalaBase() {
   let el = $("escala-base"); if (!el) { el = document.createElement("div"); el.id = "escala-base"; $("centro").appendChild(el); }
   if (!_esc) return;
   const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
-  const itens = [["PIB do Brasil em um ano", _esc.pib_tri * 1000, "#5b6b80"], ["Compras públicas registradas", _esc.pncp_bi, "#4cc9f0"], ["Em atenção no Radar", _esc.alertas_bi, "#ff2d55"]];
-  const mx = Math.log10(itens[0][1] * 10);
-  el.title = "Escala logarítmica: cada barra é 10 vezes maior que a anterior, para caberem na mesma régua.";
+  const nC = (_esc.pncp_anos || []).reduce((t, x) => t + x.contratos, 0), pct = _esc.pct_pncp != null ? _esc.pct_pncp.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%" : "";
+  const itens = [[`Analisado: ${(nC / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi de contratos (PNCP)`, _esc.pncp_bi, "#4cc9f0"], [`Em atenção${pct ? " · " + pct + " do analisado" : ""}`, _esc.alertas_bi, "#ff2d55"], ["Prioridade alta", _esc.alta_bi, "#ff2d55"]];
+  const mx = Math.log10(_esc.pncp_bi * 10);
+  el.title = "Régua logarítmica, para caberem na mesma linha. O Radar só vê o que está no PNCP (compras federais, estaduais e municipais registradas), não todo o gasto público.";
   el.innerHTML = itens.map(([t, v, cor]) => `<div><span>${t}</span><b class="num">${f(v)}</b><u><i style="width:${Math.round(100 * Math.log10(v * 10) / mx)}%;background:${cor}"></i></u></div>`).join("");
 }
 function escalaHtml() {
