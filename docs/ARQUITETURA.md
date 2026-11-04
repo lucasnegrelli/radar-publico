@@ -45,7 +45,7 @@ Segredos do repositório: `HF_TOKEN` (leitura e escrita no dataset). O token do 
 3. `bcb_ifdata.py`, `tse_historico.py 2026`.
 4. `emendas.py` (R09) e `despesas_federais.py` (R11).
 5. `exportar_web.py`: base de contratos, regras R02–R08, e dentro dele `politicos_socios.py` (R10) e `servidores.py` (R12). Gera `alertas.json`.
-6. `escala.py`, `fichas.py`, `viagens_cota.py`, `risco_financeiro.py`, `risco_dossie.py`, `fidc.py`, `municipios.py`.
+6. `escala.py`, `fichas.py`, `viagens_cota.py`, `viagens_servico.py`, `risco_financeiro.py`, `risco_dossie.py`, `fidc.py`, `municipios.py`.
 7. Em paralelo: `datajud.py`, `noticias.py`, `noticias_alertas.py`, `diarios.py`, `camara_atividade.py`, `senado_atividade.py`, `ofac.py`.
 8. `casos_auto.py` e `cards.py`.
 9. `offshore.py`, `pessoas.py`, `empresas.py`, `pessoas_extras.py`.

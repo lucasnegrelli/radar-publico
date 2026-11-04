@@ -68,6 +68,7 @@ jobs:
           python ingestao/fichas.py
           mkdir -p dados/ref && cp data-publica/ref/* dados/ref/
           python ingestao/viagens_cota.py || true
+          python ingestao/viagens_servico.py || true
           python ingestao/risco_financeiro.py
           python ingestao/risco_dossie.py || true
           python ingestao/fidc.py || true

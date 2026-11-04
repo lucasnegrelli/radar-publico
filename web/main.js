@@ -293,11 +293,12 @@ function montarMapa() {
     requestAnimationFrame(quadro);
   })(t0);
 }
+let _vgFonte = "exec";
 async function alternarVoos(on) {
   const v = on ? "visible" : "none";
   ["voos-arco", "voos-ponto", "voos-nome"].forEach((l) => map.setLayoutProperty(l, "visibility", v));
   if (!on) return;
-  const d = await dadosViagens();
+  const d = _vgFonte === "exec" ? await dadosExec() : await dadosViagens();
   const fs = [];
   d.paises.forEach((p) => {
     fs.push({ type: "Feature", properties: { pais: p.pais, n: p.n }, geometry: { type: "LineString", coordinates: curva(BRASILIA, [p.lon, p.lat], 50) } });
@@ -306,6 +307,8 @@ async function alternarVoos(on) {
   map.getSource("voos").setData({ type: "FeatureCollection", features: fs });
   map.fitBounds([[-80, -40], [10, 45]], { padding: 40, duration: 1200 });
 }
+let _exec = null;
+const dadosExec = async () => (_exec ||= await fetch("/data/viagens_exec.json").then((r) => r.json()).catch(() => ({ viagens: [], paises: [], orgaos: [], agora: [] })));
 let _viagens = null;
 const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json").then((r) => r.json()).catch(() => ({ voos: [], deputados: [], paises: [] })));
 
@@ -434,6 +437,29 @@ async function montarExterior() {
     <p class="aviso">Voo ao exterior pago pela cota não é irregularidade por si só (há regras próprias de uso). Veja o trecho e o passageiro na nota da Câmara.</p>`;
   $("tg-voos").checked = true; alternarVoos(true);
   $("b-globo").onclick = () => { modoGlobo(!globoAtivo); $("b-globo").textContent = globoAtivo ? "Voltar ao mapa do Brasil" : "Ver em globo 3D"; };
+}
+async function montarViagens(fonte = _vgFonte) {
+  _vgFonte = fonte; const el = $("aba-viagens");
+  const [ex, cam] = await Promise.all([dadosExec(), dadosViagens()]);
+  const dd = (s) => { const [a, m, d] = s.split("-"); return `${d}/${m}/${a}`; };
+  const abas = `<div class="filtros"><button data-f="exec" class="${fonte === "exec" ? "on" : ""}">Executivo federal</button><button data-f="cam" class="${fonte === "cam" ? "on" : ""}">Câmara (cota)</button></div>`;
+  let corpo;
+  if (fonte === "exec") {
+    corpo = `<p class="sub2">Viagens a serviço <b>ao exterior</b> de servidores e dirigentes do Executivo federal, no Portal da Transparência. Dados até <b>${ex.ate ? dd(ex.ate) : "–"}</b>: o Portal publica com atraso, então isto <b>não mostra onde alguém está agora</b>. Nome só aparece para cargos de direção; o resto entra por órgão.</p>
+      <div class="caixa"><b>${(ex.total || 0).toLocaleString("pt-BR")}</b> viagens · <b>${brlCurto(ex.valor || 0)}</b> em diárias e passagens${(ex.agora || []).length ? ` · <b>${ex.agora.length}</b> em curso` : ""}</div>
+      <div class="rot">// dirigentes que viajaram (mais recentes)</div>
+      ${ex.viagens.slice(0, 40).map((v, i) => `<div class="caixa vg" data-i="${i}"><b>${esc(v.nome)}</b> <span class="sub2">${esc(v.cargo || v.funcao)}</span><br><span class="sub2">${esc(v.orgsup)}</span><br>${dd(v.i)}${v.f !== v.i ? " a " + dd(v.f) : ""} · <b>${esc(v.pais)}</b>${v.cid.length ? " (" + esc(v.cid.join(", ")) + ")" : ""} · ${brlCurto(v.v)}${v.motivo ? `<br><span class="sub2">${esc(v.motivo)}</span>` : ""}</div>`).join("")}
+      <div class="rot" style="margin-top:14px">// por órgão</div><table class="tbl"><tbody>${ex.orgaos.slice(0, 20).map((o) => `<tr><td>${esc(o.org)}<br><span class="sub2">${Object.entries(o.paises).map(([k, n]) => k + " " + n).join(", ")}</span></td><td class="num" style="text-align:right">${o.n}</td><td class="num" style="text-align:right">${brlCurto(o.v)}</td></tr>`).join("")}</tbody></table>
+      <div class="rot" style="margin-top:14px">// por país</div><table class="tbl"><tbody>${ex.paises.slice(0, 25).map((p) => `<tr><td>${esc(p.pais)}</td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>`;
+  } else {
+    corpo = `<p class="sub2">Voos internacionais pagos com a cota parlamentar da Câmara. A data é a da <b>emissão</b> da passagem, não do voo.</p>
+      <div class="caixa"><b>${cam.voos.length}</b> voos para <b>${cam.paises.length}</b> países.</div>
+      <div class="rot">// quem mais voou ao exterior com a cota</div><table class="tbl"><tbody>${cam.deputados.slice(0, 20).map((p) => `<tr><td><b>${esc(p.p)}</b><br><span class="sub2">${esc(p.pt || "")}${p.uf ? "/" + esc(p.uf) : ""} · ${Object.entries(p.paises).map(([k, n]) => k + " " + n).join(", ")}</span></td><td class="num" style="text-align:right">${p.n}</td><td class="num" style="text-align:right">${brlCurto(p.v)}</td></tr>`).join("")}</tbody></table>`;
+  }
+  el.innerHTML = `<h3>Viagens ao exterior</h3>${abas}${corpo}<p class="aviso">Viagem oficial não é irregularidade por si só. São registros públicos de agentes públicos em exercício, com atraso de publicação, e não rastreamento de ninguém.</p>`;
+  el.querySelectorAll("[data-f]").forEach((b) => (b.onclick = () => montarViagens(b.dataset.f)));
+  el.querySelectorAll(".vg").forEach((c) => (c.onclick = () => { const v = ex.viagens[Number(c.dataset.i)]; if (v) map.flyTo({ center: [v.lon, v.lat], zoom: 3.2, duration: 1400 }); }));
+  $("tg-voos").checked = true; alternarVoos(true);
 }
 async function montarJustica() {
   const el = $("aba-justica");
@@ -606,9 +632,10 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   if (b.dataset.aba === "cidade") montarCidade();
   if (b.dataset.aba === "investigar" && !$("aba-investigar").dataset.ok) { $("aba-investigar").dataset.ok = "1"; montarInvestigar(CTX_P); }
   if (b.dataset.aba === "justica") montarJustica();
+  if (b.dataset.aba === "viagens") montarViagens();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
-$("aba-mais").innerHTML = `<h3>Mais</h3><p class="sub2">O resto do Radar.</p><div class="mais-grid">${[["justica", "⚖️", "Justiça e MP", "Remuneração e processos do Judiciário e do Ministério Público"], ["noticias", "📰", "Notícias", "Manchetes recentes sobre gasto público e fiscalização"], ["fontes", "🗄️", "Dados abertos", "Fontes, cobertura e arquivos para baixar"], ["sobre", "❓", "Como ler", "O que é um alerta, as cores e o glossário"]].map(([k, i, t, d]) => `<button class="mais-it" data-ir="${k}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>`;
+$("aba-mais").innerHTML = `<h3>Mais</h3><p class="sub2">O resto do Radar.</p><div class="mais-grid">${[["viagens", "✈️", "Viagens ao exterior", "Quem do Executivo e da Câmara viajou, para onde e quanto custou"], ["justica", "⚖️", "Justiça e MP", "Remuneração e processos do Judiciário e do Ministério Público"], ["noticias", "📰", "Notícias", "Manchetes recentes sobre gasto público e fiscalização"], ["fontes", "🗄️", "Dados abertos", "Fontes, cobertura e arquivos para baixar"], ["sobre", "❓", "Como ler", "O que é um alerta, as cores e o glossário"]].map(([k, i, t, d]) => `<button class="mais-it" data-ir="${k}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>`;
 $("aba-mais").querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => document.querySelector(`#abas [data-aba="${b.dataset.ir}"]`).click()));
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
   [...$("filtros").children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
