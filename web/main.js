@@ -172,7 +172,9 @@ function pontuar(a) {
 function destaques(L, n = 40, porTipo = 8) {
   const cont = {}, out = [], vistos = new Set();
   for (const a of [...L].sort((x, y) => y.score - x.score)) { if (a.cnpj && vistos.has(a.cnpj)) continue; vistos.add(a.cnpj); if ((cont[a.regra] = (cont[a.regra] || 0) + 1) > porTipo) continue; out.push(a); if (out.length >= n) break; }
-  return out;
+  const fila = [...out], mix = [];
+  while (fila.length) { const k = fila.findIndex((a) => !(mix.length >= 2 && mix[mix.length - 1].regra === a.regra && mix[mix.length - 2].regra === a.regra)); mix.push(fila.splice(k < 0 ? 0 : k, 1)[0]); }
+  return mix;
 }
 let alertas = [], visiveis = [], filtroG = "destaques", filtroR = "todas", sel = null, nomes = {};
 const RCOR = { R01: "#ff6b81", R02: "#ff2d55", R03: "#ffb300", R04: "#ff8a3d", R05: "#f7d046", R06: "#7cf5de", R07: "#22d3b6", R08: "#b388ff", R09: "#4cc9f0", R10: "#ff7ad9", R11: "#6ea8ff", RF01: "#ffcc00" };
@@ -753,6 +755,19 @@ if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(lo
 { // indicadores
   const emAtencao = alertas.filter((a) => a.gravidade !== "baixa").reduce((s, a) => s + (a.total || 0), 0);
   $("resumo").innerHTML = `<div class="kpi"><b>${alertas.length.toLocaleString("pt-BR")}</b><span>alertas</span></div><div class="kpi"><b>${brlCurto(emAtencao)}</b><span>em atenção</span></div><div class="kpi n"><b>${alertas.filter((a) => a.novo).length}</b><span>novos (14 dias)</span></div><div class="kpi c"><b>${alertas.filter((a) => a.correlacao).length}</b><span>combinados</span></div>`;
+}
+
+// ----- manchete do dia: um alerta novo por vez, para dar um motivo de clicar -----
+{
+  const cand = destaques(alertas.filter((a) => a.novo && a.gravidade !== "baixa" && !(a.manchete && a.manchete.ref)), 8, 2).slice(0, 6);
+  if (cand.length) {
+    const el = document.createElement("div"); el.id = "manchete-dia"; $("centro").appendChild(el); let i = 0, pausa = false;
+    const pinta = () => { const a = cand[i]; el.style.setProperty("--c", COR[a.gravidade]);
+      el.innerHTML = `<span class="md-t">NOVO NO RADAR</span><span class="md-x">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</span><b class="md-v num">${brlCurto(a.total)}</b><span class="md-p">${cand.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</span>`;
+      el.onclick = () => abrir(a.id); };
+    pinta(); el.onmouseenter = () => (pausa = true); el.onmouseleave = () => (pausa = false);
+    setInterval(() => { if (pausa || !$("detalhe").hidden) return; el.classList.add("troca"); setTimeout(() => { i = (i + 1) % cand.length; pinta(); el.classList.remove("troca"); }, 250); }, 7000);
+  }
 }
 
 // ----- camadas -----

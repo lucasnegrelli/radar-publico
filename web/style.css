@@ -445,3 +445,15 @@ svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg
 #sal-q{width:100%;height:36px;margin:2px 0 8px;background:var(--s2);color:var(--txt);border:1px solid var(--linha2);border-radius:8px;font:13px var(--sans);outline:none}#sal-q:focus{border-color:var(--acc)}
 #ag-s{width:100%;height:36px;margin:2px 0 8px;background:var(--s2);color:var(--txt);border:1px solid var(--linha2);border-radius:8px;font:13px var(--sans);outline:none}#ag-s:focus{border-color:var(--acc)}
 .caixa.ag{font-size:12.5px;line-height:1.45;padding:9px 12px}
+
+/* v12: manchete do dia (topo do mapa) */
+#manchete-dia{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:9;width:min(640px,calc(100% - 900px));min-width:360px;display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;padding:10px 16px 12px;background:rgba(10,15,22,.92);backdrop-filter:blur(12px);border:1px solid var(--linha2);border-left:3px solid var(--c);border-radius:14px;cursor:pointer;box-shadow:0 14px 40px rgba(0,0,0,.5);transition:opacity .25s,border-color .15s}
+#manchete-dia:hover{border-color:var(--c)}#manchete-dia.troca{opacity:0}
+.md-t{font:700 10px var(--mono);letter-spacing:.16em;color:var(--c)}
+.md-x{font-size:13.5px;line-height:1.4;color:#eef3fa;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.md-v{font:700 17px var(--display);color:#fff;white-space:nowrap}
+.md-p{grid-column:1/-1;display:flex;gap:5px;margin-top:6px}.md-p i{height:3px;flex:1;border-radius:2px;background:rgba(255,255,255,.12)}.md-p i.on{background:var(--c)}
+#bv{top:96px !important}
+#detalhe:not([hidden]) ~ #manchete-dia{display:none}
+@media(max-width:1280px){#manchete-dia{width:min(560px,calc(100% - 480px))}}
+@media(max-width:980px){#manchete-dia{display:none}}
