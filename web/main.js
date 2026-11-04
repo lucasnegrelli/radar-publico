@@ -635,8 +635,6 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   if (b.dataset.aba === "viagens") montarViagens();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
-$("aba-mais").innerHTML = `<h3>Mais</h3><p class="sub2">O resto do Radar.</p><div class="mais-grid">${[["viagens", "✈️", "Viagens ao exterior", "Quem do Executivo e da Câmara viajou, para onde e quanto custou"], ["justica", "⚖️", "Justiça e MP", "Remuneração e processos do Judiciário e do Ministério Público"], ["noticias", "📰", "Notícias", "Manchetes recentes sobre gasto público e fiscalização"], ["fontes", "🗄️", "Dados abertos", "Fontes, cobertura e arquivos para baixar"], ["sobre", "❓", "Como ler", "O que é um alerta, as cores e o glossário"]].map(([k, i, t, d]) => `<button class="mais-it" data-ir="${k}"><span>${i}</span><b>${t}</b><small>${d}</small></button>`).join("")}</div>`;
-$("aba-mais").querySelectorAll("[data-ir]").forEach((b) => (b.onclick = () => document.querySelector(`#abas [data-aba="${b.dataset.ir}"]`).click()));
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
   [...$("filtros").children].forEach((x) => x.classList.toggle("on", x === b)); aplicarFiltro(); };
 
@@ -718,7 +716,7 @@ function montarTimeline() {
   const n = meses.length, W = 1000, bw = W / n, max = Math.max(1, ...meses.map((k) => { const p = por[k] || {}; return (p.alta || 0) + (p.media || 0) + (p.baixa || 0); }));
   const barras = meses.map((k, i) => { const p = por[k] || { alta: 0, media: 0, baixa: 0 }; let y0 = 50; return ["baixa", "media", "alta"].map((g) => { const h = 46 * (p[g] || 0) / max; y0 -= h; return h > 0 ? `<rect x="${i * bw + 1}" y="${y0}" width="${Math.max(1, bw - 2)}" height="${h}" fill="${COR[g]}" opacity=".85"/>` : ""; }).join(""); }).join("");
   const rotulos = [0, Math.floor(n / 2), n - 1].map((i) => `<text x="${Math.min(W - 30, Math.max(2, i * bw))}" y="49" style="font:10px ui-monospace,monospace;fill:#7a8da3">${meses[i]}</text>`).join("");
-  $("timeline").innerHTML = `<div class="tl-h"><span><button id="tl-play" title="Ver os alertas surgindo mês a mês">▶ Reproduzir</button> alertas por mês de atividade · arraste para filtrar</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".18" width="0"/>${barras}</svg>`;
+  $("timeline").innerHTML = `<div class="tl-h"><span>alertas por mês de atividade · arraste para filtrar</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".18" width="0"/>${barras}</svg>`;
   const svg = $("tl-svg"), br = $("tl-brush"); let ini = null;
   const idx = (e) => { const r = svg.getBoundingClientRect(); return Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - r.left) / r.width) * n))); };
   const pinta = (a, b) => { const lo = Math.min(a, b), hi = Math.max(a, b); br.setAttribute("x", lo * bw); br.setAttribute("width", (hi - lo + 1) * bw); };
@@ -726,11 +724,7 @@ function montarTimeline() {
   svg.onpointermove = (e) => { if (ini != null) pinta(ini, idx(e)); };
   svg.onpointerup = (e) => { if (ini == null) return; const f = idx(e), lo = Math.min(ini, f), hi = Math.max(ini, f); ini = null;
     janela = [meses[lo], meses[hi]]; $("tl-sel").textContent = lo === hi ? meses[lo] : `${meses[lo]} a ${meses[hi]}`; $("tl-reset").hidden = false; aplicarFiltro(); };
-  let _pl = null;
-  const parar = () => { clearInterval(_pl); _pl = null; $("tl-play").textContent = "▶ Reproduzir"; };
-  $("tl-play").onclick = () => { if (_pl) { parar(); return; } let i = 0; $("tl-play").textContent = "❚❚ Pausar";
-    _pl = setInterval(() => { janela = [meses[0], meses[i]]; pinta(0, i); $("tl-sel").textContent = meses[i]; $("tl-reset").hidden = false; aplicarFiltro(); if (++i >= n) { parar(); } }, 420); };
-  svg.addEventListener("pointerdown", parar);
+  const parar = () => {};
   $("tl-reset").onclick = () => { parar(); janela = null; br.setAttribute("width", 0); $("tl-sel").textContent = ""; $("tl-reset").hidden = true; aplicarFiltro(); };
 }
 
