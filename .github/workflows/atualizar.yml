@@ -80,10 +80,18 @@ jobs:
         env:
           EAGENDAS_TOKEN: ${{ secrets.EAGENDAS_TOKEN }}
         run: python ingestao/eagendas.py || true
+      - name: Restaurar coleta noturna do Portal (cartões)
+        uses: actions/cache/restore@v4
+        with:
+          path: dados/portal
+          key: portal-cpgf-restore
+          restore-keys: portal-cpgf-
       - name: Portal da Transparência (API de dados)
         env:
           PORTAL_TOKEN: ${{ secrets.PORTAL_TOKEN }}
-        run: python ingestao/portal_fontes.py || true
+        run: |
+          python ingestao/portal_fontes.py || true
+          python ingestao/portal_cartoes.py 24 0 || true
       - name: Judiciário, notícias e diários oficiais (em paralelo)
         run: |
           python ingestao/datajud.py > /tmp/datajud.log 2>&1 &

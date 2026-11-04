@@ -1,0 +1,36 @@
+name: Portal da Transparência (coleta noturna)
+# Coleta pesada da API do Portal em lotes que retomam de onde pararam. Roda de madrugada (limite de 300 req/min entre 00h e 05h59, horário de Brasília).
+# O estado e os dados brutos ficam no cache do Actions (dados/portal); a atualização principal só agrega e publica.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      meses:
+        description: "Quantos meses para trás coletar"
+        default: "24"
+      minutos:
+        description: "Orçamento de tempo, em minutos"
+        default: "170"
+concurrency:
+  group: portal-noturno
+  cancel-in-progress: false
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 200
+    env:
+      PORTAL_TOKEN: ${{ secrets.PORTAL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install "duckdb==2.0.0"
+      - uses: actions/cache@v4
+        with:
+          path: dados/portal
+          key: portal-cpgf-${{ github.run_id }}
+          restore-keys: portal-cpgf-
+      - name: Cartões de pagamento (CPGF)
+        run: python ingestao/portal_cartoes.py ${{ inputs.meses || '24' }} ${{ inputs.minutos || '170' }} || true

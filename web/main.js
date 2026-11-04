@@ -655,6 +655,15 @@ async function montarFontes() {
   const d = await fetch("/data/meta.json").then((r) => r.json()).catch(() => null);
   $("aba-fontes").innerHTML = d ? `<h3>Fontes e cobertura</h3><p class="sub2">O que cada base cobre, até quando, e o que ainda não vê. Um painel só é confiável se mostra seus próprios pontos cegos.</p>` +
     d.fontes.map((f) => `<div class="caixa"><b>${esc(f.fonte)}</b><br><span class="sub2">${esc(f.cobertura)}${f.linhas ? " · " + Number(f.linhas).toLocaleString("pt-BR") + " linhas" : ""} · atualizado ${esc(f.atualizado)}</span><p style="margin:6px 0 0;font-size:12.5px;color:var(--media)">Lacuna: ${esc(f.lacuna)}</p></div>`).join("") : '<p class="sub2">Metadados indisponíveis.</p>';
+  cartoesBloco();
+}
+async function cartoesBloco() {
+  const d = await fetch("/data/cartoes.json").then((r) => r.json()).catch(() => null); if (!d) return;
+  const el = $("aba-fontes"); const t = (rows, f) => `<table class="tbl"><tbody>${rows.map(f).join("")}</tbody></table>`;
+  el.insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Cartões corporativos (CPGF)</h3><p class="sub2">Compras no cartão de pagamento do governo federal, de ${esc(d.de)} a ${esc(d.ate)}: <b>${d.n.toLocaleString("pt-BR")}</b> transações, <b>${brlCurto(d.valor)}</b>.${d.completo ? "" : " Coleta ainda em andamento: os números crescem a cada rodada."} Fonte: Portal da Transparência.</p>
+    ${d.sancionadas.length ? `<div class="rot">// estabelecimentos que constavam no CEIS/CNEP na data da compra</div>${t(d.sancionadas.slice(0, 8), (x) => `<tr><td><b>${esc(x.nome)}</b><br><span class="sub2">${esc(x.cat || "")} · ${esc(String(x.de).slice(0, 10))} a ${esc(String(x.ate).slice(0, 10))}</span></td><td class="num" style="text-align:right">${brlCurto(x.v)}</td></tr>`)}<p class="sub2">Constar numa lista de sanções não prova irregularidade: pode haver decisão judicial, alcance restrito da sanção ou erro de cadastro.</p>` : ""}
+    <div class="rot">// maiores estabelecimentos pagos no cartão</div>${t(d.estabelecimentos.slice(0, 10), (x) => `<tr><td>${esc(x.nome)}<br><span class="sub2">${x.n} compras · ${x.ugs} unidades</span></td><td class="num" style="text-align:right">${brlCurto(x.v)}</td></tr>`)}
+    ${d.saques.length ? `<div class="rot">// saques em espécie por unidade</div>${t(d.saques.slice(0, 8), (x) => `<tr><td>${esc(x.ug || "")}<br><span class="sub2">${esc(x.org || "")} · ${x.n} saques</span></td><td class="num" style="text-align:right">${brlCurto(x.v)}</td></tr>`)}` : ""}`);
 }
 
 // ---------- globo 3D (vínculos com o exterior) ----------
