@@ -461,6 +461,31 @@ async function montarViagens(fonte = _vgFonte) {
   el.querySelectorAll(".vg").forEach((c) => (c.onclick = () => { const v = ex.viagens[Number(c.dataset.i)]; if (v) map.flyTo({ center: [v.lon, v.lat], zoom: 3.2, duration: 1400 }); }));
   $("tg-voos").checked = true; alternarVoos(true);
 }
+let _rem = null, _remF = { poder: "", q: "", n: 60 };
+async function montarSalarios() {
+  const el = $("aba-salarios"); _rem ||= await fetch("/data/remuneracoes.json").then((r) => r.json()).catch(() => null);
+  if (!_rem) { el.innerHTML = '<h3>Salários</h3><p class="sub2">Dados ainda não carregados.</p>'; return; }
+  const PODER = { J: "Judiciário", MP: "Ministério Público", E: "Executivo federal" }, T = _rem.teto;
+  const lista = _rem.ranking.filter((p) => (!_remF.poder || (_remF.poder === "MIN" ? ["stf", "stj", "tst", "stm", "tse"].includes(p.oid) : p.poder === _remF.poder)) && (!_remF.q || norm(p.nome + " " + p.orgao + " " + p.cargo).includes(norm(_remF.q))));
+  const ini = (n) => n.split(" ").filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join("");
+  const card = (p, i) => { const ac = Math.max(0, p.bruta - T), w = Math.min(100, Math.round(100 * p.bruta / (_rem.ranking[0].bruta || 1))), ws = Math.round(100 * p.sub / Math.max(p.bruta, 1));
+    return `<div class="caixa sal" data-i="${i}"><div class="sal-h">${p.foto ? `<img class="sal-f" src="${esc(p.foto)}" alt="" loading="lazy">` : `<span class="sal-f sal-i">${esc(ini(p.nome))}</span>`}<div class="sal-n"><b>${esc(p.nome)}</b><span class="sub2">${esc(p.cargo)} · ${esc(p.orgao)}</span></div><div class="sal-v"><b class="num">${brlCurto(p.bruta)}</b><span class="sub2">${esc(p.ref)}</span></div></div>
+      <div class="sal-b" title="Subsídio ${brl(p.sub)} · demais verbas ${brl(p.pend)}"><i style="width:${w * ws / 100}%;background:#4cc9f0"></i><i style="width:${w * (100 - ws) / 100}%;background:#ffb300"></i></div>
+      <div class="sal-d" hidden><div class="sub2" style="margin:6px 0">${ac > 0 ? `<b style="color:#ff6b88">${brlCurto(ac)} acima do teto de ${brl(T)}</b> · ` : ""}subsídio/base ${brl(p.sub)} · demais verbas ${brl(p.pend)} · líquido ${brl(p.liq)}</div>
+      ${p.it.length ? `<table class="tbl"><tbody>${p.it.map(([k, v]) => `<tr><td>${esc(k)}</td><td class="num" style="text-align:right">${brl(v)}</td></tr>`).join("")}</tbody></table>` : '<p class="sub2">Sem detalhamento das rubricas.</p>'}${p.u ? `<p style="margin-top:6px"><a href="${esc(p.u)}" target="_blank" rel="noopener">Ver no Portal da Transparência</a></p>` : ""}</div></div>`; };
+  el.innerHTML = `<h3>Maiores remunerações</h3><p class="sub2">Quanto cada agente público recebeu no mês de referência, separando o <span style="color:#4cc9f0">subsídio</span> das <span style="color:#ffb300">demais verbas</span> (os "penduricalhos"). Muitas dessas verbas são legais e ficam fora do teto; o ranking mostra o total e de quê, não diz que algo é irregular. Teto: ${brl(T)}.</p>
+    <div class="filtros" id="sal-p">${[["", "Todos"], ["MIN", "Ministros (STF, STJ…)"], ["J", "Judiciário"], ["MP", "MP"], ["E", "Executivo"]].map(([k, l]) => `<button data-p="${k}" class="${_remF.poder === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    <input id="sal-q" class="sel" style="padding:0 12px" placeholder="Buscar nome, cargo ou órgão" value="${esc(_remF.q)}">
+    <div class="rot">// verbas que mais pagam acima do subsídio (soma do ranking)</div>
+    <table class="tbl"><tbody>${_rem.verbas.slice(0, 8).map((v) => `<tr><td>${esc(v.item)}<br><span class="sub2">${v.n} pessoas do ranking</span></td><td class="num" style="text-align:right">${brlCurto(v.total)}</td></tr>`).join("")}</tbody></table>
+    <div class="rot" style="margin-top:14px">// ranking (${lista.length})</div>${lista.slice(0, _remF.n).map((p) => card(p, _rem.ranking.indexOf(p))).join("")}${lista.length > _remF.n ? '<button class="botao" id="sal-mais">Ver mais</button>' : ""}
+    <p class="aviso">${esc(_rem.fonte)}. Atualizado em ${esc(_rem.gerado)}.</p>`;
+  el.querySelectorAll("#sal-p [data-p]").forEach((b) => (b.onclick = () => { _remF.poder = b.dataset.p; _remF.n = 60; montarSalarios(); }));
+  const q = $("sal-q"); q.onchange = () => { _remF.q = q.value; _remF.n = 60; montarSalarios(); };
+  if (_remF.q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  const mais = $("sal-mais"); if (mais) mais.onclick = () => { _remF.n += 60; montarSalarios(); };
+  el.querySelectorAll(".sal").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a")) return; c.querySelector(".sal-d").hidden = !c.querySelector(".sal-d").hidden; }));
+}
 async function montarJustica() {
   const el = $("aba-justica");
   const d = await fetch("/data/judiciario.json").then((r) => r.json()).catch(() => null);
@@ -633,6 +658,7 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   if (b.dataset.aba === "investigar" && !$("aba-investigar").dataset.ok) { $("aba-investigar").dataset.ok = "1"; montarInvestigar(CTX_P); }
   if (b.dataset.aba === "justica") montarJustica();
   if (b.dataset.aba === "viagens") montarViagens();
+  if (b.dataset.aba === "salarios") montarSalarios();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;

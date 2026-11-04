@@ -28,6 +28,7 @@
       <button data-aba="investigar" title="Investigar: empresas, sócios, emendas, contratos. Monte e compartilhe sua investigação"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6M8 10.5h5M10.5 8v5"/></svg><span>Investigar</span></button>
       <button data-aba="cidade" title="Minha cidade: emendas, prefeito e alertas"><svg viewBox="0 0 24 24"><path d="M3 21V10l9-6 9 6v11M9 21v-6h6v6"/></svg><span>Cidade</span></button>
       <button data-aba="fichas" title="Pessoas: políticos e agentes públicos"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Pessoas</span></button>
+      <button data-aba="salarios" title="Ranking de remunerações e verbas além do subsídio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2"/></svg><span>Salários</span></button>
       <button data-aba="viagens" title="Viagens oficiais ao exterior"><svg viewBox="0 0 24 24"><path d="M3 12l18-8-6 16-3-7-9-1z"/></svg><span>Viagens</span></button>
       <button data-aba="justica" title="Judiciário"><svg viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z"/></svg><span>Justiça</span></button>
       <button data-aba="noticias" title="Notícias"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span>Notícias</span></button>
@@ -55,6 +56,7 @@
           </div></details>
         <ul id="itens"></ul>
       </section>
+      <section id="aba-salarios" class="aba"></section>
       <section id="aba-viagens" class="aba"></section>
       <section id="aba-casos" class="aba"></section>
       
@@ -73,13 +75,13 @@
       <div class="varre" id="varre" hidden></div>
       <div id="camadas">
         <div class="cam-t">Camadas</div>
-        <label title="Calor de valor: brilho onde há mais dinheiro" style="--k:#ff8a3d"><input type="checkbox" id="l-calor" checked><i></i> Calor de valor</label>
-        <label title="Rotas do dinheiro: do órgão à empresa" style="--k:#ff2d85"><input type="checkbox" id="l-rotas" checked><i></i> Rotas do dinheiro</label>
-        <label title="Todas as rotas (pesado)" style="--k:#b388ff"><input type="checkbox" id="l-todas"><i></i> Todas as rotas <small>(pesado)</small></label>
-        <label title="Pontos: um por alerta" style="--k:#22d3b6"><input type="checkbox" id="l-pontos" checked><i></i> Pontos</label>
-        <label title="Voos internacionais pagos com a cota" style="--k:#4cc9f0"><input type="checkbox" id="tg-voos"><i></i> Voos internacionais</label>
+        <label class="sev" title="Calor de valor: brilho onde há mais dinheiro (cor da prioridade)" style="--k:#ffb300"><input type="checkbox" id="l-calor" checked><i></i> Calor de valor</label>
+        <label class="sev" title="Rotas do dinheiro: do órgão à empresa (cor da prioridade)" style="--k:#ffb300"><input type="checkbox" id="l-rotas" checked><i></i> Rotas do dinheiro</label>
+        <label class="sev" title="Todas as rotas (pesado)" style="--k:#ffb300"><input type="checkbox" id="l-todas"><i></i> Todas as rotas <small>(pesado)</small></label>
+        <label class="sev" title="Pontos: um por alerta (cor da prioridade)" style="--k:#ffb300"><input type="checkbox" id="l-pontos" checked><i></i> Pontos</label>
+        <label title="Viagens ao exterior: arcos roxos até cada país" style="--k:#b388ff"><input type="checkbox" id="tg-voos"><i></i> Viagens ao exterior</label>
       </div>
-      <div id="legenda"><span title="Prioridade alta: sinal forte, pouca dúvida"><i style="background:#ff2d55"></i></span><span title="Prioridade média"><i style="background:#ffb300"></i></span><span title="Prioridade baixa: vale conferir"><i style="background:#00b8ff"></i></span></div>
+      <div id="legenda"><span title="Prioridade alta: sinal forte, pouca dúvida"><i style="background:#ff2d55"></i>alta</span><span title="Prioridade média"><i style="background:#ffb300"></i>média</span><span title="Prioridade baixa: vale conferir"><i style="background:#00b8ff"></i>baixa</span></div>
       <div id="timeline"></div>
       <div id="coords"></div>
       <section id="detalhe" hidden></section>

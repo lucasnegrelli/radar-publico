@@ -425,3 +425,21 @@ svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg
 #camadas label i{width:11px !important;height:11px !important}
 .card .topo{flex-wrap:wrap;row-gap:4px}.card .topo .rc{overflow:visible;text-overflow:clip;flex:none}.chips-c{margin-left:auto}
 .caixa.vg{cursor:pointer;font-size:12.5px;line-height:1.5}.caixa.vg:hover{border-color:var(--acc)}
+
+/* v11: cores dos botões = cores do que aparece no mapa */
+#camadas label.sev:has(input:checked) i{background:conic-gradient(#ff2d55 0 33%,#ffb300 0 66%,#00b8ff 0) !important;border-color:transparent !important;box-shadow:none !important}
+#camadas label.sev i{border-color:#8591a5 !important}
+#legenda{gap:12px !important;padding:5px 12px !important}
+#legenda span{font-size:11px !important;color:var(--mut);display:flex;align-items:center;gap:5px}
+#legenda i{margin:0 !important;width:9px !important;height:9px !important}
+
+/* ranking de remunerações */
+.caixa.sal{cursor:pointer;padding:10px 12px}.caixa.sal:hover{border-color:var(--acc)}
+.sal-h{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center}
+.sal-f{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1px solid var(--linha2);background:var(--s3)}
+.sal-i{display:flex;align-items:center;justify-content:center;font:700 14px var(--display);color:var(--mut)}
+.sal-n{min-width:0}.sal-n b{display:block;color:#fff;font-size:13.5px;line-height:1.25}.sal-n .sub2{display:block;font-size:11.5px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sal-v{text-align:right}.sal-v b{display:block;font:700 16px var(--display);color:#fff}
+.sal-b{display:flex;height:6px;border-radius:3px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}.sal-b i{display:block;height:6px}
+.tbl td.num{white-space:nowrap}
+#sal-q{width:100%;height:36px;margin:2px 0 8px;background:var(--s2);color:var(--txt);border:1px solid var(--linha2);border-radius:8px;font:13px var(--sans);outline:none}#sal-q:focus{border-color:var(--acc)}
