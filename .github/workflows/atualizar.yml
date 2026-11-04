@@ -89,7 +89,9 @@ jobs:
       - name: Offshore Leaks (ICIJ)
         run: python ingestao/offshore.py || true
       - name: Fichas de pessoa
-        run: python ingestao/pessoas.py
+        run: |
+          python ingestao/pessoas.py
+          python ingestao/panelinhas.py || true
       - name: Fichas de empresa (bancada de investigação)
         run: python ingestao/empresas.py
       - name: Pessoas mais conhecidas (Wikipédia e manchetes)
