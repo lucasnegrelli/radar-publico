@@ -76,6 +76,10 @@ jobs:
           python ingestao/remuneracao.py || true
           python ingestao/remuneracoes.py || true
           python ingestao/justica.py || true
+      - name: Agenda oficial dos ministros (e-Agendas)
+        env:
+          EAGENDAS_TOKEN: ${{ secrets.EAGENDAS_TOKEN }}
+        run: python ingestao/eagendas.py || true
       - name: Judiciário, notícias e diários oficiais (em paralelo)
         run: |
           python ingestao/datajud.py > /tmp/datajud.log 2>&1 &

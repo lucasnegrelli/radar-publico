@@ -461,6 +461,30 @@ async function montarViagens(fonte = _vgFonte) {
   el.querySelectorAll(".vg").forEach((c) => (c.onclick = () => { const v = ex.viagens[Number(c.dataset.i)]; if (v) map.flyTo({ center: [v.lon, v.lat], zoom: 3.2, duration: 1400 }); }));
   $("tg-voos").checked = true; alternarVoos(true);
 }
+let _ag = null, _agF = { quando: "prox", q: "", n: 40 };
+async function montarAgenda() {
+  const el = $("aba-agenda"); _ag ||= await fetch("/data/agenda.json").then((r) => r.json()).catch(() => null);
+  if (!_ag) { el.innerHTML = '<h3>Agenda</h3><p class="sub2">Agenda ainda não carregada.</p>'; return; }
+  const hoje = new Date().toISOString().slice(0, 10), raiz = new Set(alertas.map((a) => String(a.cnpj || "").replace(/\D/g, "").slice(0, 8)).filter((x) => x.length === 8));
+  const dd = (s) => { const [a, m, d] = s.split("-"); return `${d}/${m}`; };
+  const todos = _ag.autoridades.flatMap((a) => a.compromissos.map((c) => ({ ...c, a })));
+  const lista = todos.filter((c) => (_agF.quando === "hoje" ? (c.d || "") <= hoje && (c.df || c.d || "") >= hoje : _agF.quando === "prox" ? (c.df || c.d || "") >= hoje : (c.d || "") < hoje) && (!_agF.q || norm(c.a.nome + " " + c.a.orgao + " " + c.a.sigla + " " + c.assunto + " " + c.local + " " + c.privados.join(" ")).includes(norm(_agF.q))))
+    .sort((x, y) => (_agF.quando === "rec" ? -1 : 1) * ((x.d + (x.h || "")) < (y.d + (y.h || "")) ? -1 : 1));
+  const card = (c) => { const emp = c.privados.map((p) => { const [n, cnpj] = p.split("|"); const al = cnpj && raiz.has(cnpj.slice(0, 8)); return `<span class="chip" style="--c:${al ? "#ff2d55" : "#8591a5"}" title="${al ? "Esta empresa (mesma raiz de CNPJ) tem alerta no Radar" : "Empresa ou entidade que participou"}">${esc(n.slice(0, 48))}${al ? " · tem alerta" : ""}</span>`; }).join(" ");
+    const ext = c.exterior.map((x) => `<span class="chip" style="--c:#b388ff">${esc(x.slice(0, 50))}</span>`).join(" ");
+    return `<div class="caixa ag"><div class="sub2 mono">${dd(c.d)}${c.df && c.df !== c.d ? "–" + dd(c.df) : ""} ${esc(c.h || "")}${c.hf ? "–" + esc(c.hf) : ""} · ${esc(c.tipo || "")}${c.viagem ? " · viagem" : ""}</div>
+      <div><b>${esc(c.a.nome)}</b> <span class="sub2">${esc(c.a.cargo.replace(/^Ministro\(a\) De Estado/i, "Ministro(a)").slice(0, 60))} · ${esc(c.a.sigla)}</span></div>
+      <div style="margin:3px 0">${esc(c.assunto || "(sem assunto)")}</div>${c.local ? `<div class="sub2">📍 ${esc(c.local.slice(0, 90))}</div>` : ""}${emp || ext ? `<div style="margin-top:5px">${ext}${emp}</div>` : ""}</div>`; };
+  const rotulo = { hoje: "hoje", prox: "de hoje em diante", rec: "dos últimos 30 dias" }[_agF.quando];
+  el.innerHTML = `<h3>Agenda dos ministros</h3><p class="sub2">Compromissos que ministros e secretários-executivos registram no <b>e-Agendas</b> (CGU), com quem se reuniram. Cada autoridade publica o que quiser dentro das regras da lei: nem tudo aparece. Janela: ${esc(_ag.janela[0])} a ${esc(_ag.janela[1])}.</p>
+    <div class="filtros" id="ag-q">${[["hoje", "Hoje"], ["prox", "Próximos"], ["rec", "Recentes"]].map(([k, l]) => `<button data-q="${k}" class="${_agF.quando === k ? "on" : ""}">${l}</button>`).join("")}</div>
+    <input id="ag-s" class="sel" placeholder="Buscar ministro, órgão, assunto ou empresa" value="${esc(_agF.q)}" style="padding:0 12px">
+    <div class="rot">// ${lista.length} compromissos ${rotulo}</div>${lista.slice(0, _agF.n).map(card).join("") || '<p class="sub2">Nada neste filtro.</p>'}${lista.length > _agF.n ? '<button class="botao" id="ag-mais">Ver mais</button>' : ""}
+    <p class="aviso">${esc(_ag.fonte)} · ${_ag.n_autoridades} autoridades · atualizado em ${esc(_ag.gerado)}. Empresas aparecem pelo nome informado; "tem alerta" liga a raiz do CNPJ aos alertas do Radar e não é indício de nada por si só.</p>`;
+  el.querySelectorAll("#ag-q [data-q]").forEach((b) => (b.onclick = () => { _agF.quando = b.dataset.q; _agF.n = 40; montarAgenda(); }));
+  const q = $("ag-s"); q.onchange = () => { _agF.q = q.value; _agF.n = 40; montarAgenda(); }; if (_agF.q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+  const mais = $("ag-mais"); if (mais) mais.onclick = () => { _agF.n += 40; montarAgenda(); };
+}
 let _rem = null, _remF = { poder: "", q: "", n: 60 };
 async function montarSalarios() {
   const el = $("aba-salarios"); _rem ||= await fetch("/data/remuneracoes.json").then((r) => r.json()).catch(() => null);
@@ -659,6 +683,7 @@ $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) retur
   if (b.dataset.aba === "justica") montarJustica();
   if (b.dataset.aba === "viagens") montarViagens();
   if (b.dataset.aba === "salarios") montarSalarios();
+  if (b.dataset.aba === "agenda") montarAgenda();
   if (b.dataset.aba === "casos") montarCasos();
   if (b.dataset.aba === "fontes") { montarFontes(); dadosAbertos(); } };
 $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; filtroG = b.dataset.g;
