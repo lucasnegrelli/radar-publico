@@ -23,21 +23,25 @@
 
   <div id="app">
     <nav id="abas" aria-label="Seções">
-      <button data-aba="alertas" class="on" title="Alertas"><svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>Alertas</span></button>
-      <button data-aba="casos" title="Investigações, bancos e empresas com sinais combinados"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
-      <button data-aba="investigar" title="Investigar: empresas, sócios, emendas, contratos. Monte e compartilhe sua investigação"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6M8 10.5h5M10.5 8v5"/></svg><span>Investigar</span></button>
+      <button data-aba="alertas" class="on" title="Alertas"><svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>Hoje</span></button>
       <button data-aba="cidade" title="Minha cidade: emendas, prefeito e alertas"><svg viewBox="0 0 24 24"><path d="M3 21V10l9-6 9 6v11M9 21v-6h6v6"/></svg><span>Cidade</span></button>
       <button data-aba="fichas" title="Pessoas: políticos e agentes públicos"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Pessoas</span></button>
-      <button data-aba="salarios" title="Ranking de remunerações e verbas além do subsídio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2"/></svg><span>Salários</span></button>
-      <button data-aba="agenda" title="Agenda oficial dos ministros: com quem se reuniram"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Agenda</span></button>
-      <button data-aba="viagens" title="Viagens oficiais ao exterior"><svg viewBox="0 0 24 24"><path d="M3 12l18-8-6 16-3-7-9-1z"/></svg><span>Viagens</span></button>
-      <button data-aba="justica" title="Judiciário"><svg viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z"/></svg><span>Justiça</span></button>
-      <button data-aba="noticias" title="Notícias"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span>Notícias</span></button>
-      <button data-aba="fontes" title="Fontes, cobertura e dados abertos para baixar"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Dados</span></button>
-      <button data-aba="sobre" title="Como ler"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17v.5"/></svg><span>Ajuda</span></button>
+      <button data-aba="investigar" title="Investigar: empresas, sócios, emendas, contratos. Monte e compartilhe sua investigação"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6M8 10.5h5M10.5 8v5"/></svg><span>Empresas</span></button>
+      <button data-grupo="dinheiro" title="Dinheiro: salários, agenda dos ministros e viagens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2"/></svg><span>Dinheiro</span></button>
+      <button data-grupo="casos" title="Casos: investigações, notícias e Justiça"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
+      <button data-grupo="ajuda" title="Como ler e fontes dos dados"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17v.5"/></svg><span>Ajuda</span></button>
+      <button class="sub" data-aba="salarios" title="Ranking de remunerações e verbas além do subsídio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2"/></svg><span>Salários</span></button>
+      <button class="sub" data-aba="agenda" title="Agenda oficial dos ministros: com quem se reuniram"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Agenda</span></button>
+      <button class="sub" data-aba="viagens" title="Viagens oficiais ao exterior"><svg viewBox="0 0 24 24"><path d="M3 12l18-8-6 16-3-7-9-1z"/></svg><span>Viagens</span></button>
+      <button class="sub" data-aba="casos" title="Investigações, bancos e empresas com sinais combinados"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
+      <button class="sub" data-aba="noticias" title="Notícias"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span>Notícias</span></button>
+      <button class="sub" data-aba="justica" title="Judiciário"><svg viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z"/></svg><span>Justiça</span></button>
+      <button class="sub" data-aba="sobre" title="Como ler"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17v.5"/></svg><span>Ajuda</span></button>
+      <button class="sub" data-aba="fontes" title="Fontes, cobertura e dados abertos para baixar"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Dados</span></button>
     </nav>
 
     <aside id="painel">
+      <div id="subabas" hidden></div>
       <section id="aba-alertas" class="aba on">
         <div id="hero-m"></div>
         <div class="cab"><h2>Alertas</h2><span id="cont-topo" class="sub2"></span></div>

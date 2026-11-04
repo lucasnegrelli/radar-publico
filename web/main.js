@@ -489,7 +489,7 @@ async function montarAgenda() {
   const porAut = {}; base.forEach((c) => (porAut[c.a.apo] = (porAut[c.a.apo] || { a: c.a, n: 0 })).n++);
   const autoridades = Object.values(porAut).sort((x, y) => y.n - x.n);
   const ent = {}; base.forEach((c) => c.privados.forEach((p) => { const [n, cnpj] = p.split("|"); const e = (ent[n] ||= { n, cnpj, c: 0, al: false }); e.c++; e.al ||= !!(cnpj && raiz.has(cnpj.slice(0, 8))); }));
-  const topEnt = Object.values(ent).sort((x, y) => y.c - x.c).slice(0, 8);
+  const topEnt = Object.values(ent).sort((x, y) => y.c - x.c).slice(0, 6);
   const nEmp = base.filter((c) => c.privados.length).length, nAl = base.filter(alertaDe).length, nExt = base.filter((c) => c.exterior.length).length;
   const card = (c) => { const ab = F.abertos.has(c.id);
     const emp = c.privados.map((p) => { const [n, cnpj, cargo] = p.split("|"); const al = cnpj && raiz.has(cnpj.slice(0, 8)); return `<span class="chip" style="--c:${al ? "#ff2d55" : "#8591a5"}" title="${al ? "Esta empresa (mesma raiz de CNPJ) tem alerta no Radar" : cargo || "Participou"}">${esc(n.slice(0, 44))}${al ? " · tem alerta" : ""}</span>`; }).join(" ");
@@ -502,9 +502,7 @@ async function montarAgenda() {
   el.innerHTML = `<h3>Agenda dos ministros</h3><p class="sub2">Compromissos que ministros e secretários-executivos registram no <b>e-Agendas</b> (CGU): com quem se reuniram e sobre o quê. Cada autoridade publica o que a lei manda; nem tudo aparece. Janela: ${esc(_ag.janela[0])} a ${esc(_ag.janela[1])}.</p>
     <div class="filtros" id="ag-q">${[["hoje", "Hoje"], ["prox", "Próximos"], ["rec", "Recentes"]].map(([k, l]) => `<button data-q="${k}" class="${F.quando === k ? "on" : ""}">${l}</button>`).join("")}</div>
     <input id="ag-s" class="sel" placeholder="Buscar ministro, órgão, assunto ou empresa" value="${esc(F.q)}" style="padding:0 12px">
-    <div class="ag-tg">${tg("emp", "com empresa/entidade", nEmp)}${tg("alerta", "empresa com alerta", nAl)}${tg("ext", "com autoridade estrangeira", nExt)}</div>
-    <div class="ag-tp">${Object.entries(tipos).sort((a, b) => b[1] - a[1]).map(([t, n]) => `<button class="tg ${F.tipo === t ? "on" : ""}" data-tipo="${esc(t)}">${esc(t)} <b>${n}</b></button>`).join("")}</div>
-    <div class="rot">// ministros mais ocupados (clique para filtrar)</div><div class="ag-au">${autoridades.slice(0, 8).map((x) => `<button class="${F.aut == x.a.apo ? "on" : ""}" data-aut="${x.a.apo}" title="${esc(x.a.cargo)}"><span>${esc(x.a.nome.split(" ").slice(0, 2).join(" "))}</span><b>${x.n}</b><i style="width:${Math.round(100 * x.n / autoridades[0].n)}%"></i></button>`).join("")}</div>
+    <div class="ag-tg">${tg("emp", "com empresas", nEmp)}${tg("alerta", "empresa com alerta", nAl)}</div>
     ${topEnt.length ? `<div class="rot">// quem mais se reuniu com eles (clique para filtrar)</div><div class="ag-en">${topEnt.map((e) => `<button class="${e.al ? "al" : ""}" data-ent="${esc(e.n)}"><span>${esc(e.n.slice(0, 40))}</span><b>${e.c}</b></button>`).join("")}</div>` : ""}
     <div class="rot">// ${lista.length} compromissos · clique para ver os detalhes</div>${lista.slice(0, F.n).map(card).join("") || '<p class="sub2">Nada neste filtro.</p>'}${lista.length > F.n ? '<button class="botao" id="ag-mais">Ver mais</button>' : ""}
     <p class="aviso">${esc(_ag.fonte)} · ${_ag.n_autoridades} autoridades · atualizado em ${esc(_ag.gerado)}. "Tem alerta" liga a raiz do CNPJ aos alertas do Radar e não é indício de nada por si só.</p>`;
@@ -531,13 +529,13 @@ async function montarSalarios() {
     .sort((a, b) => F.ord === "excesso" ? (b.bruta - a.bruta) : F.ord === "verbas" ? (b.pend / b.bruta - a.pend / a.bruta) : F.ord === "pend" ? b.pend - a.pend : b.bruta - a.bruta);
   const acima = basePoder.filter((p) => p.bruta > T), exc = acima.reduce((t, p) => t + p.bruta - T, 0), pendT = basePoder.reduce((t, p) => t + p.pend, 0), brutT = basePoder.reduce((t, p) => t + p.bruta, 0) || 1;
   const hist = FAIXAS.map(([k, l, lo, hi]) => [k, l, basePoder.filter((p) => p.bruta > lo && p.bruta <= hi).length]), mh = Math.max(1, ...hist.map((h) => h[2]));
-  const verbas = {}; basePoder.forEach((p) => p.it.forEach(([k, v]) => { if (/^(vencimento|subs|remuneração básica|abate)/i.test(k)) return; const x = (verbas[k] ||= { k, v: 0, n: 0 }); x.v += v; x.n++; }));
-  const topV = Object.values(verbas).sort((a, b) => b.v - a.v).slice(0, 8), mv = topV[0] ? topV[0].v : 1;
+  const verbas = {}; basePoder.forEach((p) => p.it.forEach(([k, v]) => { if (/^(vencimento|subs|remuneração básica|abate|eventuais)/i.test(k)) return; const x = (verbas[k] ||= { k, v: 0, n: 0 }); x.v += v; x.n++; }));
+  const topV = Object.values(verbas).sort((a, b) => b.v - a.v).slice(0, 5), mv = topV[0] ? topV[0].v : 1;
   const orgs = {}; basePoder.forEach((p) => (orgs[p.orgao] = (orgs[p.orgao] || 0) + 1)); const topO = Object.entries(orgs).sort((a, b) => b[1] - a[1]).slice(0, 8);
   const ini = (n) => n.split(" ").filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join("");
   const maxB = Math.max(...lista.slice(0, F.n).map((p) => p.bruta), T * 1.1);
   const card = (p) => { const ab = F.abertos.has(p.nome + p.orgao), ac = Math.max(0, p.bruta - T);
-    const segs = [["#4cc9f0", p.sub, "Subsídio/base"]].concat(p.it.filter(([k]) => !/^(vencimento|subs|remuneração básica|abate)/i.test(k)).slice(0, 5).map(([k, v], i) => [CVERBA[i], v, k]));
+    const segs = [["#4cc9f0", p.sub, "Subsídio/base"]].concat(p.it.filter(([k]) => !/^(vencimento|subs|remuneração básica|abate|eventuais)/i.test(k)).slice(0, 5).map(([k, v], i) => [CVERBA[i], v, k]));
     const somaS = segs.reduce((t, x) => t + x[1], 0), resto = Math.max(0, p.bruta - somaS); if (resto > 1) segs.push(["#5b6b80", resto, "Outras verbas"]);
     const barra = segs.map(([c, v, n]) => `<i style="width:${100 * v / maxB}%;background:${c}" title="${esc(n)}: ${brl(v)}"></i>`).join("");
     return `<div class="caixa sal ${ab ? "aberto" : ""}" data-k="${esc(p.nome + p.orgao)}"><div class="sal-h">${p.foto ? `<img class="sal-f" src="${esc(p.foto)}" alt="" loading="lazy">` : `<span class="sal-f sal-i">${esc(ini(p.nome))}</span>`}<div class="sal-n"><b>${esc(p.nome)}</b><span class="sub2">${esc(p.cargo)} · ${esc(p.orgao)}</span></div><div class="sal-v"><b class="num">${brlCurto(p.bruta)}</b><span class="sub2">${ac > 0 ? `<span style="color:#ff6b88">+${brlCurto(ac)} do teto</span>` : "dentro do teto"}</span></div></div>
@@ -547,10 +545,8 @@ async function montarSalarios() {
   el.innerHTML = `<h3>Maiores remunerações</h3><p class="sub2">Quanto cada agente público recebeu no mês de referência, separando o <span style="color:#4cc9f0">subsídio</span> das demais verbas (os "penduricalhos"). Muitas dessas verbas são legais e ficam fora do teto: o ranking mostra o total e de quê, não diz que algo é irregular. A linha branca nas barras é o teto (${brl(T)}).</p>
     <div class="sal-k"><div><b>${acima.length}</b><span>do ranking acima do teto</span></div><div><b>${brlCurto(exc)}</b><span>de excedente por mês</span></div><div><b>${Math.round(100 * pendT / brutT)}%</b><span>do total é fora do subsídio</span></div></div>
     <div class="filtros" id="sal-p">${[["", "Todos"], ["MIN", "Ministros"], ["J", "Judiciário"], ["MP", "MP"], ["E", "Executivo"]].map(([k, l]) => `<button data-p="${k}" class="${F.poder === k ? "on" : ""}">${l}</button>`).join("")}</div>
-    <div class="rot">// faixas de remuneração (clique para filtrar)</div><div class="sal-h2">${hist.map(([k, l, n]) => `<button class="${F.faixa === k ? "on" : ""}" data-faixa="${k}" title="${l}"><i style="height:${Math.max(3, Math.round(46 * n / mh))}px"></i><b>${n}</b><span>${l.replace("até ", "").replace("acima de ", ">")}</span></button>`).join("")}</div>
-    <div class="rot">// verbas que mais pagam acima do subsídio (clique: quem recebe)</div>${topV.map((v) => `<div class="pan-l tp ${F.verba === v.k ? "ativo" : ""}" data-verba="${esc(v.k)}" style="grid-template-columns:1fr 62px !important" title="${v.n} pessoas"><span class="tn" style="--r:#ffb300"><span style="overflow:hidden;text-overflow:ellipsis">${esc(v.k)}</span></span><b class="num">${brlCurto(v.v)}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(4, Math.round(100 * v.v / mv))}%"><i style="width:100%;background:#ffb300"></i></div></div>`).join("")}
-    ${topO.length > 1 ? `<div class="rot">// órgãos</div><div class="ag-en">${topO.map(([o, n]) => `<button class="${F.org === o ? "on" : ""}" data-org="${esc(o)}"><span>${esc(o.slice(0, 38))}</span><b>${n}</b></button>`).join("")}</div>` : ""}
-    <div class="sal-bar"><input id="sal-q" placeholder="Buscar nome, cargo ou órgão" value="${esc(F.q)}"><select id="sal-o" class="sel">${[["total", "Maior remuneração"], ["excesso", "Mais acima do teto"], ["pend", "Mais em verbas fora do subsídio"], ["verbas", "Maior % em verbas"]].map(([k, l]) => `<option value="${k}" ${F.ord === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+    <div class="rot">// os "penduricalhos" que mais pagam (clique: quem recebe)</div>${topV.map((v) => `<div class="pan-l tp ${F.verba === v.k ? "ativo" : ""}" data-verba="${esc(v.k)}" style="grid-template-columns:1fr 62px !important" title="${v.n} pessoas"><span class="tn" style="--r:#ffb300"><span style="overflow:hidden;text-overflow:ellipsis">${esc(v.k)}</span></span><b class="num">${brlCurto(v.v)}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(4, Math.round(100 * v.v / mv))}%"><i style="width:100%;background:#ffb300"></i></div></div>`).join("")}
+    <div class="sal-bar"><input id="sal-q" placeholder="Buscar nome, cargo ou órgão" value="${esc(F.q)}"></div>
     ${chips.length ? `<div class="pan-ativos">${chips.map(([k, t]) => `<button class="pan-at" data-x="${k}">${esc(t)} <b>×</b></button>`).join("")}</div>` : ""}
     <div class="rot">// ${lista.length} pessoas · clique para abrir as rubricas</div>${lista.slice(0, F.n).map(card).join("") || '<p class="sub2">Ninguém neste filtro.</p>'}${lista.length > F.n ? '<button class="botao" id="sal-mais">Ver mais</button>' : ""}
     <p class="aviso">${esc(_rem.fonte)}. Atualizado em ${esc(_rem.gerado)}.</p>`;
@@ -562,7 +558,6 @@ async function montarSalarios() {
   el.querySelectorAll("[data-org]").forEach((b) => (b.onclick = () => { F.org = F.org === b.dataset.org ? "" : b.dataset.org; F.n = 40; re(); }));
   el.querySelectorAll("[data-x]").forEach((b) => (b.onclick = () => { F[b.dataset.x] = ""; re(); }));
   const sq = $("sal-q"); sq.onchange = () => { F.q = sq.value; F.n = 40; re(); }; if (F.q) { sq.focus(); sq.setSelectionRange(sq.value.length, sq.value.length); }
-  $("sal-o").onchange = (e) => { F.ord = e.target.value; re(); };
   const mais = $("sal-mais"); if (mais) mais.onclick = () => { F.n += 40; re(); };
   el.querySelectorAll(".caixa.sal").forEach((c) => (c.onclick = (e) => { if (e.target.closest("a,tr")) return; const k = c.dataset.k; F.abertos.has(k) ? F.abertos.delete(k) : F.abertos.add(k); const y = $("painel").scrollTop; montarSalarios().then(() => ($("painel").scrollTop = y)); }));
 }
@@ -608,14 +603,13 @@ async function montarJustica() {
     const rs = cea.recentes.filter((r) => (!F.tipo || r.tipo === F.tipo) && (!F.org || r.org === F.org) && (!q || norm(r.nome + " " + r.org).includes(q))), mt = Math.max(1, ...cea.por_tipo.map((t) => t.n)), mo = Math.max(1, ...cea.por_orgao.map((o) => o.n));
     h += `<div class="sal-k"><div><b>${cea.n}</b><span>expulsões em 12 meses</span></div><div><b>${cea.por_orgao.length}</b><span>órgãos</span></div><div><b>${esc((cea.por_tipo[0] || {}).tipo || "–")}</b><span>punição mais comum</span></div></div>
       <div class="rot">// por tipo de punição (clique para filtrar)</div>${cea.por_tipo.map((t) => `<div class="pan-l tp ${F.tipo === t.tipo ? "ativo" : ""}" data-tipo="${esc(t.tipo)}" style="grid-template-columns:1fr 40px !important"><span class="tn" style="--r:#ff2d55">${esc(t.tipo)}</span><b class="num">${t.n}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(4, Math.round(100 * t.n / mt))}%"><i style="width:100%;background:#ff2d55"></i></div></div>`).join("")}
-      <div class="rot">// órgãos com mais expulsões (clique para filtrar)</div>${cea.por_orgao.slice(0, 8).map((o) => `<div class="pan-l tp ${F.org === o.org ? "ativo" : ""}" data-org="${esc(o.org)}" style="grid-template-columns:1fr 40px !important"><span class="tn" style="--r:#ffb300"><span style="overflow:hidden;text-overflow:ellipsis">${esc(o.org)}</span></span><b class="num">${o.n}</b><div class="barra" style="grid-column:1/-1;width:${Math.max(4, Math.round(100 * o.n / mo))}%"><i style="width:100%;background:#ffb300"></i></div></div>`).join("")}
       <input id="j-q" class="sel" style="padding:0 12px;margin-top:10px" placeholder="Buscar nome ou órgão" value="${esc(F.q)}">
       <div class="rot">// ${rs.length} registros recentes (Diário Oficial da União)</div>` + (rs.slice(0, F.n).map((r) => `<div class="caixa jus"><b>${esc(r.nome)}</b> <span class="sub2 mono">${esc(r.cpf || "")}</span><div class="sub2"><span style="color:#ff6b88">${esc(r.tipo)}</span> · ${esc(r.org)} · ${dd(r.d)}${r.portaria ? ` · portaria ${esc(r.portaria)}` : ""}${r.dou ? ` · DOU ${esc(r.dou)}` : ""}</div></div>`).join("") || '<p class="sub2">Nada neste filtro.</p>') + (rs.length > F.n ? '<button class="botao" id="j-mais">Ver mais</button>' : "") + `<p class="sub2">Fonte: ${esc(cea.fonte)}. O nome da pessoa expulsa é publicado no Diário Oficial; o CPF vem mascarado.</p>`;
   } else if (F.sec === "imp" && dj && dj.tribunais) {
     const ts = [...dj.tribunais].sort((a, b) => b.total - a.total), max = Math.max(...ts.map((t) => t.total)), sel = ts.find((t) => t.sigla === F.trib);
     h += `<p class="sub2">${esc(dj.classe)} por tribunal (DataJud, CNJ): quanto chega à Justiça. Estados maiores têm mais processos. Clique num tribunal para ver ano a ano.</p>`;
     if (sel) { const anos = Object.entries(sel.anos), ma = Math.max(1, ...anos.map(([, v]) => v)); h += `<div class="caixa"><b>${esc(sel.sigla)}</b> <span class="sub2">${sel.total.toLocaleString("pt-BR")} ações</span><div class="jus-anos">${anos.map(([a, v]) => `<div title="${a}: ${v}"><i style="height:${Math.max(3, Math.round(70 * v / ma))}px"></i><b>${v}</b><span>${String(a).slice(2)}</span></div>`).join("")}</div></div>`; }
-    h += ts.slice(0, 27).map((t) => `<div class="pan-l tp ${F.trib === t.sigla ? "ativo" : ""}" data-trib="${esc(t.sigla)}" style="grid-template-columns:54px 1fr 70px !important"><span class="tn" style="--r:#4cc9f0">${esc(t.sigla)}</span><div class="barra" style="width:${Math.max(4, Math.round(100 * t.total / max))}%"><i style="width:100%;background:#4cc9f0"></i></div><b class="num">${t.total.toLocaleString("pt-BR")}</b></div>`).join("") + `<p class="aviso">O DataJud não informa as partes, então não dá para ligar processo a político. Salários de magistrados estão na aba Salários.</p>`;
+    h += ts.slice(0, 12).map((t) => `<div class="pan-l tp ${F.trib === t.sigla ? "ativo" : ""}" data-trib="${esc(t.sigla)}" style="grid-template-columns:54px 1fr 70px !important"><span class="tn" style="--r:#4cc9f0">${esc(t.sigla)}</span><div class="barra" style="width:${Math.max(4, Math.round(100 * t.total / max))}%"><i style="width:100%;background:#4cc9f0"></i></div><b class="num">${t.total.toLocaleString("pt-BR")}</b></div>`).join("") + `<p class="aviso">O DataJud não informa as partes, então não dá para ligar processo a político. Salários de magistrados estão na aba Salários.</p>`;
   } else h += '<p class="sub2">Dados ainda não carregados.</p>';
   el.innerHTML = h;
   el.querySelectorAll("#j-s [data-sec]").forEach((b) => (b.onclick = () => { F.sec = b.dataset.sec; F.q = ""; F.n = 20; re(); }));
@@ -796,9 +790,22 @@ function modoGlobo(on) {
 }
 
 // ---------- abas ----------
+const GRUPOS = { dinheiro: [["salarios", "Salários"], ["agenda", "Agenda dos ministros"], ["viagens", "Viagens"]], casos: [["casos", "Investigações"], ["noticias", "Notícias"], ["justica", "Justiça"]], ajuda: [["sobre", "Como ler"], ["fontes", "Fontes e dados"]] };
+const ULT = {};
+const grupoDe = (aba) => Object.keys(GRUPOS).find((g) => GRUPOS[g].some(([k]) => k === aba));
+function marcaNav(aba) {
+  const g = grupoDe(aba);
+  [...$("abas").children].forEach((x) => { if (x.classList.contains("sub")) return; x.classList.toggle("on", g ? x.dataset.grupo === g : x.dataset.aba === aba); });
+  const sb = $("subabas");
+  if (!g) { sb.hidden = true; return; }
+  ULT[g] = aba; sb.hidden = false;
+  sb.innerHTML = GRUPOS[g].map(([k, l]) => `<button data-sub="${k}" class="${k === aba ? "on" : ""}">${l}</button>`).join("");
+  sb.querySelectorAll("[data-sub]").forEach((x) => (x.onclick = () => document.querySelector(`#abas [data-aba="${x.dataset.sub}"]`).click()));
+}
 $("abas").onclick = (e) => { const b = e.target.closest("button"); if (!b) return;
   if (_vgAuto && b.dataset.aba !== "viagens" && b.dataset.aba !== "exterior") { _vgAuto = false; $("tg-voos").checked = false; alternarVoos(false); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 900 }); }
-  [...$("abas").children].forEach((x) => x.classList.toggle("on", x === b));
+  if (b.dataset.grupo) { const g = GRUPOS[b.dataset.grupo]; const alvo = ULT[b.dataset.grupo] || g[0][0]; document.querySelector(`#abas [data-aba="${alvo}"]`).click(); return; }
+  marcaNav(b.dataset.aba);
   document.querySelectorAll(".aba").forEach((x) => x.classList.toggle("on", x.id === "aba-" + b.dataset.aba));
   if (b.dataset.aba === "fichas") carregarFichas();
   if (b.dataset.aba === "cidade") montarCidade();

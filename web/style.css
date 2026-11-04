@@ -549,3 +549,10 @@ body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibreg
 /* justiça */
 .jus-anos{display:flex;align-items:flex-end;gap:5px;height:104px;margin-top:10px}.jus-anos div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;font-size:9.5px;color:var(--mut)}.jus-anos i{display:block;width:100%;background:#4cc9f0;border-radius:3px 3px 0 0}.jus-anos b{color:#fff;font-size:10px}
 #j-q{width:100%;height:36px;margin:2px 0 8px;background:var(--s2);color:var(--txt);border:1px solid var(--linha2);border-radius:8px;font:13px var(--sans);outline:none}#j-q:focus{border-color:var(--acc)}
+
+/* v18: navegação em grupos e sub-abas */
+#abas button.sub{display:none !important}
+#subabas{position:sticky;top:-14px;z-index:5;display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px;padding:10px 0 8px;background:linear-gradient(180deg,#0b1017 70%,transparent)}
+#subabas[hidden]{display:none}
+#subabas button{height:30px;padding:0 13px;border-radius:99px;border:1px solid var(--linha2);background:rgba(255,255,255,.03);color:var(--mut);font-size:12.5px;cursor:pointer}
+#subabas button:hover{color:#fff;border-color:var(--mut)}#subabas button.on{background:var(--acc);border-color:var(--acc);color:#04130b;font-weight:600}
