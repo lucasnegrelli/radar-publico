@@ -231,8 +231,9 @@ function camadas(tempo) {
   L.push(new ScatterplotLayer({ id: "brilho", visible: LAY.calor, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => 5 + 2 * Math.max(0, Math.log10(Math.max(d.total, 1000)) - 3) + (d.id === ativo ? 5 : 0), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], d.id === ativo ? 70 : 16], parameters: ADITIVO, updateTriggers: { getRadius: ativo, getFillColor: ativo } }));
   L.push(new PathLayer({ id: "arcos", visible: LAY.rotas, data: rotasVis(), getPath: (d) => d.path, getColor: (d) => [...RGB[d.g], d.id === ativo ? 255 : 120], getWidth: (d) => d.w * (d.id === ativo ? 2 : 0.9), widthUnits: "pixels", capRounded: true, parameters: ADITIVO, updateTriggers: { getColor: ativo, getWidth: ativo } }));
   // pontos como antes, mas com área de clique generosa (pickingRadius do overlay) e destaque ao passar o mouse
-  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => (d.id === ativo ? 5.5 : 2.8), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 255], stroked: true, getLineColor: (d) => (d.id === ativo ? [255, 255, 255, 255] : [255, 255, 255, 100]), getLineWidth: (d) => (d.id === ativo ? 1.6 : 0.5), lineWidthUnits: "pixels", pickable: true, parameters: { depthCompare: "always", depthWriteEnabled: false }, updateTriggers: { getRadius: ativo, getLineColor: ativo, getLineWidth: ativo },
-    onHover: (i) => { if (map.isMoving()) return; const id = i.object ? i.object.id : null; if (id !== hoverId) { hoverId = id; map.getCanvas().style.cursor = id ? "pointer" : ""; } }, onClick: (i) => i.object && abrir(i.object.id) }));
+  L.push(new ScatterplotLayer({ id: "pontos-a", visible: LAY.pontos, data: pontosA, getPosition: (d) => d.pos, getRadius: (d) => (d.id === ativo ? 7 : 3.6), radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], !ativo || d.id === ativo ? 255 : 130], stroked: true, getLineColor: (d) => (d.id === ativo ? [255, 255, 255, 255] : [255, 255, 255, 100]), getLineWidth: (d) => (d.id === ativo ? 1.6 : 0.5), lineWidthUnits: "pixels", pickable: true, parameters: { depthCompare: "always", depthWriteEnabled: false }, updateTriggers: { getRadius: ativo, getLineColor: ativo, getLineWidth: ativo, getFillColor: ativo },
+    onHover: (i) => { if (map.isMoving()) return; const id = i.object ? i.object.id : null; if (id !== hoverId) { hoverId = id; document.body.classList.toggle("sobre-alerta", !!id); } }, onClick: (i) => i.object && abrir(i.object.id) }));
+  if (ativo) { const h = pontosA.filter((d) => d.id === ativo); L.push(new ScatterplotLayer({ id: "hover-brilho", data: h, getPosition: (d) => d.pos, getRadius: 30, radiusUnits: "pixels", getFillColor: (d) => [...RGB[d.g], 70], parameters: ADITIVO }), new ScatterplotLayer({ id: "hover-anel", data: h, getPosition: (d) => d.pos, getRadius: 15, radiusUnits: "pixels", filled: false, stroked: true, getLineColor: [255, 255, 255, 235], getLineWidth: 2, lineWidthUnits: "pixels", parameters: { depthCompare: "always", depthWriteEnabled: false } })); }
   L.push(new ScatterplotLayer({ id: "anel-pulso", visible: LAY.pontos, data: pulsos, getPosition: (d) => d.pos, getRadius: 1, radiusUnits: "pixels", radiusScale: 6 + 16 * t, stroked: true, filled: false, getLineColor: (d) => [...RGB[d.g], Math.round(190 * (1 - t))], getLineWidth: 1.3, lineWidthUnits: "pixels", parameters: ADITIVO }));
   if (rotaSel) {
     L.push(new PathLayer({ id: "sel-brilho", data: [rotaSel], getPath: (d) => d.path, getColor: [...RGB[rotaSel.g], 90], getWidth: 12, widthUnits: "pixels", capRounded: true, parameters: ADITIVO }));
@@ -267,7 +268,7 @@ function montarMapa() {
   const el = document.createElement("div"); el.innerHTML = '<div style="color:#00ffa6;font:700 11px ui-monospace,Consolas,monospace;letter-spacing:.14em;text-shadow:0 0 8px #00ffa6">◉ BRASÍLIA</div>';
   new maplibregl.Marker({ element: el, anchor: "left" }).setLngLat(BRASILIA).addTo(map);
 
-  map.on("movestart", () => { if (hoverId) { hoverId = null; map.getCanvas().style.cursor = ""; } });
+  map.on("movestart", () => { if (hoverId) { hoverId = null; document.body.classList.remove("sobre-alerta"); } });
   derivar();
   overlay = new MapboxOverlay({ interleaved: true, pickingRadius: 14, layers: camadas(0), getTooltip: ({ object, layer }) => {
     if (!object) return null;
@@ -278,7 +279,7 @@ function montarMapa() {
   map.addControl(overlay);
 
   map.on("click", "voos-ponto", () => {});
-  ["voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => (map.getCanvas().style.cursor = "pointer")); map.on("mouseleave", l, () => (map.getCanvas().style.cursor = "")); });
+  ["voos-ponto"].forEach((l) => { map.on("mouseenter", l, () => document.body.classList.add("sobre-alerta")); map.on("mouseleave", l, () => document.body.classList.remove("sobre-alerta")); });
   const dica = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 12 });
   map.on("mousemove", "voos-ponto", (e) => dica.setLngLat(e.lngLat).setHTML(`<b>${esc(e.features[0].properties.pais)}</b><br>${e.features[0].properties.n} voos pagos com a cota`).addTo(map));
   map.on("mouseleave", "voos-ponto", () => dica.remove());
@@ -330,7 +331,7 @@ const bonito = (n) => { const t = String(n || ""); if (t !== t.toUpperCase()) re
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
-      <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${chipContrato(a)}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
+      <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${lenDe(a).length ? '<span class="chip" style="--c:#4cc9f0" title="A empresa tem acordo de leniência registrado na CGU">leniência</span>' : ""}${chipContrato(a)}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
       <div class="frase">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</div>
       <div class="rodape"><span class="quem-c">${a.local ? esc(a.local.cidade) + "/" + a.local.uf + " · " : ""}${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}</span><span class="valor num">${brlCurto(a.total)}</span></div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
@@ -368,7 +369,7 @@ function abrir(id) {
     <h4>${esc(t.titulo)}</h4>
     <table style="--c:${c}"><thead><tr>${cab}</tr></thead><tbody>${linhas}</tbody></table>
     ${a.n > t.linhas.length ? `<p class="sub2" style="margin-top:6px">Mostrando ${t.linhas.length} de ${a.n} registros.</p>` : ""}
-    ${blocoSancao}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
+    ${blocoSancao}${lenDe(a).length ? `<h4>Acordo de leniência</h4>${lenDe(a).map((x) => `<div class="diario"><small>${esc(x.orgao || "")} · ${esc(x.inicio || "")} a ${esc(x.fim || "")} · ${esc(x.situacao || "")}</small>${esc(x.empresas.map((e) => e.nome).join("; ").slice(0, 200))}</div>`).join("")}<p class="sub2">Acordo de leniência é um acerto em que a empresa admite irregularidades e colabora com as investigações em troca de redução de sanções. Fonte: Portal da Transparência (CGU).</p>` : ""}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
     <h4>Checagem</h4><ul class="check">${checagem(a).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
     ${blocoImprensa}${blocoAcoes}
     <p class="aviso">Isto é um ponto de atenção feito a partir de dados públicos, não uma conclusão. Pode haver explicação legal.</p>
@@ -1044,6 +1045,9 @@ function porque(a) {
 
 
 // ----- imprensa por alerta e escala -----
+let _len = null;
+fetch("/data/leniencia.json").then((r) => r.json()).then((j) => { _len = new Map(); (j.acordos || []).forEach((x) => (x.empresas || []).forEach((e) => { const k = String(e.cnpj || "").slice(0, 8); if (k.length === 8) (_len.get(k) || _len.set(k, []).get(k)).push(x); })); lista(); }).catch(() => {});
+const lenDe = (a) => (_len ? _len.get(String(a.cnpj || "").replace(/\D/g, "").slice(0, 8)) || [] : []);
 let _na = null;
 fetch("/data/noticias_alertas.json").then((r) => r.json()).then((j) => { _na = j; }).catch(() => {});
 fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualizarPanorama(); }).catch(() => {});
@@ -1084,6 +1088,7 @@ function dadosAbertos() {
     ["fichas.json", "Cota parlamentar por deputado, senador e prefeito eleito (JSON)."],
     ["risco.json", "Bancos em observação com balanço, fundos e imprensa (JSON)."],
     ["viagens.json", "Voos internacionais pagos com a cota da Câmara (JSON)."],
+    ["leniencia.json", "Acordos de leniência da CGU: empresas, órgão, vigência (JSON)."], ["ceaf.json", "Servidores expulsos nos últimos 12 meses, por órgão e tipo (JSON)."],
     ["judiciario.json", "Processos de improbidade por tribunal (DataJud, JSON)."],
     ["meta.json", "Fontes, cobertura e data de atualização (JSON)."],
   ];

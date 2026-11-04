@@ -500,3 +500,9 @@ svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg
 .pan-at b{font-weight:700;opacity:.8}.pan-at:hover{background:rgba(61,255,154,.25);color:#fff}
 .pan-at.limpa{border-color:var(--linha2);background:none;color:var(--mut)}.pan-at.limpa:hover{color:#fff;border-color:var(--mut)}
 .pan-h small{opacity:.9}
+
+/* v15: cursor do mapa (mão, não mira) e hover visível */
+.maplibregl-canvas-container.maplibregl-interactive .maplibregl-canvas{cursor:grab !important}
+.maplibregl-canvas-container.maplibregl-interactive:active .maplibregl-canvas{cursor:grabbing !important}
+body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibregl-canvas{cursor:pointer !important}
+#timeline svg{cursor:col-resize !important}

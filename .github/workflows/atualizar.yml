@@ -80,6 +80,10 @@ jobs:
         env:
           EAGENDAS_TOKEN: ${{ secrets.EAGENDAS_TOKEN }}
         run: python ingestao/eagendas.py || true
+      - name: Portal da Transparência (API de dados)
+        env:
+          PORTAL_TOKEN: ${{ secrets.PORTAL_TOKEN }}
+        run: python ingestao/portal_fontes.py || true
       - name: Judiciário, notícias e diários oficiais (em paralelo)
         run: |
           python ingestao/datajud.py > /tmp/datajud.log 2>&1 &
