@@ -13,7 +13,8 @@ import { HeatmapLayer } from "@deck.gl/aggregation-layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 
 const COR = { alta: "#ff2d55", media: "#ffb300", baixa: "#00b8ff" };
-const NOME_G = { alta: "Prioridade alta", media: "Prioridade média", baixa: "Prioridade baixa" };
+const NOME_G = { alta: "Prioridade máxima", media: "Relevante", baixa: "Contexto" };
+const ROT_G = { alta: "máxima", media: "relevante", baixa: "contexto" };
 const UF_COD = { 11: "RO", 12: "AC", 13: "AM", 14: "RR", 15: "PA", 16: "AP", 17: "TO", 21: "MA", 22: "PI", 23: "CE", 24: "RN", 25: "PB", 26: "PE", 27: "AL", 28: "SE", 29: "BA", 31: "MG", 32: "ES", 33: "RJ", 35: "SP", 41: "PR", 42: "SC", 43: "RS", 50: "MS", 51: "MT", 52: "GO", 53: "DF" };
 const BRASILIA = [-47.8645, -15.7997];
 const $ = (id) => document.getElementById(id);
@@ -328,11 +329,11 @@ const dadosViagens = async () => (_viagens ||= await fetch("/data/viagens.json")
 // ---------- lista e filtros ----------
 let total_filtro = 0, fE = "", fP = "", fUF = "", fV = 0;
 const passa = (a) => (!fE || (a.esfera || (a.regra === "R09" || a.regra === "R10" || a.regra === "R11" || a.regra === "R12" ? "F" : "")) === fE) && (!fP || (a.poder || (a.regra === "R09" ? "E" : "")) === fP) && (!fUF || ((a.local && a.local.uf) === fUF || a.orgao_uf === fUF)) && (a.total || 0) >= fV;
-const universo = () => alertas.filter((a) => noJanela(a) && passa(a) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
+const universo = () => alertas.filter((a) => noJanela(a) && passa(a) && (filtroG === "todas" || filtroG === "baixa" || a.gravidade !== "baixa") && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
 function aplicarFiltro() {
   visiveis = alertas.filter((a) => noJanela(a) && passa(a) && (filtroG === "todas" || filtroG === "destaques" || a.gravidade === filtroG) && (filtroR === "todas" || (filtroR === "__comb" ? !!a.correlacao : a.regra === filtroR)));
   total_filtro = visiveis.length;
-  if (filtroG === "destaques") visiveis = destaques(visiveis);
+  if (filtroG === "destaques") visiveis = destaques(visiveis.filter((a) => a.gravidade !== "baixa"));
   lista(); atualizarMapa(); atualizarPanorama();
 }
 const curta = (a) => { const s = manchete(a).replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').trim(); const p = s.split(/(?<=\.)\s/)[0]; return p.length > 175 ? p.slice(0, 172) + "…" : p; };
@@ -834,7 +835,7 @@ $("filtros").onclick = (e) => { const b = e.target.closest("button"); if (!b) re
 $("aba-sobre").innerHTML = `
   <h3>Como ler este painel</h3>
   <div class="caixa"><b>O que é um alerta</b><p>Um cruzamento automático de bases públicas que encontrou algo fora do esperado. É um ponto de atenção para conferir, não uma acusação.</p></div>
-  <div class="caixa"><b>Prioridade</b><p><span class="chip" style="--c:${COR.alta}">alta</span> sinal forte (ex.: punição que valia em todo o governo, empresa com menos de 90 dias e contrato acima de R$ 1 mi). <span class="chip" style="--c:${COR.media}">média</span> sinal relevante com alguma dúvida. <span class="chip" style="--c:${COR.baixa}">baixa</span> sinal fraco ou restrito a um órgão.</p></div>
+  <div class="caixa"><b>Prioridade</b><p>O Radar ordena todos os sinais por peso (valor, tipo, combinação com outros sinais). Só cerca de 3% ganham <b>prioridade máxima</b> e cerca de 18% são <b>relevantes</b>; o restante é <b>contexto</b>, para consulta, e não conta como alerta. <span class="chip" style="--c:${COR.alta}">alta</span> sinal forte (ex.: punição que valia em todo o governo, empresa com menos de 90 dias e contrato acima de R$ 1 mi). <span class="chip" style="--c:${COR.media}">média</span> sinal relevante com alguma dúvida. <span class="chip" style="--c:${COR.baixa}">baixa</span> sinal fraco ou restrito a um órgão.</p></div>
   <div class="caixa"><b>De onde vêm os dados</b><p>PNCP, Portal da Transparência, Câmara, Senado, TSE e Receita Federal. Tudo aberto e público. Cada alerta traz o link da fonte.</p></div>
   <div class="caixa"><b>Inspiração e créditos</b><p>Operação Serenata de Amor e Querido Diário (Open Knowledge Brasil), ambos de código aberto.</p></div>`;
 
@@ -851,7 +852,10 @@ ufGeo.features.forEach((f) => { f.properties.uf = UF_COD[Number(f.properties.cod
 nomes = { ...(dA.regras || {}), RF01: "Risco financeiro: banco em crescimento acelerado" };
 const ord = { alta: 0, media: 1, baixa: 2 };
 alertas = [...dA.alertas, ...(dR.alertas || [])].map((a) => ((a.score = pontuar(a)), a)).sort((a, b) => ord[a.gravidade] - ord[b.gravidade] || b.total - a.total);
-visiveis = alertas; total_filtro = alertas.length; if (filtroG === "destaques") visiveis = destaques(alertas);
+{ const porScore = [...alertas].sort((x, y) => y.score - x.score), nA = Math.max(20, Math.round(porScore.length * 0.03)), nM = Math.round(porScore.length * 0.18);
+  porScore.forEach((a, i) => { a.gravidade_regra = a.gravidade; a.gravidade = i < nA ? "alta" : i < nA + nM ? "media" : "baixa"; });
+  alertas.sort((a, b) => ord[a.gravidade] - ord[b.gravidade] || b.score - a.score); }
+visiveis = alertas; total_filtro = alertas.length; if (filtroG === "destaques") visiveis = destaques(alertas.filter((a) => a.gravidade !== "baixa"));
 
 // filtro por tipo de alerta
 const cont = {}; alertas.forEach((a) => (cont[a.regra] = (cont[a.regra] || 0) + 1));
@@ -871,7 +875,7 @@ const bCsv = document.createElement("button"); bCsv.className = "botao"; bCsv.te
 const total = alertas.filter((a) => !(a.manchete && a.manchete.ref)).reduce((s, a) => s + a.total, 0);  // o caso de referência (Master) é histórico e não entra na soma
 $("resumo").innerHTML = `<span><b class="num">${alertas.length}</b>alertas</span><span><b class="num">${brlCurto(total)}</b>envolvidos</span><span><b class="num">${dA.gerado ? data(dA.gerado) : "–"}</b>atualizado</span>`;
 {
-  const altaR = alertas.filter((a) => a.gravidade === "alta" && !(a.manchete && a.manchete.ref)).reduce((s, a) => s + (a.total || 0), 0);
+  const altaR = alertas.filter((a) => a.gravidade_regra === "alta" && !(a.manchete && a.manchete.ref)).reduce((s, a) => s + (a.total || 0), 0);
   const n = altaR < 2e9 ? 4 : altaR < 25e9 ? 3 : altaR < 100e9 ? 2 : 1;
   const cor = { 5: "#00ffa6", 4: "#00b8ff", 3: "#ffb300", 2: "#ff7a1a", 1: "#ff2d55" }[n];
   const txt = { 5: "NORMAL", 4: "ATENÇÃO", 3: "ELEVADO", 2: "ALTO", 1: "CRÍTICO" }[n];
@@ -1022,6 +1026,7 @@ function atualizarPanorama() {
   const sem = (f) => { const u = fUF, r = filtroR; if (f === "uf") fUF = ""; else filtroR = "todas"; const x = universo().filter((a) => a.regra !== "RF01"); fUF = u; filtroR = r; return x; };
   let total = 0; const c = { alta: 0, media: 0, baixa: 0 };
   L.forEach((a) => { total += a.total || 0; c[a.gravidade]++; });
+  const cT = { alta: 0, media: 0, baixa: 0 }; { const g0 = filtroG; filtroG = "todas"; universo().filter((a) => a.regra !== "RF01").forEach((a) => cT[a.gravidade]++); filtroG = g0; }
   const porUF = {}; sem("uf").forEach((a) => { if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, n: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o.n++; o[a.gravidade] += a.total || 0; } });
   const ufsTodos = Object.entries(porUF).sort((x, y) => y[1].v - x[1].v), ufs = panTodos ? ufsTodos : ufsTodos.slice(0, 8), mx = ufsTodos[0] ? ufsTodos[0][1].v : 1;
   const porR = {}; sem("r").forEach((a) => { const o = (porR[a.regra] ||= { v: 0, n: 0 }); o.v += a.total || 0; o.n++; });
@@ -1032,11 +1037,11 @@ function atualizarPanorama() {
   const cv = _casosV && _casosV.length ? `<div class="hero-casos" id="pan-casos" title="Abrir os casos"><b>+ R$ ${_casosV.reduce((s, x) => s + x.bi, 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi</b> citados em ${_casosV.length} casos sob apuração (PF, MPF, Receita). Não é prejuízo confirmado. <u>Ver casos →</u></div>` : "";
   const hm = $("hero-m"); if (hm) hm.innerHTML = `<small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><div class="hm-sev"><i style="flex:${c.alta};background:${COR.alta}"></i><i style="flex:${c.media};background:${COR.media}"></i><i style="flex:${c.baixa};background:${COR.baixa}"></i></div>${cv}`;
   const NL = L.length || 1, vazio = L.length ? "" : '<div class="pan-vazio">Nenhum alerta com essa combinação de filtros. Troque um deles abaixo ou <button class="pan-mais" id="pan-limpa">limpar todos os filtros</button></div>';
-  const sev = ["alta", "media", "baixa"].map((g) => `<button class="sev-b ${filtroG === g ? "on" : ""}" data-g="${g}" style="--c:${COR[g]}" title="Mostrar só prioridade ${g === "media" ? "média" : g}"><i></i><b class="num">${c[g]}</b> ${g === "media" ? "média" : g}</button>`).join("");
-  const at = [fUF && ["uf", `Estado: ${fUF}`], filtroR !== "todas" && ["r", `Tipo: ${RNOME[filtroR] || (filtroR === "__comb" ? "Combinados" : filtroR)}`], !["destaques", "todas"].includes(filtroG) && ["g", `Prioridade: ${filtroG === "media" ? "média" : filtroG}`], janela && ["j", `Período: ${janela[0]}${janela[1] !== janela[0] ? " a " + janela[1] : ""}`]].filter(Boolean);
+  const sev = ["alta", "media", "baixa"].map((g) => `<button class="sev-b ${filtroG === g ? "on" : ""}" data-g="${g}" style="--c:${COR[g]}" title="${NOME_G[g]}${g === "baixa" ? ": sinais fracos, só para consulta" : ""}"><i></i><b class="num">${cT[g]}</b> ${ROT_G[g]}</button>`).join("");
+  const at = [fUF && ["uf", `Estado: ${fUF}`], filtroR !== "todas" && ["r", `Tipo: ${RNOME[filtroR] || (filtroR === "__comb" ? "Combinados" : filtroR)}`], !["destaques", "todas"].includes(filtroG) && ["g", `Prioridade: ${ROT_G[filtroG] || filtroG}`], janela && ["j", `Período: ${janela[0]}${janela[1] !== janela[0] ? " a " + janela[1] : ""}`]].filter(Boolean);
   const ativos = at.length ? `<div class="pan-ativos">${at.map(([k, t]) => `<button class="pan-at" data-x="${k}" title="Tirar este filtro">${esc(t)} <b>×</b></button>`).join("")}<button class="pan-at limpa" data-x="*">limpar tudo</button></div>` : "";
   panDyn.classList.toggle("f-uf", !!fUF); panDyn.classList.toggle("f-r", filtroR !== "todas");
-  panDyn.innerHTML = `${ativos}<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
+  panDyn.innerHTML = `${ativos}<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas relevantes${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><span class="pan-nota">Só os ${cT.alta + cT.media} de maior peso. Os outros ${cT.baixa.toLocaleString("pt-BR")} são contexto.</span></div>
     <div class="pan-sev"><i style="width:${100 * c.alta / NL}%;background:${COR.alta}"></i><i style="width:${100 * c.media / NL}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / NL}%;background:${COR.baixa}"></i></div>
     <div class="sev-row">${sev}</div>${vazio}${cv}
     <div class="pan-h">Estados <small>clique: filtra e aproxima</small></div>${estados}${ufsTodos.length > 8 ? `<button class="pan-mais" id="pan-todos">${panTodos ? "Mostrar só os 8 maiores" : `Ver todos os ${ufsTodos.length} estados`}</button>` : ""}
@@ -1068,7 +1073,7 @@ function porque(a) {
     ok("A empresa constava como punida", `${s.lista} · ${s.tipo}`);
     ok("O pagamento caiu dentro da vigência da punição", `pagamentos em ${per}; punição ${s.fim ? "de " + data(s.inicio) + " até " + data(s.fim) : "desde " + data(s.inicio) + ", sem data final"}`);
     ok("A punição alcança o Congresso", alcance(s.alcance));
-    prio = a.gravidade === "alta" ? "Alta: a punição valia para toda a administração, então não há dúvida de que alcançava a Câmara ou o Senado." : a.gravidade === "media" ? "Média: o órgão que puniu não informou o alcance. Pode ou não valer para o Congresso." : "Baixa: a punição valia só no órgão que a aplicou. Provavelmente não impedia contratar com a Câmara ou o Senado.";
+    prio = a.gravidade_regra === "alta" ? "Alta: a punição valia para toda a administração, então não há dúvida de que alcançava a Câmara ou o Senado." : a.gravidade_regra === "media" ? "Média: o órgão que puniu não informou o alcance. Pode ou não valer para o Congresso." : "Baixa: a punição valia só no órgão que a aplicou. Provavelmente não impedia contratar com a Câmara ou o Senado.";
     descartado = ["Punições de alcance estadual ou municipal que não chegam ao Congresso", "Pagamentos de data anterior ao início da punição ou posterior ao fim"];
     naoProva = ["Que o gasto foi irregular: o serviço pode ter sido prestado de verdade.", "Que o parlamentar sabia da punição: o cadastro nem sempre é consultado."];
   } else if (m.tipo === "R02") {
@@ -1076,7 +1081,7 @@ function porque(a) {
     ok("A empresa constava como punida", `${s.lista} · ${s.tipo}`);
     ok("Contratos assinados dentro da vigência da punição", `${plural(a.n, "contrato", "contratos")} em ${per}`);
     ok("A punição alcança o órgão contratante (esfera e estado)", alcance(s.alcance));
-    prio = a.gravidade === "alta" ? "Alta: punição que vale em todo o governo ou em toda a esfera do órgão contratante." : a.gravidade === "media" ? "Média: o alcance não foi informado ou é restrito à esfera e ao Poder de quem puniu." : "Baixa: punição restrita ao órgão que a aplicou; pode nem valer para quem contratou.";
+    prio = a.gravidade_regra === "alta" ? "Alta: punição que vale em todo o governo ou em toda a esfera do órgão contratante." : a.gravidade_regra === "media" ? "Média: o alcance não foi informado ou é restrito à esfera e ao Poder de quem puniu." : "Baixa: punição restrita ao órgão que a aplicou; pode nem valer para quem contratou.";
     descartado = ["Punições que não alcançam a esfera e o estado do contratante", "Fornecedores que são estatais ou administração pública", "Contratos com valor digitado errado e valores repetidos de credenciamento"];
     naoProva = ["Que a contratação foi ilegal: a punição pode ter sido suspensa por decisão judicial.", "Que o órgão errou: muitos órgãos não consultam o cadastro na hora."];
   } else if (m.tipo === "R03") {
@@ -1091,7 +1096,7 @@ function porque(a) {
     regra = "Procuramos contratos muito maiores que o capital social da empresa contratada, sinal de que ela pode não ter porte para executar.";
     ok(`Contrato vale ${(m.vezes || 0).toLocaleString("pt-BR")} vezes o capital social`, `contrato ${brl(a.total)} · capital ${brl(m.capital || 0)} (faixa considerada: de 50 a 1.000 vezes)`);
     ok("Contrato entre R$ 500 mil e R$ 300 milhões", brl(a.total));
-    prio = a.gravidade === "alta" ? "Alta: pelo menos 100 vezes o capital e valor entre R$ 2 mi e R$ 100 mi." : "Média: desproporção relevante, mas valor fora da faixa em que o erro de digitação é menos provável.";
+    prio = a.gravidade_regra === "alta" ? "Alta: pelo menos 100 vezes o capital e valor entre R$ 2 mi e R$ 100 mi." : "Média: desproporção relevante, mas valor fora da faixa em que o erro de digitação é menos provável.";
     descartado = ["Contratos acima de 1.000 vezes o capital (quase sempre valor digitado errado)", "Valores redondos em milhares que, divididos por mil, voltam ao normal (erro de escala)", "Credenciamento, consórcios e estatais"];
     naoProva = ["Que a empresa não consegue executar: capital baixo é comum em empresa de serviço.", "Que o valor está certo: o PNCP tem erros de digitação. Confira no contrato."];
   } else if (m.tipo === "R05") {
@@ -1099,7 +1104,7 @@ function porque(a) {
     ok("Um sócio da empresa doou à campanha", `${m.doador} (${QUALIF[m.qualificacao] || "sócio(a)"}) doou ${brl(m.doacao)}`);
     ok("O candidato foi eleito prefeito em 2024", `${m.prefeito} (${m.partido}) · ${m.cidade}/${m.uf}`);
     ok("A empresa fechou contratos com essa prefeitura depois da posse (1º/jan/2025)", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}, ${per}`);
-    prio = a.gravidade === "alta" ? "Alta: contratos acima de R$ 1 milhão e doação de pelo menos R$ 5 mil." : a.gravidade === "media" ? "Média: contratos acima de R$ 300 mil e doação relevante ou sócio-administrador." : "Baixa: vínculo existe, mas valores menores.";
+    prio = a.gravidade_regra === "alta" ? "Alta: contratos acima de R$ 1 milhão e doação de pelo menos R$ 5 mil." : a.gravidade_regra === "media" ? "Média: contratos acima de R$ 300 mil e doação relevante ou sócio-administrador." : "Baixa: vínculo existe, mas valores menores.";
     descartado = ["Contratos abaixo de R$ 50 mil", "Fornecedores estatais", "Valores com sinais de erro e credenciamento", "Doações de empresas (proibidas desde 2015) e de partidos"];
     naoProva = ["Que houve troca de favores: doar para campanha é legal.", "Que a empresa foi beneficiada sem licitação: veja a modalidade do contrato.", "Que a empresa não fornecia à prefeitura antes: só olhamos a partir de 2025."];
   } else if (m.tipo === "R06") {
@@ -1108,14 +1113,14 @@ function porque(a) {
     ok("Quatro ou mais contratos no trimestre", `${a.n} contratos em ${m.tri}`);
     ok("Cada contrato na faixa de dispensa (R$ 15 mil a R$ 70 mil)", `de ${brl(m.minimo)} a ${brl(m.maximo)}`);
     ok("Soma de pelo menos R$ 200 mil", brl(a.total));
-    prio = a.gravidade === "alta" ? "Alta: oito ou mais contratos e soma acima de R$ 500 mil." : a.gravidade === "media" ? "Média: cinco ou mais contratos." : "Baixa: o mínimo de quatro contratos.";
+    prio = a.gravidade_regra === "alta" ? "Alta: oito ou mais contratos e soma acima de R$ 500 mil." : a.gravidade_regra === "media" ? "Média: cinco ou mais contratos." : "Baixa: o mínimo de quatro contratos.";
     descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro de digitação"];
     naoProva = ["Que houve fracionamento: compras diferentes podem ser legítimas.", "Que o preço foi acima do mercado."];
   } else if (m.tipo === "R07") {
     regra = "Procuramos uma única empresa concentrando mais da metade do que uma prefeitura contratou num ano.";
     ok(`Uma empresa recebeu ${Math.round(m.share * 100)}% do valor contratado pelo órgão no ano`, `${brl(a.total)} de ${brl(m.total_orgao)} em ${m.ano} (limite: 50%)`);
     ok("Órgão com volume relevante (mínimo R$ 2 mi e 5 contratos no ano)", brl(m.total_orgao));
-    prio = a.gravidade === "alta" ? "Alta: 70% ou mais e órgão com mais de R$ 10 milhões contratados no ano." : a.gravidade === "media" ? "Média: 60% ou mais do valor." : "Baixa: entre 50% e 60%.";
+    prio = a.gravidade_regra === "alta" ? "Alta: 70% ou mais e órgão com mais de R$ 10 milhões contratados no ano." : a.gravidade_regra === "media" ? "Média: 60% ou mais do valor." : "Baixa: entre 50% e 60%.";
     descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro"];
     naoProva = ["Que houve direcionamento: serviços contínuos (lixo, saúde, merenda) costumam ter poucos fornecedores.", "Que o contrato foi sem concorrência."];
   } else if (m.tipo === "R08") {
@@ -1123,7 +1128,7 @@ function porque(a) {
     ok(`A empresa tem sócio sediado em ${m.pais}`, `${m.socio}`);
     ok(m.nivel === 1 ? "País da lista de sigilo clássico (nível 1)" : "País da lista de tributação favorecida (nível 2)", m.pais);
     ok("Contratos de pelo menos R$ 300 mil", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}`);
-    prio = a.gravidade === "alta" ? "Alta: jurisdição de sigilo clássico e contratos acima de R$ 1 milhão." : a.gravidade === "media" ? "Média: jurisdição de sigilo clássico, ou contratos acima de R$ 1 milhão em país de tributação favorecida." : "Baixa: país de tributação favorecida e contratos moderados.";
+    prio = a.gravidade_regra === "alta" ? "Alta: jurisdição de sigilo clássico e contratos acima de R$ 1 milhão." : a.gravidade_regra === "media" ? "Média: jurisdição de sigilo clássico, ou contratos acima de R$ 1 milhão em país de tributação favorecida." : "Baixa: país de tributação favorecida e contratos moderados.";
     descartado = ["Credenciamento e atas com valor repetido", "Fornecedores estatais", "Valores com sinais de erro"];
     naoProva = ["Que há dinheiro desviado ou evasão: multinacionais legítimas têm holding em Luxemburgo, Suíça ou Países Baixos.", "Quem é o dono real: o sócio no exterior pode ter um beneficiário final no Brasil."];
   } else if (m.tipo === "R12") {
@@ -1131,7 +1136,7 @@ function porque(a) {
     ok("Servidor federal ativo consta como sócio ou administrador", `${plural(m.n_servidores, "servidor", "servidores")}${m.administradores ? ", " + m.administradores + " administrando a empresa" : ", como cotista(s)"}`);
     ok("A empresa vendeu ao governo federal (pelo menos R$ 100 mil)", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}, ${per}`);
     ok("Empresa privada (não fundação, associação ou cooperativa)", "natureza jurídica empresarial");
-    prio = a.gravidade === "alta" ? "Alta: há servidor na administração da empresa (a lei veda a gerência ou administração de sociedade privada por servidor)." : "Média: só cotistas, com mais de R$ 500 mil em contratos.";
+    prio = a.gravidade_regra === "alta" ? "Alta: há servidor na administração da empresa (a lei veda a gerência ou administração de sociedade privada por servidor)." : "Média: só cotistas, com mais de R$ 500 mil em contratos.";
     descartado = ["Fundações de apoio, associações, cooperativas, OS e estatais", "Contratos abaixo de R$ 50 mil, antes de 2025 ou com valor com sinais de erro", "Servidores aposentados, cedidos fora do quadro ativo ou sem CPF parcial no cadastro"];
     naoProva = ["Que o servidor agiu de má-fé: pode ser atividade privada autorizada, ou ele pode já ter saído da sociedade.", "Que o contrato foi irregular: a empresa pode ter vencido licitação aberta a todos."];
   } else if (m.tipo === "R11") {
@@ -1145,7 +1150,7 @@ function porque(a) {
       else if (cc.sinal === "so_contrato_anterior") parcial("Não há contrato novo: só contratos anteriores à punição", `${plural(cc.anteriores, "contrato anterior", "contratos anteriores")} no PNCP; o pagamento pode ser de contrato antigo, o que costuma ser permitido`);
       else parcial("Nenhum contrato dessa empresa no PNCP", "contratos antigos, convênios e atas nem sempre estão no PNCP, então a origem do pagamento fica em aberto");
     }
-    prio = a.gravidade === "alta" ? "Alta: há contrato novo assinado durante a punição e ela vale para toda a administração." : a.gravidade === "media" ? "Média: ou há contrato novo mas a punição é mais restrita, ou não achamos contrato no PNCP e a origem do pagamento fica em aberto." : "Baixa: só achamos contratos anteriores à punição. Provavelmente é pagamento de contrato antigo, que costuma ser permitido.";
+    prio = a.gravidade_regra === "alta" ? "Alta: há contrato novo assinado durante a punição e ela vale para toda a administração." : a.gravidade_regra === "media" ? "Média: ou há contrato novo mas a punição é mais restrita, ou não achamos contrato no PNCP e a origem do pagamento fica em aberto." : "Baixa: só achamos contratos anteriores à punição. Provavelmente é pagamento de contrato antigo, que costuma ser permitido.";
     descartado = ["Multa e publicação extraordinária (não impedem contratar)", "Estatais e empresas públicas", "Meses anteriores ao início da punição"];
     naoProva = ["Que o pagamento foi irregular: pode quitar entrega feita antes da punição.", "Que o órgão errou: nem sempre o órgão pagador consulta o cadastro."];
   } else if (m.tipo === "R10") {
@@ -1154,7 +1159,7 @@ function porque(a) {
     ok("A empresa vendeu ao governo (contratos de pelo menos R$ 100 mil no total)", `${plural(a.n, "contrato", "contratos")}, ${brl(a.total)}, ${per}`);
     ok(m.apos_posse ? "Há contratos depois da posse" : "Contratos anteriores à posse", `posse em ${data(m.posse)}`);
     if (m.mesmo_municipio) ok("Contrato com o município onde exerce o mandato", m.ue);
-    prio = a.gravidade === "alta" ? "Alta: parlamentar ou chefe de executivo com contratos depois da posse, ou contrato com o próprio município." : "Média: sociedade com contratos, mas todos antes da posse ou sem o vínculo direto com o mandato.";
+    prio = a.gravidade_regra === "alta" ? "Alta: parlamentar ou chefe de executivo com contratos depois da posse, ou contrato com o próprio município." : "Média: sociedade com contratos, mas todos antes da posse ou sem o vínculo direto com o mandato.";
     descartado = ["Estatais e valores com sinais de erro", "Contratos abaixo de R$ 50 mil, antes de 2025, e totais abaixo de R$ 100 mil", "Vice, suplente e candidatos não eleitos"];
     naoProva = ["Que a contratação foi irregular: pode ser compra de balcão aberta a qualquer empresa, e a participação do político pode ser pequena.", "Que o político ainda é sócio: a base mostra o quadro societário atual, sem data de saída."];
   } else if (m.tipo === "R09") {
@@ -1164,7 +1169,7 @@ function porque(a) {
     if (m.cepim) ok("Consta no CEPIM: entidade privada sem fins lucrativos impedida de receber transferências federais", String(m.cepim).toLowerCase());
     if (m.nova) ok("Aberta menos de 1 ano antes do primeiro pagamento", `abertura em ${data(m.abertura)}`);
     if (m.capital_peq) ok("Valor recebido mais de 50 vezes o capital social", `capital ${brl(m.capital || 0)}`);
-    prio = a.gravidade === "alta" ? "Alta: sanção de alcance amplo, ou empresa nova com mais de R$ 1 milhão, ou mais de um sinal combinado." : a.gravidade === "media" ? "Média: um sinal e mais de R$ 500 mil recebidos." : "Baixa: um sinal e valor menor.";
+    prio = a.gravidade_regra === "alta" ? "Alta: sanção de alcance amplo, ou empresa nova com mais de R$ 1 milhão, ou mais de um sinal combinado." : a.gravidade_regra === "media" ? "Média: um sinal e mais de R$ 500 mil recebidos." : "Baixa: um sinal e valor menor.";
     descartado = ["Prefeituras, governos estaduais, autarquias e órgãos públicos (receber emenda é o esperado)", "Pagamentos abaixo de R$ 100 mil no total"];
     naoProva = ["Que houve desvio: a entidade pode ter executado o objeto normalmente.", "Que o impedimento do CEPIM já existia na data do pagamento: a lista é a de hoje e o pagamento pode ser anterior.", "Que o parlamentar escolheu a entidade por algum interesse: a indicação da emenda é política e pública, e o dado só mostra quem recebeu."];
   } else if (m.tipo === "RF01") {
@@ -1173,7 +1178,7 @@ function porque(a) {
     ok("Crescimento de 50% ou mais em 12 meses", `${m.yoy >= 0 ? "+" : ""}${Math.round(m.yoy * 100)}%`);
     ok("Ativo pelo menos 10 vezes o patrimônio líquido", `${(m.alav || 0).toFixed(1)} vezes`);
     ok(`Padrão sustentado por ${m.trimestres} trimestres seguidos`, `posição em ${m.ate}`);
-    prio = a.gravidade === "media" ? "Média: quatro ou mais trimestres seguidos." : "Baixa: dois ou três trimestres seguidos.";
+    prio = a.gravidade_regra === "media" ? "Média: quatro ou mais trimestres seguidos." : "Baixa: dois ou três trimestres seguidos.";
     descartado = ["Instituições de pagamento", "Bancos com captação abaixo de R$ 5 bilhões", "Crescimento isolado de um trimestre"];
     naoProva = ["Que o banco tem problema: bancos grandes em expansão também acendem.", "Quem compra o papel do banco: isso exige dados que não são abertos (veja Fontes)."];
   }
@@ -1181,7 +1186,7 @@ function porque(a) {
   const lista = (arr) => `<ul class="check">${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>`;
   return `<p class="sub2" style="margin:0 0 8px"><b style="color:#fff">${esc(R)}</b> (regra ${a.regra}). ${esc(regra)}</p>
     <div class="criterios">${linhas}</div>
-    <div class="prio" style="--c:${COR[a.gravidade]}"><b>Prioridade ${esc(NOME_G[a.gravidade].replace("Prioridade ", ""))}</b><span>${esc(prio)}</span></div>
+    <div class="prio" style="--c:${COR[a.gravidade]}"><b>${esc(NOME_G[a.gravidade])}</b><span>${esc(prio)}</span></div>
     <p class="sub2" style="margin:6px 0 0">Prioridade mede quão forte é o sinal e quão pouca dúvida resta. Não mede gravidade de nenhum ato.</p>
     <h5>O que foi descartado antes de te mostrar isto</h5>${lista(descartado)}
     <h5>O que este alerta não prova</h5>${lista(naoProva)}`;
@@ -1197,7 +1202,8 @@ function escalaBase() {
   if (!_esc) return;
   const f = (v) => v >= 1000 ? `R$ ${(v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} tri` : `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi`;
   const nC = (_esc.pncp_anos || []).reduce((t, x) => t + x.contratos, 0), pct = _esc.pct_pncp != null ? _esc.pct_pncp.toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "%" : "";
-  const itens = [[`Analisado: ${(nC / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi de contratos (PNCP)`, _esc.pncp_bi, "#4cc9f0"], [`Em atenção${pct ? " · " + pct + " do analisado" : ""}`, _esc.alertas_bi, "#ff2d55"], ["Prioridade alta", _esc.alta_bi, "#ff2d55"]];
+  const emAt = alertas.filter((x) => x.gravidade !== "baixa" && !(x.manchete && x.manchete.ref)).reduce((t, x) => t + (x.total || 0), 0) / 1e9, maxA = alertas.filter((x) => x.gravidade === "alta" && !(x.manchete && x.manchete.ref)).reduce((t, x) => t + (x.total || 0), 0) / 1e9, pc2 = (100 * emAt / _esc.pncp_bi).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + "%";
+  const itens = [[`Analisado: ${(nC / 1e6).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi de contratos (PNCP)`, _esc.pncp_bi, "#4cc9f0"], [`Em atenção · ${pc2} do analisado`, emAt, "#ffb300"], ["Prioridade máxima", maxA, "#ff2d55"]];
   const mx = Math.log10(_esc.pncp_bi * 10);
   el.title = "Régua logarítmica, para caberem na mesma linha. O Radar só vê o que está no PNCP (compras federais, estaduais e municipais registradas), não todo o gasto público.";
   el.innerHTML = itens.map(([t, v, cor]) => `<div><span>${t}</span><b class="num">${f(v)}</b><u><i style="width:${Math.round(100 * Math.log10(v * 10) / mx)}%;background:${cor}"></i></u></div>`).join("");

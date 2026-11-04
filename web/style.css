@@ -589,3 +589,6 @@ body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibreg
 .mais-li{list-style:none;text-align:center;padding:6px 0}
 @media(max-width:1280px){#manchete-dia{width:min(560px,calc(100% - 480px)) !important}}
 .sal-fl>span{display:none}.sal-fl button{flex:1;white-space:nowrap;padding:0 8px}
+
+.pan-nota{display:block;margin-top:3px;font-size:11px;color:var(--mut)}
+.sev-b{font-size:11px !important;padding:0 2px !important;gap:4px !important}.sev-b b{font-size:12px}
