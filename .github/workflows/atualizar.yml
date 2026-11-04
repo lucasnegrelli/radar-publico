@@ -86,6 +86,16 @@ jobs:
           path: dados/portal
           key: portal-cpgf-restore
           restore-keys: portal-cpgf-
+      - name: Restaurar PGFN completo (mensal)
+        uses: actions/cache/restore@v4
+        with:
+          path: dados/pgfn/pgfn_full.json
+          key: pgfn-full-restore
+          restore-keys: pgfn-full-
+      - name: PGFN e Banco Central (regimes especiais)
+        run: |
+          python ingestao/bcb_regimes.py || true
+          if [ -f dados/pgfn/pgfn_full.json ]; then cp dados/pgfn/pgfn_full.json web/public/data/pgfn.json; else python ingestao/pgfn.py || true; fi
       - name: Portal da Transparência (API de dados)
         env:
           PORTAL_TOKEN: ${{ secrets.PORTAL_TOKEN }}

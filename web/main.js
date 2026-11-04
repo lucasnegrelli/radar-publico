@@ -176,6 +176,16 @@ function destaques(L, n = 40, porTipo = 8) {
   while (fila.length) { const k = fila.findIndex((a) => !(mix.length >= 2 && mix[mix.length - 1].regra === a.regra && mix[mix.length - 2].regra === a.regra)); mix.push(fila.splice(k < 0 ? 0 : k, 1)[0]); }
   return mix;
 }
+let _pg = null, _pgd = null, _reg = null;
+fetch("/data/pgfn.json").then((r) => r.json()).then((j) => { _pg = j.por_raiz || {}; _pgd = j; if (alertas.length) lista(); }).catch(() => {});
+fetch("/data/bcb_regimes.json").then((r) => r.json()).then((j) => { _reg = new Map((j.itens || []).map((x) => [x.raiz, x])); _regD = j; if (alertas.length) lista(); }).catch(() => {});
+let _regD = null;
+const raizDe = (a) => String(a.cnpj || "").replace(/\D/g, "").slice(0, 8);
+const pgDe = (a) => (_pg && _pg[raizDe(a)]) || null;
+const regDe = (a) => (_reg && _reg.get(raizDe(a))) || null;
+let _len = null;
+fetch("/data/leniencia.json").then((r) => r.json()).then((j) => { _len = new Map(); (j.acordos || []).forEach((x) => (x.empresas || []).forEach((e) => { const k = String(e.cnpj || "").slice(0, 8); if (k.length === 8) (_len.get(k) || _len.set(k, []).get(k)).push(x); })); if (alertas.length) lista(); }).catch(() => {});
+const lenDe = (a) => (_len ? _len.get(String(a.cnpj || "").replace(/\D/g, "").slice(0, 8)) || [] : []);
 let alertas = [], visiveis = [], filtroG = "destaques", filtroR = "todas", sel = null, nomes = {};
 const RCOR = { R01: "#ff6b81", R02: "#ff2d55", R03: "#ffb300", R04: "#ff8a3d", R05: "#f7d046", R06: "#7cf5de", R07: "#22d3b6", R08: "#b388ff", R09: "#4cc9f0", R10: "#ff7ad9", R11: "#6ea8ff", RF01: "#ffcc00" };
 const RNOME = { R01: "Cota × punida", R02: "Contrato × punida", R03: "Empresa nova", R04: "Capital pequeno", R05: "Doador → fornecedor", R06: "Fracionamento", R07: "Concentração", R08: "Sócio no exterior", R09: "Emenda", R10: "Político sócio", R11: "Pgto federal × punida", RF01: "Banco" };
@@ -331,7 +341,7 @@ const bonito = (n) => { const t = String(n || ""); if (t !== t.toUpperCase()) re
 function lista() {
   $("itens").innerHTML = visiveis.slice(0, 200).map((a) => `
     <li class="card ${sel === a.id ? "sel" : ""} ${triagem()[a.id] === "descartado" ? "dim" : ""}" style="--c:${COR[a.gravidade]}" data-id="${esc(a.id)}">
-      <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${lenDe(a).length ? '<span class="chip" style="--c:#4cc9f0" title="A empresa tem acordo de leniência registrado na CGU">leniência</span>' : ""}${chipContrato(a)}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
+      <div class="topo"><span class="rc" style="--r:${RCOR[a.regra] || "#8aa0b5"}">${RNOME[a.regra] || a.regra}</span><span class="chips-c">${a.novo ? '<span class="chip" style="--c:#3dff9a">novo</span>' : ""}${a.correlacao ? '<span class="chip" style="--c:#b388ff">combinado</span>' : ""}${lenDe(a).length ? '<span class="chip" style="--c:#4cc9f0" title="A empresa tem acordo de leniência registrado na CGU">leniência</span>' : ""}${pgDe(a) ? `<span class="chip" style="--c:#ffb300" title="Dívida ativa com a União (PGFN, previdenciário e FGTS): ${brl(pgDe(a)[0])}">deve ${brlCurto(pgDe(a)[0])}</span>` : ""}${regDe(a) ? `<span class="chip" style="--c:#ff2d55" title="Banco Central: ${esc(regDe(a).tipo)} desde ${esc(regDe(a).inicio)}">${esc(regDe(a).tipo.toLowerCase())}</span>` : ""}${chipContrato(a)}${triagem()[a.id] && triagem()[a.id] !== "novo" ? `<span class="chip" style="--c:#8aa0b5">${triagem()[a.id]}</span>` : ""}</span></div>
       <div class="frase">${esc(curta(a).replace(a.empresa, bonito(a.empresa)))}</div>
       <div class="rodape"><span class="quem-c">${a.local ? esc(a.local.cidade) + "/" + a.local.uf + " · " : ""}${periodo(a.inicio, a.fim).replace(/^(em|entre) /, "")}</span><span class="valor num">${brlCurto(a.total)}</span></div>
     </li>`).join("") || '<p class="sub2">Nenhum alerta neste filtro.</p>';
@@ -369,7 +379,7 @@ function abrir(id) {
     <h4>${esc(t.titulo)}</h4>
     <table style="--c:${c}"><thead><tr>${cab}</tr></thead><tbody>${linhas}</tbody></table>
     ${a.n > t.linhas.length ? `<p class="sub2" style="margin-top:6px">Mostrando ${t.linhas.length} de ${a.n} registros.</p>` : ""}
-    ${blocoSancao}${lenDe(a).length ? `<h4>Acordo de leniência</h4>${lenDe(a).map((x) => `<div class="diario"><small>${esc(x.orgao || "")} · ${esc(x.inicio || "")} a ${esc(x.fim || "")} · ${esc(x.situacao || "")}</small>${esc(x.empresas.map((e) => e.nome).join("; ").slice(0, 200))}</div>`).join("")}<p class="sub2">Acordo de leniência é um acerto em que a empresa admite irregularidades e colabora com as investigações em troca de redução de sanções. Fonte: Portal da Transparência (CGU).</p>` : ""}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
+    ${blocoSancao}${pgDe(a) ? `<h4>Dívida ativa da União</h4><p class="sub2" style="margin-bottom:6px">A empresa (somando matriz e filiais) deve <b style="color:#fff">${brl(pgDe(a)[0])}</b> em ${pgDe(a)[1]} inscrições de dívida ativa de contribuições previdenciárias e FGTS (PGFN). Dívida ativa não é irregularidade por si só: pode estar parcelada ou em discussão na Justiça. A pergunta útil é por que o governo segue pagando quem deve tanto à União.</p>` : ""}${regDe(a) ? `<h4>Regime especial no Banco Central</h4><div class="diario"><small>${esc(regDe(a).inicio)} · ${esc(regDe(a).tipo)}</small>${esc(regDe(a).nome)} está em ${esc(regDe(a).tipo.toLowerCase())} decretada pelo Banco Central.</div>` : ""}${lenDe(a).length ? `<h4>Acordo de leniência</h4>${lenDe(a).map((x) => `<div class="diario"><small>${esc(x.orgao || "")} · ${esc(x.inicio || "")} a ${esc(x.fim || "")} · ${esc(x.situacao || "")}</small>${esc(x.empresas.map((e) => e.nome).join("; ").slice(0, 200))}</div>`).join("")}<p class="sub2">Acordo de leniência é um acerto em que a empresa admite irregularidades e colabora com as investigações em troca de redução de sanções. Fonte: Portal da Transparência (CGU).</p>` : ""}${blocoEmpresa}${blocoVinculo}${(dDiarios[a.id] || []).length ? `<h4>Diários oficiais</h4>${dDiarios[a.id].map((x) => `<div class="diario"><small>${esc(x.cidade)}/${esc(x.uf)} · ${esc(x.data)}</small>${esc(x.trecho)} <a href="${esc(x.url)}" target="_blank" rel="noopener">abrir diário</a></div>`).join("")}<p class="sub2">Menções ao nome da empresa em diários oficiais municipais (Querido Diário). Podem ser homônimos.</p>` : ""}${(a.secoes || []).map((x) => `<h4>${esc(x.titulo)}</h4><dl class="kv">${x.kv.map((k) => `<dt>${esc(k[0])}</dt><dd>${esc(k[1])}</dd>`).join("")}</dl>`).join("")}
     <h4>Checagem</h4><ul class="check">${checagem(a).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
     ${blocoImprensa}${blocoAcoes}
     <p class="aviso">Isto é um ponto de atenção feito a partir de dados públicos, não uma conclusão. Pode haver explicação legal.</p>
@@ -657,7 +667,13 @@ async function montarFontes() {
     d.fontes.map((f) => `<div class="caixa"><b>${esc(f.fonte)}</b><br><span class="sub2">${esc(f.cobertura)}${f.linhas ? " · " + Number(f.linhas).toLocaleString("pt-BR") + " linhas" : ""} · atualizado ${esc(f.atualizado)}</span><p style="margin:6px 0 0;font-size:12.5px;color:var(--media)">Lacuna: ${esc(f.lacuna)}</p></div>`).join("") : '<p class="sub2">Metadados indisponíveis.</p>';
   cartoesBloco();
 }
+async function fontesExtras() {
+  const el = $("aba-fontes");
+  if (_regD && _regD.itens.length) el.insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Bancos e instituições em regime especial</h3><p class="sub2">Liquidação extrajudicial, RAET ou intervenção decretada pelo Banco Central (${_regD.n} instituições). Fonte: dados abertos do Banco Central.</p><table class="tbl"><tbody>${_regD.itens.slice(0, 12).map((x) => `<tr><td><b>${esc(x.nome)}</b><br><span class="sub2">${esc(x.tipo)} · desde ${esc(x.inicio)}${x.uf ? " · " + esc(x.uf) : ""}</span></td></tr>`).join("")}</tbody></table>`);
+  if (_pgd) el.insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Dívida ativa da União (PGFN)</h3><p class="sub2">${_pgd.n_empresas.toLocaleString("pt-BR")} empresas devem <b>${brlCurto(_pgd.total)}</b> (${esc(_pgd.nota)}). Maiores devedoras:</p><table class="tbl"><tbody>${_pgd.top.slice(0, 10).map((x) => `<tr><td>${esc(x.nome)}<br><span class="sub2">${esc(x.uf || "")} · ${x.n} inscrições</span></td><td class="num" style="text-align:right">${brlCurto(x.v)}</td></tr>`).join("")}</tbody></table>`);
+}
 async function cartoesBloco() {
+  await fontesExtras();
   const d = await fetch("/data/cartoes.json").then((r) => r.json()).catch(() => null); if (!d) return;
   const el = $("aba-fontes"); const t = (rows, f) => `<table class="tbl"><tbody>${rows.map(f).join("")}</tbody></table>`;
   el.insertAdjacentHTML("beforeend", `<h3 style="margin-top:18px">Cartões corporativos (CPGF)</h3><p class="sub2">Compras no cartão de pagamento do governo federal, de ${esc(d.de)} a ${esc(d.ate)}: <b>${d.n.toLocaleString("pt-BR")}</b> transações, <b>${brlCurto(d.valor)}</b>.${d.completo ? "" : " Coleta ainda em andamento: os números crescem a cada rodada."} Fonte: Portal da Transparência.</p>
@@ -1054,9 +1070,6 @@ function porque(a) {
 
 
 // ----- imprensa por alerta e escala -----
-let _len = null;
-fetch("/data/leniencia.json").then((r) => r.json()).then((j) => { _len = new Map(); (j.acordos || []).forEach((x) => (x.empresas || []).forEach((e) => { const k = String(e.cnpj || "").slice(0, 8); if (k.length === 8) (_len.get(k) || _len.set(k, []).get(k)).push(x); })); lista(); }).catch(() => {});
-const lenDe = (a) => (_len ? _len.get(String(a.cnpj || "").replace(/\D/g, "").slice(0, 8)) || [] : []);
 let _na = null;
 fetch("/data/noticias_alertas.json").then((r) => r.json()).then((j) => { _na = j; }).catch(() => {});
 fetch("/data/escala.json").then((r) => r.json()).then((j) => { _esc = j; atualizarPanorama(); }).catch(() => {});

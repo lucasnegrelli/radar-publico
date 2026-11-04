@@ -1,0 +1,25 @@
+name: PGFN dívida ativa (completo, mensal)
+# Lê os 3 arquivos da PGFN (inclui o não previdenciário, 1,4 GB) em fluxo e guarda só o agregado por raiz de CNPJ no cache. A atualização principal usa esse agregado.
+on:
+  schedule:
+    - cron: "0 7 3 * *"
+  workflow_dispatch:
+concurrency:
+  group: pgfn-mensal
+  cancel-in-progress: false
+jobs:
+  pgfn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Liberar disco
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android || true
+      - run: python ingestao/pgfn.py --tudo
+      - uses: actions/cache/save@v4
+        with:
+          path: dados/pgfn/pgfn_full.json
+          key: pgfn-full-${{ github.run_id }}
