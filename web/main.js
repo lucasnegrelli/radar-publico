@@ -801,19 +801,21 @@ if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(lo
 
 // ----- linha do tempo (arraste para filtrar por período) -----
 function montarTimeline() {
-  const por = {}; alertas.forEach((a) => { const m = (a.fim || a.inicio || "").slice(0, 7); if (!m || m < "2023-01") return; (por[m] ||= { alta: 0, media: 0, baixa: 0 })[a.gravidade]++; });
+  const por = {}; alertas.forEach((a) => { const m = (a.fim || a.inicio || "").slice(0, 7); if (!m || m < "2025-01") return; (por[m] ||= { alta: 0, media: 0, baixa: 0 })[a.gravidade]++; });
   const ks = Object.keys(por).sort(); if (ks.length < 2) { $("timeline").style.display = "none"; return; }
   const meses = []; let [y, m] = ks[0].split("-").map(Number); const [yf, mf] = ks[ks.length - 1].split("-").map(Number);
   while (y < yf || (y === yf && m <= mf)) { meses.push(`${y}-${String(m).padStart(2, "0")}`); if (++m > 12) { m = 1; y++; } }
   const n = meses.length, W = 1000, bw = W / n, max = Math.max(1, ...meses.map((k) => { const p = por[k] || {}; return (p.alta || 0) + (p.media || 0) + (p.baixa || 0); }));
-  const barras = meses.map((k, i) => { const p = por[k] || { alta: 0, media: 0, baixa: 0 }; let y0 = 50; return ["baixa", "media", "alta"].map((g) => { const h = 46 * (p[g] || 0) / max; y0 -= h; return h > 0 ? `<rect x="${i * bw + 1}" y="${y0}" width="${Math.max(1, bw - 2)}" height="${h}" fill="${COR[g]}" opacity=".85"/>` : ""; }).join(""); }).join("");
+  const barras = meses.map((k, i) => { const p = por[k] || { alta: 0, media: 0, baixa: 0 }, t = (p.alta || 0) + (p.media || 0) + (p.baixa || 0), H = t ? Math.max(3, 46 * Math.sqrt(t / max)) : 0; let y0 = 50; return ["baixa", "media", "alta"].map((g) => { const h = t ? H * (p[g] || 0) / t : 0; y0 -= h; return h > 0 ? `<rect x="${i * bw + 1}" y="${y0}" width="${Math.max(1, bw - 2)}" height="${h}" fill="${COR[g]}" opacity=".85"/>` : ""; }).join(""); }).join("");
   const rotulos = [0, Math.floor(n / 2), n - 1].map((i) => `<text x="${Math.min(W - 30, Math.max(2, i * bw))}" y="49" style="font:10px ui-monospace,monospace;fill:#7a8da3">${meses[i]}</text>`).join("");
-  $("timeline").innerHTML = `<div class="tl-h"><span>alertas por mês de atividade · arraste para filtrar</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".18" width="0"/>${barras}</svg>`;
+  $("timeline").innerHTML = `<div class="tl-h"><span>alertas por mês de atividade · arraste para filtrar</span><span id="tl-sel"></span><button id="tl-reset" hidden>limpar período</button></div><svg id="tl-svg" viewBox="0 0 ${W} 52" preserveAspectRatio="none"><rect id="tl-hover" y="0" height="52" fill="#fff" opacity="0" width="0"/><rect id="tl-brush" y="0" height="52" fill="#22d3b6" opacity=".22" width="0"/>${barras}</svg>`;
   const svg = $("tl-svg"), br = $("tl-brush"); let ini = null;
   const idx = (e) => { const r = svg.getBoundingClientRect(); return Math.max(0, Math.min(n - 1, Math.floor(((e.clientX - r.left) / r.width) * n))); };
   const pinta = (a, b) => { const lo = Math.min(a, b), hi = Math.max(a, b); br.setAttribute("x", lo * bw); br.setAttribute("width", (hi - lo + 1) * bw); };
   svg.onpointerdown = (e) => { ini = idx(e); svg.setPointerCapture(e.pointerId); pinta(ini, ini); };
-  svg.onpointermove = (e) => { if (ini != null) pinta(ini, idx(e)); };
+  const hv = $("tl-hover"), cont = (k) => { const p = por[k] || {}; return (p.alta || 0) + (p.media || 0) + (p.baixa || 0); };
+  svg.onpointermove = (e) => { const i = idx(e); if (ini != null) pinta(ini, i); hv.setAttribute("x", i * bw); hv.setAttribute("width", bw); hv.setAttribute("opacity", ".14"); if (ini == null) { const p = por[meses[i]] || {}; $("tl-sel").textContent = `${meses[i]} · ${cont(meses[i])} alertas (${p.alta || 0} alta)`; } };
+  svg.onpointerleave = () => { hv.setAttribute("opacity", "0"); if (!janela) $("tl-sel").textContent = ""; };
   svg.onpointerup = (e) => { if (ini == null) return; const f = idx(e), lo = Math.min(ini, f), hi = Math.max(ini, f); ini = null;
     janela = [meses[lo], meses[hi]]; $("tl-sel").textContent = lo === hi ? meses[lo] : `${meses[lo]} a ${meses[hi]}`; $("tl-reset").hidden = false; aplicarFiltro(); };
   const parar = () => {};
@@ -892,7 +894,7 @@ document.addEventListener("keydown", (e) => {
 // =====================================================================
 const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appendChild(pan);
 const panDyn = document.createElement("div"); pan.appendChild(panDyn);
-{ const tl = $("timeline"); if (tl) { const h = document.createElement("div"); h.className = "pan-h"; h.innerHTML = "Quando <small>arraste para filtrar</small>"; pan.appendChild(h); pan.appendChild(tl); } }
+{ const tl = $("timeline"); if (tl) { const h = document.createElement("div"); h.className = "pan-h"; h.innerHTML = "Quando <small>desde 2025 · clique ou arraste</small>"; pan.appendChild(h); pan.appendChild(tl); } }
 let panTodos = false;
 const MOSTRAR_TIPOS = true;   // desligado por enquanto: falta dado e o ranking por tipo ainda engana; o filtro por tipo segue em "Mais filtros"
 const setG = (g) => { filtroG = filtroG === g ? "destaques" : g; [...$("filtros").children].forEach((x) => x.classList.toggle("on", x.dataset.g === filtroG)); aplicarFiltro(); };
