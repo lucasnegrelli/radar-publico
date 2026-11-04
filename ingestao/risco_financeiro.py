@@ -13,9 +13,12 @@ select AnoMes, CodInst,
   max(case when Coluna='Captações' then Saldo end) captacao,
   max(case when Coluna='Patrimônio Líquido' then Saldo end) pl
 from read_parquet('dados/bcb/ifdata_resumo.parquet') group by 1,2""")
-c.execute("""create or replace table bcb_cad as
+try:
+    c.execute("""create or replace table bcb_cad as
 select CodInst, arg_max(NomeInstituicao, Data) nome, arg_max(Uf, Data) uf, arg_max(Municipio, Data) municipio, arg_max(CnpjInstituicaoLider, Data) cnpj8
 from read_parquet('dados/bcb/ifdata_cadastro.parquet') group by 1""")
+except Exception as e:
+    print("cadastro do BCB indisponível, usando a tabela bcb_cad já existente:", str(e)[:80])
 c.execute("""create or replace table bcb_sinais as
 with t as (select p.*, c.nome, c.uf, c.municipio, c.cnpj8,
     lag(captacao,4) over (partition by p.CodInst order by AnoMes) cap_ant, lag(ativo,4) over (partition by p.CodInst order by AnoMes) ativo_ant

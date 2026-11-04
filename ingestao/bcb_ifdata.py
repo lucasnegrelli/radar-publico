@@ -36,7 +36,10 @@ for am in trimestres():
 pq = RAIZ / "ifdata_resumo.parquet"; cq = RAIZ / "ifdata_cadastro.parquet"
 tmp = RAIZ / "_tmp.json"; tmp.write_text(json.dumps(linhas), encoding="utf-8")
 duckdb.sql(f"COPY (SELECT * FROM read_json_auto('{tmp.as_posix()}')) TO '{pq.as_posix()}' (FORMAT PARQUET)")
-tmp.write_text(json.dumps(cad), encoding="utf-8")
-duckdb.sql(f"COPY (SELECT * FROM read_json_auto('{tmp.as_posix()}', sample_size=-1)) TO '{cq.as_posix()}' (FORMAT PARQUET)")
+if cad:
+    tmp.write_text(json.dumps(cad), encoding="utf-8")
+    duckdb.sql(f"COPY (SELECT * FROM read_json_auto('{tmp.as_posix()}', sample_size=-1)) TO '{cq.as_posix()}' (FORMAT PARQUET)")
+else:
+    print("cadastro veio vazio (API instável): mantendo o cadastro anterior")
 tmp.unlink()
 print("ok", len(linhas), "linhas de resumo,", len(cad), "linhas de cadastro")
