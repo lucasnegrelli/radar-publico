@@ -457,3 +457,28 @@ svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg
 #detalhe:not([hidden]) ~ #manchete-dia{display:none}
 @media(max-width:1280px){#manchete-dia{width:min(560px,calc(100% - 480px))}}
 @media(max-width:980px){#manchete-dia{display:none}}
+
+/* ===== v13: painel direito interativo, tudo dentro dele ===== */
+#panorama{top:12px !important;right:12px;width:320px !important;max-height:calc(100% - 24px) !important;overflow-y:auto;padding:14px 14px 16px}
+#panorama .pan-hero b{font-size:34px}
+.sev-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 4px}
+.sev-b{display:flex;align-items:center;justify-content:center;gap:6px;height:30px;border-radius:8px;border:1px solid var(--linha);background:rgba(255,255,255,.02);color:var(--mut);font-size:11.5px;cursor:pointer;padding:0 4px}
+.sev-b i{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}.sev-b b{color:#fff;font-weight:600}
+.sev-b:hover{border-color:var(--c);color:#fff}.sev-b.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);color:#fff}
+.pan-mais{display:block;width:100%;margin:6px 0 0;padding:6px;border:1px dashed var(--linha2);border-radius:8px;background:none;color:var(--mut);font-size:11.5px;cursor:pointer}.pan-mais:hover{border-color:var(--acc);color:#fff}
+.pan-l[data-uf],.pan-l[data-r]{cursor:pointer}
+.pan-l.tp{grid-template-columns:118px 1fr 62px !important}.pan-l.tp .tn{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pan-l.tp .tn:before{content:"";width:7px;height:7px;border-radius:2px;background:var(--r);flex:none}
+.pan-l.tp b{white-space:nowrap}
+.hero-casos{cursor:pointer}.hero-casos:hover{background:rgba(255,45,85,.12)}.hero-casos u{color:#ff6b88;text-decoration:none;white-space:nowrap}
+#panorama #timeline{position:static !important;display:block !important;height:auto;padding:0;background:none;border:0;backdrop-filter:none;left:auto;right:auto;bottom:auto}
+#panorama #timeline .tl-h > span:first-child{display:none}
+#panorama #timeline svg{height:46px;margin-top:2px}
+#panorama #escala-base{position:static;display:grid;grid-template-columns:1fr;gap:9px;padding:0;background:none;border:0;backdrop-filter:none;cursor:help}
+#detalhe:not([hidden]) ~ #panorama,#detalhe:not([hidden]) ~ #legenda{display:none}
+#legenda{display:none !important}
+/* camadas: duas opções discretas, no rodapé do mapa */
+#camadas{left:464px !important;right:auto !important;top:auto !important;bottom:14px !important;flex-direction:row !important;align-items:center;gap:6px !important}
+#camadas label{font-size:11px !important;padding:5px 10px !important;gap:7px !important;background:rgba(10,15,22,.7) !important;color:var(--mut)}
+#camadas label:hover{color:#fff}
+#camadas label.sev:has(input:checked) i{background:#ffb300 !important}
+@media(max-width:1280px){#camadas{left:464px !important}}
