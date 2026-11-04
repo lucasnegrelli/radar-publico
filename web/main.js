@@ -894,6 +894,7 @@ const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appe
 const panDyn = document.createElement("div"); pan.appendChild(panDyn);
 { const tl = $("timeline"); if (tl) { const h = document.createElement("div"); h.className = "pan-h"; h.innerHTML = "Quando <small>arraste para filtrar</small>"; pan.appendChild(h); pan.appendChild(tl); } }
 let panTodos = false;
+const MOSTRAR_TIPOS = false;   // desligado por enquanto: falta dado e o ranking por tipo ainda engana; o filtro por tipo segue em "Mais filtros"
 const setG = (g) => { filtroG = filtroG === g ? "destaques" : g; [...$("filtros").children].forEach((x) => x.classList.toggle("on", x.dataset.g === filtroG)); aplicarFiltro(); };
 const setR = (r) => { filtroR = filtroR === r ? "todas" : r; const sl = $("tipo"); if (sl) sl.value = filtroR; aplicarFiltro(); };
 function bboxUF(u) { const f = ufGeo.features.find((x) => x.properties.uf === u); if (!f) return null; let a = 1e9, b = 1e9, c = -1e9, d = -1e9; const rec = (k) => { if (typeof k[0] === "number") { a = Math.min(a, k[0]); c = Math.max(c, k[0]); b = Math.min(b, k[1]); d = Math.max(d, k[1]); } else k.forEach(rec); }; rec(f.geometry.coordinates); return [[a, b], [c, d]]; }
@@ -921,7 +922,7 @@ function atualizarPanorama() {
     <div class="pan-sev"><i style="width:${100 * c.alta / NL}%;background:${COR.alta}"></i><i style="width:${100 * c.media / NL}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / NL}%;background:${COR.baixa}"></i></div>
     <div class="sev-row">${sev}</div>${vazio}${cv}
     <div class="pan-h">Estados <small>clique: filtra e aproxima</small></div>${estados}${ufsTodos.length > 8 ? `<button class="pan-mais" id="pan-todos">${panTodos ? "Mostrar só os 8 maiores" : `Ver todos os ${ufsTodos.length} estados`}</button>` : ""}
-    <div class="pan-h">Tipos de alerta <small>clique para filtrar</small></div>${tiposH}`;
+    ${MOSTRAR_TIPOS ? `<div class="pan-h">Tipos de alerta <small>clique para filtrar</small></div>${tiposH}` : ""}`;
   panDyn.querySelectorAll("[data-uf]").forEach((e) => (e.onclick = () => setUF(e.dataset.uf)));
   panDyn.querySelectorAll("[data-r]").forEach((e) => (e.onclick = () => setR(e.dataset.r)));
   panDyn.querySelectorAll("[data-g]").forEach((e) => (e.onclick = () => setG(e.dataset.g)));

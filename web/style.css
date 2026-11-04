@@ -506,3 +506,8 @@ svg.rede g.clic{cursor:pointer}svg.rede g.clic:hover circle{r:10;stroke:#fff}svg
 .maplibregl-canvas-container.maplibregl-interactive:active .maplibregl-canvas{cursor:grabbing !important}
 body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibregl-canvas{cursor:pointer !important}
 #timeline svg{cursor:col-resize !important}
+
+/* v16: hover forte nos estados */
+.pan-l[data-uf]:hover{background:rgba(61,255,154,.14);border-color:var(--acc);transform:translateX(-2px);box-shadow:0 0 0 1px rgba(61,255,154,.25),0 6px 18px rgba(0,0,0,.35)}
+.pan-l[data-uf]:hover .uf{color:var(--acc2)}
+.pan-l[data-uf]{transition:background .1s,border-color .1s,transform .1s,box-shadow .1s}
