@@ -894,7 +894,7 @@ const pan = document.createElement("div"); pan.id = "panorama"; $("centro").appe
 const panDyn = document.createElement("div"); pan.appendChild(panDyn);
 { const tl = $("timeline"); if (tl) { const h = document.createElement("div"); h.className = "pan-h"; h.innerHTML = "Quando <small>arraste para filtrar</small>"; pan.appendChild(h); pan.appendChild(tl); } }
 let panTodos = false;
-const MOSTRAR_TIPOS = false;   // desligado por enquanto: falta dado e o ranking por tipo ainda engana; o filtro por tipo segue em "Mais filtros"
+const MOSTRAR_TIPOS = true;   // desligado por enquanto: falta dado e o ranking por tipo ainda engana; o filtro por tipo segue em "Mais filtros"
 const setG = (g) => { filtroG = filtroG === g ? "destaques" : g; [...$("filtros").children].forEach((x) => x.classList.toggle("on", x.dataset.g === filtroG)); aplicarFiltro(); };
 const setR = (r) => { filtroR = filtroR === r ? "todas" : r; const sl = $("tipo"); if (sl) sl.value = filtroR; aplicarFiltro(); };
 function bboxUF(u) { const f = ufGeo.features.find((x) => x.properties.uf === u); if (!f) return null; let a = 1e9, b = 1e9, c = -1e9, d = -1e9; const rec = (k) => { if (typeof k[0] === "number") { a = Math.min(a, k[0]); c = Math.max(c, k[0]); b = Math.min(b, k[1]); d = Math.max(d, k[1]); } else k.forEach(rec); }; rec(f.geometry.coordinates); return [[a, b], [c, d]]; }
