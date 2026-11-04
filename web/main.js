@@ -875,7 +875,6 @@ const setUF = (u) => { fUF = fUF === u ? "" : u; const sf = $("f-uf"); if (sf) s
 function atualizarPanorama() {
   const L = universo().filter((a) => a.regra !== "RF01");
   const sem = (f) => { const u = fUF, r = filtroR; if (f === "uf") fUF = ""; else filtroR = "todas"; const x = universo().filter((a) => a.regra !== "RF01"); fUF = u; filtroR = r; return x; };
-  if (!L.length) { panDyn.innerHTML = '<div class="pan-t">Panorama</div><div class="sub2">Nenhum alerta neste filtro.</div><button class="botao" id="pan-limpa">Limpar filtros</button>'; $("pan-limpa").onclick = () => { fUF = ""; filtroR = "todas"; const sl = $("tipo"); if (sl) sl.value = "todas"; const sf = $("f-uf"); if (sf) sf.value = ""; aplicarFiltro(); }; return; }
   let total = 0; const c = { alta: 0, media: 0, baixa: 0 };
   L.forEach((a) => { total += a.total || 0; c[a.gravidade]++; });
   const porUF = {}; sem("uf").forEach((a) => { if (a.local && a.local.uf) { const o = (porUF[a.local.uf] ||= { v: 0, n: 0, alta: 0, media: 0, baixa: 0 }); o.v += a.total || 0; o.n++; o[a.gravidade] += a.total || 0; } });
@@ -887,15 +886,17 @@ function atualizarPanorama() {
   const tiposH = tipos.map(([r, o]) => `<div class="pan-l tp ${filtroR === r ? "ativo" : ""}" data-r="${r}" title="${o.n} alertas · clique para filtrar"><span class="tn" style="--r:${RCOR[r] || "#8aa0b5"}">${esc(RNOME[r] || r)}</span><div class="barra" style="width:${Math.max(5, Math.round(100 * o.v / mr))}%"><i style="width:100%;background:${RCOR[r] || "#8aa0b5"}"></i></div><b class="num">${brlCurto(o.v)}</b></div>`).join("");
   const cv = _casosV && _casosV.length ? `<div class="hero-casos" id="pan-casos" title="Abrir os casos"><b>+ R$ ${_casosV.reduce((s, x) => s + x.bi, 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} bi</b> citados em ${_casosV.length} casos sob apuração (PF, MPF, Receita). Não é prejuízo confirmado. <u>Ver casos →</u></div>` : "";
   const hm = $("hero-m"); if (hm) hm.innerHTML = `<small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span><div class="hm-sev"><i style="flex:${c.alta};background:${COR.alta}"></i><i style="flex:${c.media};background:${COR.media}"></i><i style="flex:${c.baixa};background:${COR.baixa}"></i></div>${cv}`;
+  const NL = L.length || 1, vazio = L.length ? "" : '<div class="pan-vazio">Nenhum alerta com essa combinação de filtros. Troque um deles abaixo ou <button class="pan-mais" id="pan-limpa">limpar todos os filtros</button></div>';
   const sev = ["alta", "media", "baixa"].map((g) => `<button class="sev-b ${filtroG === g ? "on" : ""}" data-g="${g}" style="--c:${COR[g]}" title="Mostrar só prioridade ${g === "media" ? "média" : g}"><i></i><b class="num">${c[g]}</b> ${g === "media" ? "média" : g}</button>`).join("");
   panDyn.innerHTML = `<div class="pan-hero"><small>EM ATENÇÃO AGORA</small><b>${brlCurto(total)}</b><span>${L.length.toLocaleString("pt-BR")} alertas${pct != null ? ` · ${pct.toFixed(2).replace(".", ",")}% das compras públicas` : ""}</span></div>
-    <div class="pan-sev"><i style="width:${100 * c.alta / L.length}%;background:${COR.alta}"></i><i style="width:${100 * c.media / L.length}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / L.length}%;background:${COR.baixa}"></i></div>
-    <div class="sev-row">${sev}</div>${cv}
+    <div class="pan-sev"><i style="width:${100 * c.alta / NL}%;background:${COR.alta}"></i><i style="width:${100 * c.media / NL}%;background:${COR.media}"></i><i style="width:${100 * c.baixa / NL}%;background:${COR.baixa}"></i></div>
+    <div class="sev-row">${sev}</div>${vazio}${cv}
     <div class="pan-h">Estados <small>clique: filtra e aproxima</small></div>${estados}${ufsTodos.length > 8 ? `<button class="pan-mais" id="pan-todos">${panTodos ? "Mostrar só os 8 maiores" : `Ver todos os ${ufsTodos.length} estados`}</button>` : ""}
     <div class="pan-h">Tipos de alerta <small>clique para filtrar</small></div>${tiposH}`;
   panDyn.querySelectorAll("[data-uf]").forEach((e) => (e.onclick = () => setUF(e.dataset.uf)));
   panDyn.querySelectorAll("[data-r]").forEach((e) => (e.onclick = () => setR(e.dataset.r)));
   panDyn.querySelectorAll("[data-g]").forEach((e) => (e.onclick = () => setG(e.dataset.g)));
+  const pl = $("pan-limpa"); if (pl) pl.onclick = () => { janela = null; { const tr = $("tl-reset"); if (tr) { tr.hidden = true; const ts = $("tl-sel"); if (ts) ts.textContent = ""; const br = $("tl-brush"); if (br) br.setAttribute("width", 0); } } fUF = ""; filtroR = "todas"; filtroG = "destaques"; [...$("filtros").children].forEach((x) => x.classList.toggle("on", x.dataset.g === "destaques")); const sl = $("tipo"); if (sl) sl.value = "todas"; const sf = $("f-uf"); if (sf) sf.value = ""; aplicarFiltro(); map.fitBounds(MAPA_BOUNDS, { padding: pad(), duration: 900 }); };
   const pt = $("pan-todos"); if (pt) pt.onclick = () => { panTodos = !panTodos; atualizarPanorama(); };
   const pc = $("pan-casos"); if (pc) pc.onclick = () => document.querySelector('#abas [data-aba="casos"]').click();
   escalaBase();
