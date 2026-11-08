@@ -49,3 +49,15 @@ Isto é uma hipótese a testar em cinza, não uma pele pronta.
 3. Só depois entram cor, tipo final e movimento.
 4. Teste em celular real, com pessoas não técnicas, antes de refazer as demais telas.
 5. PWA instalável e imagem de compartilhamento por alerta.
+
+
+## 7. Rodada 2: pesquisa de referências e nova hipótese (cordel / xilogravura)
+O que vi de fato: vencedores recentes do Awwwards (Site of the Year: mundos ilustrados e em 3D, como Messenger/abeto, um site de cachorro ilustrado à mão, Igloo), o showcase do Information is Beautiful 2024 (formas feitas sob medida para o dado, não gráficos de biblioteca) e The Pudding (personalidade e cor por história). Leitura de apoio: Data Humanism (Giorgia Lupi: abraçar a complexidade, sair dos padrões, trazer contexto, lembrar que o dado é imperfeito) e as tendências de 2025–26 (volta do feito à mão, tipografia como herói, reação ao visual "polido e genérico").
+
+Conclusão: o que escapa do genérico é (a) **um mundo assumido até o fim**, (b) **marca de mão** (não CSS limpo) e (c) **forma própria do dado**. O "estilo" nunca basta.
+
+Hipótese: **Cordel e xilogravura** como linguagem do Radar. O cordel é a literatura popular que denuncia e informa; a xilogravura é preto sobre papel, entalhe, hachura. Casa com o tom (sério e cortante), com o gesto da coincidência (a faixa entalhada com goiva) e com o Brasil como ponto de partida. Referências brasileiras a estudar: J. Borges e Gilvan Samico (xilogravura de cordel), Lygia Pape (Tecelares), Athos Bulcão (azulejos de Brasília), Waldemar Cordeiro (arte concreta). Fonte de cartaz: Londrina Solid (desenhada no Brasil a partir de letras populares).
+
+Alternativa a testar se esta não convencer: **Concreto** (geometria e planos sobrepostos da arte concreta brasileira), em que a coincidência vira composição de planos.
+
+Riscos: virar folclore/kitsch (evitar ornamento; manter preto, branco, um vermelho de carimbo e muita disciplina), e acessibilidade (textura nunca em texto corrido).

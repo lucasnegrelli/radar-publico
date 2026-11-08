@@ -32,6 +32,18 @@ const modelo = computed(() => {
   };
 });
 const H = computed(() => (props.alto ? 92 : 64));
+// marcas de goiva: a faixa é "entalhada" à mão (traços inclinados e irregulares), não um padrão repetido
+const semente = (t) => { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10000) / 10000; }; };
+const goivas = computed(() => {
+  const b = modelo.value && modelo.value.banda; if (!b) return [];
+  const r = semente(String(props.a.id)), y0 = props.alto ? 22 : 14, h = props.alto ? 40 : 28, out = [];
+  for (let x = b.x0 + 2; x < b.x1 - 1; x += 4.2 + r() * 1.6) {
+    if (r() < 0.1) continue;
+    const topo = y0 + r() * h * 0.22, base = y0 + h - r() * h * 0.22, d = (base - topo) * (0.55 + r() * 0.2);
+    out.push({ d: `M${Math.max(b.x0, x - d).toFixed(1)} ${base.toFixed(1)} L${Math.min(b.x1, x).toFixed(1)} ${topo.toFixed(1)}`, w: (0.9 + r() * 1.5).toFixed(2) });
+  }
+  return out;
+});
 </script>
 
 <template>
@@ -41,10 +53,10 @@ const H = computed(() => (props.alto ? 92 : 64));
         <pattern :id="'h' + uid" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="currentColor" stroke-width="1" opacity=".38" /></pattern>
       </defs>
       <g v-if="modelo.banda">
-        <rect :x="modelo.banda.x0" :y="alto ? 22 : 14" :width="Math.max(1, modelo.banda.x1 - modelo.banda.x0)" :height="alto ? 40 : 28" :fill="`url(#h${uid})`" />
-        <rect :x="modelo.banda.x0" :y="alto ? 22 : 14" :width="Math.max(1, modelo.banda.x1 - modelo.banda.x0)" :height="alto ? 40 : 28" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />
+        <g filter="url(#tinta)"><path v-for="(g, i) in goivas" :key="i" :d="g.d" :stroke-width="g.w" stroke="currentColor" stroke-linecap="round" fill="none" vector-effect="non-scaling-stroke" /></g>
+        <rect :x="modelo.banda.x0" :y="alto ? 22 : 14" :width="Math.max(1, modelo.banda.x1 - modelo.banda.x0)" :height="alto ? 40 : 28" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" filter="url(#tinta)" />
       </g>
-      <g>
+      <g filter="url(#tinta)">
         <line v-for="(p, i) in modelo.pays" :key="i" :x1="p.x" :x2="p.x" :y1="alto ? 12 : 8" :y2="alto ? 72 : 50" :stroke="p.dentro ? '#000' : '#8a8a8a'" :stroke-width="p.dentro ? 2.4 : 1.6" vector-effect="non-scaling-stroke" />
       </g>
       <line x1="0" :x2="modelo.W" :y1="H - 14" :y2="H - 14" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke" />

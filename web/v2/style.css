@@ -60,3 +60,50 @@ button,input{font:inherit;color:inherit;border-radius:0}a{color:inherit}
 .abas{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-top:1px solid var(--ink);padding-bottom:env(safe-area-inset-bottom);z-index:20}
 .abas a{padding:15px 0 14px;text-align:center;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--mid);border-top:3px solid transparent;margin-top:-1px}
 .abas a.on{color:var(--ink);border-top-color:var(--ink);font-weight:600}
+
+/* ===== Direção CORDEL (xilogravura): tinta preta sobre papel-jornal, letras de cartaz, goiva. Brasil, feito à mão, cortante. ===== */
+.app[data-dir="cordel"]{--bg:#e6e4de;--ink:#0b0b0b;--mid:#4a4a46;--rule:#9c9a92;--soft:#d9d7d0;--stamp:#b3121f;--cartaz:"Londrina Solid","Impact",sans-serif;background-color:var(--bg);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E")}
+body{background:#cfcdc6}
+.app[data-dir="cordel"] .cab{border:0;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;background:var(--ink);color:var(--bg);align-items:flex-end}
+.app[data-dir="cordel"] .logo{align-items:flex-end}
+.app[data-dir="cordel"] .logo i{display:none}
+.marca-xilo{font:900 30px/.84 var(--cartaz);letter-spacing:.01em;text-transform:uppercase;filter:url(#tinta2)}
+.app[data-dir="cordel"] .cab time{color:var(--bg);opacity:.75}
+.app[data-dir="cordel"] .abre{padding:22px 14px 8px}
+.app[data-dir="cordel"] .abre .rot{color:var(--ink);font-weight:600}
+.app[data-dir="cordel"] .abre h1{font:900 clamp(40px,12.6vw,64px)/.9 var(--cartaz);letter-spacing:.005em;text-transform:uppercase;margin:12px 0 14px;filter:url(#tinta2)}
+.app[data-dir="cordel"] .abre h1 .n{color:var(--stamp)}
+.app[data-dir="cordel"] .abre .vl{border-top:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:9px 0;font-weight:600;filter:url(#tinta)}
+.app[data-dir="cordel"] .abre .sub{color:var(--ink);font-weight:500}
+.app[data-dir="cordel"] .txt{color:var(--ink)}
+.app[data-dir="cordel"] .busca{margin:20px 14px 0;border:3px solid var(--ink);padding:0 12px;height:54px;background:var(--bg);filter:url(#tinta)}
+.app[data-dir="cordel"] .busca input{font-weight:600;padding-right:8px}.app[data-dir="cordel"] .busca span{flex:none;margin-left:6px}
+.app[data-dir="cordel"] .sec{padding:26px 14px 10px}
+.app[data-dir="cordel"] .sec .rot{color:var(--ink);font-weight:700}
+.app[data-dir="cordel"] .item{margin:0 14px 16px;padding:12px 12px 12px;border:3px solid var(--ink);background:var(--bg);filter:url(#tinta);box-shadow:5px 5px 0 var(--ink)}
+.app[data-dir="cordel"] .item:hover{background:var(--soft)}
+.app[data-dir="cordel"] .idx{display:grid;place-items:center;width:28px;height:28px;background:var(--ink);color:var(--bg);font:600 12px var(--mono)}
+.app[data-dir="cordel"] .tipo{color:var(--ink);font-weight:600}
+.app[data-dir="cordel"] .nivel{border:2.5px solid var(--stamp);color:var(--stamp);background:transparent;transform:rotate(-2.5deg);font-weight:600;letter-spacing:.1em;font-size:11px;padding:5px 8px}
+.app[data-dir="cordel"] .nivel:not(.alta){border-color:var(--ink);color:var(--ink)}
+.app[data-dir="cordel"] .item .fr{font-weight:600;margin-top:12px}
+.app[data-dir="cordel"] .item footer{border-top:3px solid var(--ink);margin-top:12px}
+.app[data-dir="cordel"] .item .v{font:900 30px/1 var(--cartaz);letter-spacing:.01em}
+.app[data-dir="cordel"] .item .abrir{background:var(--ink);color:var(--bg);padding:6px 9px}
+.app[data-dir="cordel"] .rodape{border-top:3px solid var(--ink);padding:22px 14px 10px;color:var(--ink)}
+.app[data-dir="cordel"] .botao{margin:14px 14px 0;border:3px solid var(--ink);filter:url(#tinta)}
+.app[data-dir="cordel"] .botao.cheio{width:calc(100% - 28px)}
+.app[data-dir="cordel"] .abas{background:var(--ink);border-top:0}
+.app[data-dir="cordel"] .abas a{color:var(--bg);opacity:.7;border-top:0;margin:0;padding:16px 0 14px}
+.app[data-dir="cordel"] .abas a.on{opacity:1;background:var(--bg);color:var(--ink)}
+.app[data-dir="cordel"] .det{padding:0 14px 20px}
+.app[data-dir="cordel"] .volta{color:var(--ink);font-weight:600}
+.app[data-dir="cordel"] .tit{font:900 clamp(40px,13vw,54px)/.9 var(--cartaz);text-transform:uppercase;letter-spacing:.005em;filter:url(#tinta2)}
+.app[data-dir="cordel"] .num-g{font:900 56px/.9 var(--cartaz);color:var(--stamp);letter-spacing:.01em;filter:url(#tinta2)}
+.app[data-dir="cordel"] .bloco-d{border-top:3px solid var(--ink)}
+.app[data-dir="cordel"] .nao{border:3px solid var(--ink);background:var(--bg)}
+.app[data-dir="cordel"] .corpo{font-weight:500}
+.app[data-dir="cordel"] .tb td{border-bottom:2px solid var(--ink)}
+.app[data-dir="cordel"] .coin figcaption{color:var(--ink);font-weight:500}
+.app[data-dir="cordel"] .eixo span{color:var(--ink)}

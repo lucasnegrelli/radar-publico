@@ -38,16 +38,16 @@ const valorTxt = computed(() => brlCurto(total.value));
 </script>
 
 <template>
-  <div class="app">
+  <div class="app" data-dir="cordel">
     <header class="cab">
-      <a class="logo" href="/v2/" @click.prevent="voltar"><i></i>RADAR PÚBLICO</a>
+      <a class="logo" href="/v2/" @click.prevent="voltar"><span class="marca-xilo">RADAR<br>PÚBLICO</span></a>
       <time>{{ hoje }}</time>
     </header>
 
     <template v-if="!atual">
       <section class="abre">
-        <div class="rot">Hoje</div>
-        <h1><span class="n">{{ pesam.length.toLocaleString("pt-BR") }}</span> coincidências para conferir.</h1>
+        <div class="rot">Hoje · o dinheiro público em voz alta</div>
+        <h1><span class="n">{{ pesam.length.toLocaleString("pt-BR") }}</span> coincidências para conferir</h1>
         <p class="mono vl">{{ valorTxt }} de dinheiro público envolvido</p>
         <p class="sub">Pagamentos e contratos que caíram onde, ou quando, não deviam. Alerta não é acusação: cada um mostra a fonte e o que não prova.</p>
         <button class="txt" @click="como = !como">{{ como ? "Fechar" : "Como lemos isto" }}</button>
