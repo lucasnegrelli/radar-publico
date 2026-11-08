@@ -1,12 +1,10 @@
-import "@fontsource-variable/inter";
-import "@fontsource-variable/fraunces";
-import "@fontsource-variable/archivo/wdth.css";
-import "@fontsource/instrument-serif/400.css";
-import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource/ibm-plex-mono/600.css";
 import "./style.css";
-import "./dir-cedula.css";
-import "./dir-boletim.css";
-import "./dir-carta.css";
 import { createApp } from "vue";
 import App from "./App.vue";
 createApp(App).mount("#app");

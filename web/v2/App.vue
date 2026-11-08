@@ -1,87 +1,73 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import Anomalia from "./components/Anomalia.vue";
-import MapaBR from "./components/MapaBR.vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import Item from "./components/Item.vue";
+import Detalhe from "./components/Detalhe.vue";
 import { brlCurto, pontuar } from "./textos.js";
 
-const dir = ref(new URLSearchParams(location.search).get("d") || "cedula");
-const alertas = ref([]), geo = ref(null), gerado = ref(""), busca = ref(""), uf = ref(""), mostrar = ref(3);
+const alertas = ref([]), gerado = ref(""), busca = ref(""), mostrar = ref(4), aberto = ref(null), como = ref(false);
+const lerHash = () => { const h = decodeURIComponent(location.hash.replace(/^#\/?/, "")); aberto.value = h || null; window.scrollTo(0, 0); };
 
 onMounted(async () => {
   const j = (u) => fetch(u).then((r) => r.json()).catch(() => null);
-  const [a, r, g] = await Promise.all([j("/data/alertas.json"), j("/data/risco.json"), j("/data/uf.geojson")]);
+  const [a, r] = await Promise.all([j("/data/alertas.json"), j("/data/risco.json")]);
   const L = [...((a && a.alertas) || []), ...((r && r.alertas) || [])].map((x) => ((x.score = pontuar(x)), x));
   const ord = [...L].sort((x, y) => y.score - x.score), nA = Math.max(20, Math.round(ord.length * 0.03)), nM = Math.round(ord.length * 0.18);
   ord.forEach((x, i) => { x.gravidade = i < nA ? "alta" : i < nA + nM ? "media" : "baixa"; });
-  alertas.value = ord; geo.value = g; gerado.value = (a && a.gerado) || "";
+  alertas.value = ord; gerado.value = (a && a.gerado) || "";
+  lerHash(); window.addEventListener("hashchange", lerHash);
 });
+onBeforeUnmount(() => window.removeEventListener("hashchange", lerHash));
+
 const pesam = computed(() => alertas.value.filter((a) => a.gravidade !== "baixa" && !(a.manchete && a.manchete.ref)));
 const total = computed(() => pesam.value.reduce((t, a) => t + (a.total || 0), 0));
-const valorTxt = computed(() => brlCurto(total.value));
-const porUF = computed(() => { const o = {}; pesam.value.forEach((a) => { const u = (a.local && a.local.uf) || a.orgao_uf; if (u) o[u] = (o[u] || 0) + (a.total || 0); }); return o; });
 const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const lista = computed(() => {
   const q = norm(busca.value).trim();
-  let L = q ? alertas.value.filter((a) => norm([a.empresa, a.cnpj, a.local && a.local.cidade, a.local && a.local.uf].join(" ")).includes(q)) : pesam.value;
-  if (uf.value && !q) L = L.filter((a) => ((a.local && a.local.uf) || a.orgao_uf) === uf.value);
-  return L;
+  if (q) return alertas.value.filter((a) => norm([a.empresa, a.cnpj, a.local && a.local.cidade, a.local && a.local.uf].join(" ")).includes(q));
+  // intercala os tipos (um de cada, pelo peso) para a primeira tela mostrar a variedade do que o Radar enxerga
+  const grupos = {}; pesam.value.forEach((a) => (grupos[a.regra] ||= []).push(a));
+  const fila = Object.values(grupos).sort((x, y) => y[0].score - x[0].score), out = [];
+  for (let i = 0; out.length < pesam.value.length; i++) { let algum = false; fila.forEach((g) => { if (g[i]) { out.push(g[i]); algum = true; } }); if (!algum) break; }
+  return out;
 });
-const hoje = computed(() => new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }).replace(".", ""));
-const escolhe = (u) => { uf.value = uf.value === u ? "" : u; mostrar.value = 3; };
-const ufs = computed(() => Object.entries(porUF.value).sort((a, b) => b[1] - a[1]).slice(0, 10).map((x) => x[0]));
+const atual = computed(() => alertas.value.find((a) => a.id === aberto.value));
+const hoje = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).replace(/\//g, ".");
+const abrir = (id) => { location.hash = "/" + encodeURIComponent(id); };
+const voltar = () => { history.pushState("", document.title, location.pathname + location.search); aberto.value = null; window.scrollTo(0, 0); };
+const valorTxt = computed(() => brlCurto(total.value));
 </script>
 
 <template>
-  <div class="app" :data-dir="dir">
+  <div class="app">
     <header class="cab">
-      <a class="logo" href="/v2/" @click.prevent>
-        <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="16" cy="16" r="13" /><circle cx="16" cy="16" r="7.5" /><circle cx="16" cy="16" r="2.4" fill="var(--signal)" stroke="none" /><path d="M16 16 L25 8" stroke="var(--signal)" /></svg>
-        Radar Público
-      </a>
+      <a class="logo" href="/v2/" @click.prevent="voltar"><i></i>RADAR PÚBLICO</a>
       <time>{{ hoje }}</time>
     </header>
 
-    <section class="abre">
-      <div class="rot">Hoje no dinheiro público</div>
-      <h1><span class="valor">{{ valorTxt }}</span> em {{ pesam.length.toLocaleString("pt-BR") }} sinais que merecem conferência.</h1>
-      <p class="sub">Cruzamos contratos, emendas, sanções e empresas com bases oficiais. <b>Alerta não é acusação</b>: é um motivo para conferir, sempre com a fonte.</p>
-    </section>
+    <template v-if="!atual">
+      <section class="abre">
+        <div class="rot">Hoje</div>
+        <h1><span class="n">{{ pesam.length.toLocaleString("pt-BR") }}</span> coincidências para conferir.</h1>
+        <p class="mono vl">{{ valorTxt }} de dinheiro público envolvido</p>
+        <p class="sub">Pagamentos e contratos que caíram onde, ou quando, não deviam. Alerta não é acusação: cada um mostra a fonte e o que não prova.</p>
+        <button class="txt" @click="como = !como">{{ como ? "Fechar" : "Como lemos isto" }}</button>
+        <div v-if="como" class="como"><p>Cruzamos contratos, emendas, sanções, empresas e doações de bases oficiais. Ordenamos tudo por peso. Só cerca de 3% viram <b>conferir já</b> e 18% <b>vale olhar</b>; o resto é contexto e não aparece como alerta.</p></div>
+      </section>
 
-    <label class="busca"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l6 6" /></svg><input v-model="busca" placeholder="Sua cidade, uma empresa ou um CNPJ" inputmode="search" /></label>
-    <div class="chips"><button v-for="u in ufs" :key="u" class="chip" :class="{ on: uf === u }" @click="escolhe(u)">{{ u }}</button></div>
+      <label class="busca"><input v-model="busca" placeholder="Sua cidade, uma empresa ou um CNPJ" inputmode="search" /><span>→</span></label>
 
-    <section class="bloco">
-      <h2>{{ busca ? "Resultados" : uf ? "Em " + uf : "Conferir primeiro" }}</h2>
-      <div class="fila">
-        <Anomalia v-for="a in lista.slice(0, mostrar)" :key="a.id" :a="a" />
-        <div v-if="!lista.length" class="vazio">Nada encontrado. Tente o nome da cidade ou da empresa.</div>
-      </div>
-      <button v-if="lista.length > mostrar" class="mais" @click="mostrar += 5">Ver mais ({{ lista.length - mostrar }})</button>
-    </section>
+      <section class="lista">
+        <div class="sec"><span class="rot">{{ busca ? "Resultados" : "Conferir primeiro" }}</span><span class="rot">{{ lista.length.toLocaleString("pt-BR") }}</span></div>
+        <Item v-for="(a, i) in lista.slice(0, mostrar)" :key="a.id" :a="a" :n="i + 1" @abrir="abrir" />
+        <div v-if="!lista.length" class="vazio">Nada encontrado.</div>
+        <button v-if="lista.length > mostrar" class="botao vazio cheio" @click="mostrar += 6">Ver mais {{ Math.min(6, lista.length - mostrar) }}</button>
+      </section>
 
-    <section class="bloco">
-      <h2>Onde está</h2>
-      <div class="mapa"><MapaBR :geo="geo" :valores="porUF" :selecionada="uf" @escolher="escolhe" /></div>
-      <div class="leg"><span>menos</span><span>mais valor em atenção</span></div>
-    </section>
+      <footer class="rodape">Fontes: PNCP, Portal da Transparência, Câmara, Senado, TSE, Receita, PGFN, Banco Central. Atualizado em {{ gerado }}. <a href="/">Painel completo</a></footer>
+    </template>
 
-    <section class="bloco">
-      <h2>Como funciona</h2>
-      <div class="como">
-        <div><b>Juntamos</b><p>Contratos, emendas, sanções, empresas e doações de bases oficiais e abertas.</p></div>
-        <div><b>Cruzamos</b><p>Procuramos o que foge do normal e ordenamos por peso: só uma parte pequena vira prioridade.</p></div>
-        <div><b>Mostramos a fonte</b><p>Cada sinal explica o porquê e o que ele não prova. Você confere e decide.</p></div>
-      </div>
-    </section>
+    <Detalhe v-else :a="atual" @voltar="voltar" />
 
-    <footer class="rodape">Fontes: PNCP, Portal da Transparência, Câmara, Senado, TSE, Receita, PGFN e Banco Central. Atualizado em {{ gerado }}. <a href="/">Painel completo</a></footer>
-
-    <nav class="abas">
-      <a class="on" href="/v2/"><svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z" /><path d="M12 10v5M12 18v.5" /></svg>Hoje</a>
-      <a href="/"><svg viewBox="0 0 24 24"><path d="M3 21V10l9-6 9 6v11M9 21v-6h6v6" /></svg>Cidade</a>
-      <a href="/"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></svg>Pessoas</a>
-      <a href="/"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2" /></svg>Dinheiro</a>
-      <a href="/"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z" /><path d="M8 12h8M8 16h5" /></svg>Casos</a>
-    </nav>
+    <nav class="abas"><a class="on" href="/v2/" @click.prevent="voltar">Hoje</a><a href="/">Cidade</a><a href="/">Pessoas</a><a href="/">Dinheiro</a><a href="/">Casos</a></nav>
   </div>
 </template>
