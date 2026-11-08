@@ -1,0 +1,24 @@
+/* Direção C · CARTA — cartografia: areia de atlas, linhas de nível, tinta marinha e terracota.
+   Ideia: o dinheiro público tem relevo. Cada alerta é uma "estação" na carta, com coordenadas e escala. Serifa itálica elegante + grotesca discreta. */
+.app[data-dir="carta"]{
+  --bg:#ece3d0;--card:#f6efdf;--ink:#142a44;--mudo:#5f6a73;--fio:#d3c8ae;--fio2:#b6a98a;--signal:#c2482a;--on-signal:#f6efdf;--ambar:#9b6b13;
+  --f-display:"Instrument Serif",Georgia,serif;--f-num:"Instrument Serif",Georgia,serif;--f-marca:"Instrument Serif",Georgia,serif;--f-texto:"Inter Variable",system-ui,sans-serif;--f-rot:"Inter Variable",system-ui,sans-serif;
+  --w-h1:400;--s-h1:clamp(38px,11.5vw,56px);--ls-h1:-.02em;--ls-marca:0;--w-fr:500;--w-num:400;--ls-num:-.01em;
+  --r-busca:99px;--r-card:10px;--r-sel:99px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='360' viewBox='0 0 520 360'%3E%3Cg fill='none' stroke='%23142a44' stroke-opacity='.13' stroke-width='.8'%3E%3Cpath d='M-20 120C60 60 140 150 220 100S380 40 540 110'/%3E%3Cpath d='M-20 142C60 84 140 172 220 122S380 62 540 132'/%3E%3Cpath d='M-20 164C60 108 140 194 220 144S380 84 540 154'/%3E%3Cpath d='M-20 186C60 132 140 216 220 166S380 106 540 176'/%3E%3Cpath d='M-20 208C60 156 140 238 220 188S380 128 540 198'/%3E%3Cpath d='M-20 230C60 180 140 260 220 210S380 150 540 220'/%3E%3Cellipse cx='400' cy='60' rx='70' ry='34'/%3E%3Cellipse cx='400' cy='60' rx='48' ry='22'/%3E%3Cellipse cx='400' cy='60' rx='26' ry='11'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:top center;background-size:520px 360px;
+}
+.app[data-dir="carta"] .abre h1{font-weight:400}
+.app[data-dir="carta"] .abre h1 .valor{font-style:italic}
+.app[data-dir="carta"] .rot:first-child::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--signal);margin-right:8px;vertical-align:1px}
+.app[data-dir="carta"] .item{border-radius:10px;border:1px solid var(--fio2);position:relative}
+.app[data-dir="carta"] .item::before,.app[data-dir="carta"] .item::after{content:"";position:absolute;width:9px;height:9px;border:1.5px solid var(--ink);opacity:.55}
+.app[data-dir="carta"] .item::before{left:-1px;top:-1px;border-right:0;border-bottom:0;border-radius:10px 0 0 0}
+.app[data-dir="carta"] .item::after{right:-1px;bottom:-1px;border-left:0;border-top:0;border-radius:0 0 10px 0}
+.app[data-dir="carta"] .item .sel.alta{background:var(--signal)}
+.app[data-dir="carta"] .item .v{font-size:42px;font-style:italic}
+.app[data-dir="carta"] .item p.fr{font-weight:500}
+.app[data-dir="carta"] .ir{background:var(--ink);border-radius:99px}
+.app[data-dir="carta"] .busca{background:var(--card)}
+.app[data-dir="carta"] .bloco>h2{font-family:"Instrument Serif",serif;font-style:italic;text-transform:none;letter-spacing:0;font-size:19px;font-weight:400;color:var(--ink)}
+.app[data-dir="carta"] .abas{background:var(--card)}

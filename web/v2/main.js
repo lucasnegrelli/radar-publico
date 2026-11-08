@@ -1,11 +1,12 @@
 import "@fontsource-variable/inter";
-import "@fontsource/barlow-condensed/500.css";
-import "@fontsource/barlow-condensed/700.css";
+import "@fontsource-variable/fraunces";
+import "@fontsource-variable/archivo/wdth.css";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
 import "./style.css";
+import "./dir-cedula.css";
+import "./dir-boletim.css";
+import "./dir-carta.css";
 import { createApp } from "vue";
 import App from "./App.vue";
-
-const salvo = localStorage.getItem("radar.tema");
-const escuro = salvo ? salvo === "escuro" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-document.documentElement.dataset.tema = escuro ? "escuro" : "claro";
 createApp(App).mount("#app");

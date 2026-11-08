@@ -1,0 +1,25 @@
+/* Direção B · BOLETIM — plantão de redação: fundo branco-jornal, preto pesado, amarelo de marca-texto e carimbo "CONFERIR".
+   Ideia: urgência com responsabilidade. Manchete grande, linguagem direta, cada alerta como um aviso curto. */
+.app[data-dir="boletim"]{
+  --bg:#fbfaf6;--card:#ffffff;--ink:#0b0b0b;--mudo:#55524b;--fio:#e5e1d6;--fio2:#161616;--signal:#e10600;--on-signal:#ffffff;--ambar:#b45f00;--marca:#ffe14d;
+  --f-display:"Archivo Variable",Arial,sans-serif;--f-num:"Archivo Variable",Arial,sans-serif;--f-marca:"Archivo Variable",Arial,sans-serif;--f-texto:"Inter Variable",system-ui,sans-serif;--f-rot:"Archivo Variable",Arial,sans-serif;
+  --w-h1:800;--s-h1:clamp(32px,9.5vw,44px);--ls-h1:-.035em;--ls-marca:-.02em;--w-fr:600;--w-num:800;--ls-num:-.04em;
+  --r-busca:0;--r-card:0;--r-sel:0;
+  border-top:6px solid var(--ink);
+}
+.app[data-dir="boletim"] h1,.app[data-dir="boletim"] .v,.app[data-dir="boletim"] .logo{font-stretch:78%}
+.app[data-dir="boletim"] .abre h1{text-transform:none}
+.app[data-dir="boletim"] .abre h1 .valor{color:var(--ink);background:var(--marca);padding:0 .12em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.app[data-dir="boletim"] .rot{font-stretch:100%;color:var(--signal);letter-spacing:.2em;font-weight:800}
+.app[data-dir="boletim"] .cab{border-bottom:2px solid var(--ink);padding-bottom:12px}
+.app[data-dir="boletim"] .busca{border:2px solid var(--ink)}
+.app[data-dir="boletim"] .chip{border-radius:0;border:1.5px solid var(--ink);font-weight:600}
+.app[data-dir="boletim"] .item{border:0;border-top:3px solid var(--ink);border-bottom:1px solid var(--fio);padding:14px 0 12px;background:transparent}
+.app[data-dir="boletim"] .item .sel.alta{background:var(--ink);color:#fff;letter-spacing:.16em;font-weight:800}
+.app[data-dir="boletim"] .item .sel.media{border:1.5px solid var(--ink);color:var(--ink)}
+.app[data-dir="boletim"] .item .v{font-size:42px}
+.app[data-dir="boletim"] .item .rod{border-top:0;padding-top:6px}
+.app[data-dir="boletim"] .ir{border-radius:0;background:var(--signal);border-color:var(--signal);color:#fff;font-weight:800;letter-spacing:.02em}
+.app[data-dir="boletim"] .bloco>h2{color:var(--ink);font-weight:800}.app[data-dir="boletim"] .bloco>h2::after{height:3px;background:var(--ink)}
+.app[data-dir="boletim"] .abas{border-top:3px solid var(--ink)}
+.app[data-dir="boletim"] .mais{border:2px solid var(--ink);border-radius:0}
