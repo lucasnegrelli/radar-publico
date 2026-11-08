@@ -593,3 +593,11 @@ body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibreg
 .pan-nota{display:block;margin-top:3px;font-size:11px;color:var(--mut)}
 .sev-b{font-size:11px !important;padding:0 2px !important;gap:4px !important}.sev-b b{font-size:12px}
 .chips-c{flex-wrap:wrap !important;justify-content:flex-end;white-space:normal !important;row-gap:4px}
+
+/* mobile: a busca/manchete entra no fluxo da lista, nunca cobre a tela */
+@media(max-width:820px){
+  #manchete-dia{display:flex !important;position:static !important;transform:none !important;left:auto !important;top:auto !important;width:auto !important;min-width:0 !important;margin:0 0 12px !important;padding:0 !important;background:none !important;border:0 !important;box-shadow:none !important;z-index:auto !important}
+  .md-busca{height:46px}.md-card .md-x{-webkit-line-clamp:3}
+  .md-atalhos{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}.md-atalhos button{flex:0 0 auto}
+  #subabas{top:-14px}
+}

@@ -936,7 +936,7 @@ if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(lo
 // ----- tela inicial: busca + manchete do dia + "por que isso importa" -----
 {
   const cand = destaques(alertas.filter((a) => a.novo && a.gravidade !== "baixa" && !(a.manchete && a.manchete.ref)), 8, 2).slice(0, 6);
-  const el = document.createElement("div"); el.id = "manchete-dia"; $("centro").appendChild(el); let i = 0, pausa = false;
+  const el = document.createElement("div"); el.id = "manchete-dia"; if (CEL()) $("aba-alertas").prepend(el); else $("centro").appendChild(el); let i = 0, pausa = false;
   const pinta = () => { const a = cand[i];
     el.innerHTML = `<button class="md-busca" id="md-busca"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/></svg><span>Busque sua cidade, um político ou uma empresa</span><kbd>Ctrl K</kbd></button>
       <div class="md-atalhos"><button data-ir="cidade">🏠 Minha cidade</button><button data-ir="fichas">👤 Um político</button><button data-ir="investigar">🔎 Uma empresa</button><button data-ir="casos">📂 Casos</button></div>
