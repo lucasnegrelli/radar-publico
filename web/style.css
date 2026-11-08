@@ -592,3 +592,4 @@ body.sobre-alerta .maplibregl-canvas-container.maplibregl-interactive .maplibreg
 
 .pan-nota{display:block;margin-top:3px;font-size:11px;color:var(--mut)}
 .sev-b{font-size:11px !important;padding:0 2px !important;gap:4px !important}.sev-b b{font-size:12px}
+.chips-c{flex-wrap:wrap !important;justify-content:flex-end;white-space:normal !important;row-gap:4px}

@@ -930,7 +930,7 @@ if (location.hash.length > 1) setTimeout(() => { const h = decodeURIComponent(lo
 // =====================================================================
 { // indicadores
   const emAtencao = alertas.filter((a) => a.gravidade !== "baixa").reduce((s, a) => s + (a.total || 0), 0);
-  $("resumo").innerHTML = `<div class="kpi"><b>${alertas.length.toLocaleString("pt-BR")}</b><span>alertas</span></div><div class="kpi"><b>${brlCurto(emAtencao)}</b><span>em atenção</span></div><div class="kpi n"><b>${alertas.filter((a) => a.novo).length}</b><span>novos (14 dias)</span></div><div class="kpi c"><b>${alertas.filter((a) => a.correlacao).length}</b><span>combinados</span></div>`;
+  $("resumo").innerHTML = `<div class="kpi" title="Prioridade máxima e relevantes. Os demais sinais são contexto."><b>${alertas.filter((a) => a.gravidade !== "baixa").length.toLocaleString("pt-BR")}</b><span>alertas</span></div><div class="kpi"><b>${brlCurto(emAtencao)}</b><span>em atenção</span></div><div class="kpi n"><b>${alertas.filter((a) => a.novo && a.gravidade !== "baixa").length}</b><span>novos (14 dias)</span></div><div class="kpi c"><b>${alertas.filter((a) => a.correlacao).length}</b><span>combinados</span></div>`;
 }
 
 // ----- tela inicial: busca + manchete do dia + "por que isso importa" -----
