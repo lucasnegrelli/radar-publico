@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07090d" />
+  <title>Radar Público · monitor de dinheiro público</title>
+  <script type="module" crossorigin src="/assets/main-B0tpFSIB.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/array-utils-flat-Cb1piTOC.js">
+  <link rel="modulepreload" crossorigin href="/assets/arithmetic-expression-pvW7-vCa.js">
+  <link rel="modulepreload" crossorigin href="/assets/get-attribute-from-layouts-ZsdpIp6k.js">
+  <link rel="modulepreload" crossorigin href="/assets/webgl-device-DYU3hQOd.js">
+  <link rel="modulepreload" crossorigin href="/assets/interleave-bIu6Itf-.js">
+  <link rel="modulepreload" crossorigin href="/assets/buffer-transform-DK5yEOYe.js">
+  <link rel="stylesheet" crossorigin href="/assets/main-DLWO3tOW.css">
+</head>
+<body>
+  <header id="topo">
+    <div class="marca">
+      <svg viewBox="0 0 32 32" class="logo"><circle cx="16" cy="16" r="13"/><circle cx="16" cy="16" r="8"/><circle cx="16" cy="16" r="3" class="nucleo"/><path class="varre" d="M16 16 L16 3"/><circle cx="22" cy="9" r="1.8" class="blip"/></svg>
+      <b id="marca-nome">RADAR PÚBLICO</b><small>monitor de dinheiro público</small>
+    </div>
+    <button id="b-busca" class="busca-fake" aria-label="Buscar">
+      <svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6"/></svg>
+      <span>Buscar sua cidade</span><kbd>Ctrl K</kbd>
+    </button>
+    <a class="beta" href="/v2/" title="Nova interface do Radar (versão em teste)">Nova versão <b>beta</b></a>
+    <div class="resumo" id="resumo"></div>
+    <div class="ameaca" id="ameaca"></div>
+  </header>
+
+  <div id="app">
+    <nav id="abas" aria-label="Seções">
+      <button data-aba="alertas" class="on" title="Alertas"><svg viewBox="0 0 24 24"><path d="M12 3l9.5 17h-19L12 3z"/><path d="M12 10v5M12 18v.5"/></svg><span>Hoje</span></button>
+      <button data-aba="cidade" title="Minha cidade: emendas, prefeito e alertas"><svg viewBox="0 0 24 24"><path d="M3 21V10l9-6 9 6v11M9 21v-6h6v6"/></svg><span>Cidade</span></button>
+      <button data-aba="fichas" title="Pessoas: políticos e agentes públicos"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Pessoas</span></button>
+      <button data-aba="investigar" title="Investigar: empresas, sócios, emendas, contratos. Monte e compartilhe sua investigação"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l6 6M8 10.5h5M10.5 8v5"/></svg><span>Empresas</span></button>
+      <button data-grupo="dinheiro" title="Dinheiro: salários, agenda dos ministros e viagens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2"/></svg><span>Dinheiro</span></button>
+      <button data-grupo="casos" title="Casos: investigações, notícias e Justiça"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
+      <button data-grupo="ajuda" title="Como ler e fontes dos dados"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17v.5"/></svg><span>Ajuda</span></button>
+      <button class="sub" data-aba="salarios" title="Ranking de remunerações e verbas além do subsídio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.6c0-1.3-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.4 3 1.1 3 2.4-1.3 2-3 2-3-.7-3-2"/></svg><span>Salários</span></button>
+      <button class="sub" data-aba="comex" title="Comércio exterior do Brasil"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg><span>Comércio</span></button>
+      <button class="sub" data-aba="agenda" title="Agenda oficial dos ministros: com quem se reuniram"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><span>Agenda</span></button>
+      <button class="sub" data-aba="viagens" title="Viagens oficiais ao exterior"><svg viewBox="0 0 24 24"><path d="M3 12l18-8-6 16-3-7-9-1z"/></svg><span>Viagens</span></button>
+      <button class="sub" data-aba="casos" title="Investigações, bancos e empresas com sinais combinados"><svg viewBox="0 0 24 24"><path d="M4 4h12l4 4v12H4z"/><path d="M8 12h8M8 16h5"/></svg><span>Casos</span></button>
+      <button class="sub" data-aba="noticias" title="Notícias"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><span>Notícias</span></button>
+      <button class="sub" data-aba="justica" title="Judiciário"><svg viewBox="0 0 24 24"><path d="M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 006 0L5 7zM19 7l-3 7a3 3 0 006 0l-3-7z"/></svg><span>Justiça</span></button>
+      <button class="sub" data-aba="sobre" title="Como ler"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17v.5"/></svg><span>Ajuda</span></button>
+      <button class="sub" data-aba="fontes" title="Fontes, cobertura e dados abertos para baixar"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>Dados</span></button>
+    </nav>
+
+    <aside id="painel">
+      <div id="subabas" hidden></div>
+      <section id="aba-alertas" class="aba on">
+        <div id="hero-m"></div>
+        <div class="cab"><h2>Alertas</h2><span id="cont-topo" class="sub2"></span></div>
+        <div class="filtros" id="filtros">
+          <button data-g="destaques" class="on">Destaques</button>
+          <button data-g="todas">Todos</button>
+          <button data-g="alta">Máxima</button>
+          <button data-g="media">Relevante</button>
+          <button data-g="baixa">Contexto</button>
+        </div>
+        <details id="filtros-avanc"><summary>Mais filtros</summary>
+          <div class="fa-grid">
+            <label>Esfera<select id="f-esfera"><option value="">Todas</option><option value="F">Federal</option><option value="E">Estadual</option><option value="M">Municipal</option></select></label>
+            <label>Poder<select id="f-poder"><option value="">Todos</option><option value="E">Executivo</option><option value="L">Legislativo</option><option value="J">Judiciário</option></select></label>
+            <label>Estado<select id="f-uf"><option value="">Todos</option></select></label>
+            <label>Valor mínimo<select id="f-valor"><option value="0">Qualquer</option><option value="100000">R$ 100 mil</option><option value="1000000">R$ 1 mi</option><option value="10000000">R$ 10 mi</option><option value="100000000">R$ 100 mi</option></select></label>
+          </div></details>
+        <ul id="itens"></ul>
+      </section>
+      <section id="aba-salarios" class="aba"></section>
+      <section id="aba-comex" class="aba"></section>
+      <section id="aba-agenda" class="aba"></section>
+      <section id="aba-viagens" class="aba"></section>
+      <section id="aba-casos" class="aba"></section>
+      
+      <section id="aba-investigar" class="aba"></section>
+      <section id="aba-cidade" class="aba"></section>
+      <section id="aba-fichas" class="aba"></section>
+      
+      <section id="aba-justica" class="aba"></section>
+      <section id="aba-noticias" class="aba"></section>
+      <section id="aba-fontes" class="aba"></section>
+      <section id="aba-sobre" class="aba"></section>
+    </aside>
+
+    <main id="centro">
+      <div id="mapa"></div>
+      <div class="varre" id="varre" hidden></div>
+      <div id="camadas">
+        
+        <label class="sev" title="Todas as rotas (pesado)" style="--k:#ffb300"><input type="checkbox" id="l-todas"><i></i> Todas as rotas <small>(pesado)</small></label>
+        <label title="Viagens ao exterior: arcos roxos até cada país" style="--k:#b388ff"><input type="checkbox" id="tg-voos"><i></i> Viagens ao exterior</label>
+      </div>
+      <div id="legenda"><span title="Prioridade alta: sinal forte, pouca dúvida"><i style="background:#ff2d55"></i>alta</span><span title="Prioridade média"><i style="background:#ffb300"></i>média</span><span title="Prioridade baixa: vale conferir"><i style="background:#00b8ff"></i>baixa</span></div>
+      <div id="timeline"></div>
+      <div id="coords"></div>
+      <section id="detalhe" hidden></section>
+    </main>
+  </div>
+</body>
+</html>
